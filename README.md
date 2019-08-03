@@ -3,7 +3,7 @@ The superUser Project is a simple and lightweight way to start any process with 
 
 # How it works
 This program does the following things: (In order)
-* Acquires the *SeDebugPrivilege* for its own token. 
+* Acquires the *SeDebugPrivilege* for its own token.
 The purpose of the *SeDebugPrivilege* is to allow the process to be able to acquire a *PROCESS_ALL_ACCESS* handle to any process regardless of its security descriptors.
 * Opens a Service Manager handle to query the status of the *TrustedInstaller* service.
 * Starts the *TrustedInstaller* service and acquires its handle with *PROCESS_ALL_ACCESS*.
@@ -13,9 +13,10 @@ The purpose of the *SeDebugPrivilege* is to allow the process to be able to acqu
 * Finally the process is created, its PID is printed and the main thread is resumed. (It was created suspended for possible future changes/fixes)
 
 This method is (almost certainly) in no way inferior to the method which captures the TI token and creates a process with it. The acquired privileges are identical and, from what I've tested, there are no differences between them.
+
 Please contact me if I'm wrong.
 
-# Usage 
+# Usage
 There are two ways to run the program:
 
 ### From the File Explorer
