@@ -133,7 +133,7 @@ int wmain(int argc, wchar_t *argv[]) {
 	int returnStatus = 0;
 
 	int optcount = 1;
-	BOOLEAN bCommandPresent;
+	BOOLEAN bCommandPresent = FALSE;
 	for(int a = 0; a < argc; ++a) {
 		if(wcscmp(argv[a], L"/h") == 0) {
 			// Print help and exit
