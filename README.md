@@ -26,9 +26,14 @@ In case of any problems use the second method of running the program to see the 
 ## From the Command Prompt
 Simply run the command prompt (preferably elevated to see the program output) in the folder containing the executable and type:
 
-#### ```superUser "<process name>"```
+#### ```superUser [options] /c <process name>```
+|  Option |  Meaning                                                       |
+|---------|----------------------------------------------------------------|
+| /h      | Display the help message.                                      |
+| /v      | Verbose. Display progress info.                                |
+| /w      | Wait for the created process to exit. Used for scripts.        |
+| /c      | Used to specify the command to run. Without it cmd is started. |
 
-It is important that you enclose the process name in brackets if it contains spaces, otherwise a command prompt will start.
 ## Exit Codes
 | Exit Code  | Decimal  |  Meaning                                          |
 |------------|----------|---------------------------------------------------|

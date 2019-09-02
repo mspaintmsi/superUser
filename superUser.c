@@ -11,6 +11,13 @@
 
 #define DEFAULT_PROCESS L"cmd.exe"
 
+// I couldn't seem to find a constant in the headers for this.
+#define MAX_COMMANDLINE 8192
+// Can be set to any number
+#define MAX_ARGUMENTS 1000
+
+#define VERB_PRINT(...) if(bVerbose) { wprintf(__VA_ARGS__); }
+
 BOOL SetPrivilege(
 	HANDLE hToken,
 	LPCTSTR Privilege,
@@ -60,7 +67,53 @@ BOOL SetPrivilege(
 	return TRUE;
 }
 
-int wmain(int argc, WCHAR **argv) {
+// Get all the arguments after the executable path
+/* wchar_t *GetCommandLineArgs(int argc, wchar_t *argv[]) {
+
+	wchar_t *parsedCommandLine = calloc(MAX_COMMANDLINE, sizeof(wchar_t));
+
+	for(int a = 1; a < argc; ++a) {
+		wchar_t lpwszTempCmd[MAX_COMMANDLINE];
+		wprintf(L"Argument %d = \"%s\"\n", a, argv[a]);
+		if((wcscspn(argv[a], L"&<>()@^| ") != wcslen(argv[a])) || (wcscmp(argv[a], L"\0") == 0))
+			// Surround with "
+			swprintf(lpwszTempCmd, sizeof(lpwszTempCmd), L" \"%s\"", argv[a]);
+		else
+			// Leave as is
+			swprintf(lpwszTempCmd, sizeof(lpwszTempCmd), L" %s", argv[a]);
+
+		wcscat(parsedCommandLine, lpwszTempCmd);
+	}
+
+	// Remove leading space
+	swscanf(parsedCommandLine, L" %[^\n]s", parsedCommandLine);
+
+	return parsedCommandLine;
+} */
+
+wchar_t *GetCommandLineArgs(wchar_t *argv[], int skip) {
+	wchar_t *lpwszCommandLine = GetCommandLine();
+	int executablePathLength = wcslen(argv[0]);
+
+	int totlen = -1;
+	for(int a = 1; a < skip; ++a) {
+		totlen++; // Count space before argument
+		totlen += wcslen(argv[a]);
+	}
+
+	if(*lpwszCommandLine == L'\"')
+		executablePathLength += 2;
+
+	lpwszCommandLine += executablePathLength + 2;
+	lpwszCommandLine += totlen;
+
+	while(*lpwszCommandLine == L' ')
+		lpwszCommandLine++;
+
+	return lpwszCommandLine;
+}
+
+int wmain(int argc, wchar_t *argv[]) {
 
 	SC_HANDLE hSCManager = NULL;
 	SC_HANDLE hTIService = NULL;
@@ -69,25 +122,49 @@ int wmain(int argc, WCHAR **argv) {
 	ULONG ulBytesNeeded = 0;
 	HANDLE hToken;
 
+	BOOLEAN bVerbose = FALSE, bWait = FALSE;
+	wchar_t *lpwszNewProcessName;
+
 	STARTUPINFOEX startupInfo;
 	size_t attributeListLength;
 
 	PROCESS_INFORMATION newProcInfo;
-	WCHAR *newProcName;
 
 	int returnStatus = 0;
 
-	//Input check.
-	if(argc != 2) {
-		newProcName = calloc(1, sizeof(DEFAULT_PROCESS));
-		wcscpy(newProcName, DEFAULT_PROCESS);
-	} else {
-		newProcName = calloc(1, sizeof(argv[1]));
-		wcscpy(newProcName, argv[1]);
+	int optcount = 1;
+	BOOLEAN bCommandPresent;
+	for(int a = 0; a < argc; ++a) {
+		if(wcscmp(argv[a], L"/h") == 0) {
+			// Print help and exit
+			wprintf(L"%s [options] /c [Process Name]\n", argv[0]);
+			wprintf(L"Options:\n");
+			wprintf(L"\t/v - Display progress info.\n");
+			wprintf(L"\t/w - Wait for the created process to finish before exiting.\n");
+			wprintf(L"\t/h - Display help info.\n\n");
+			wprintf(L"\t/c - Specify command/process to execute. MUST BE THE LAST ARGUMENT. If it's not specified cmd starts by default.\n\n");
+
+			exit(0);
+		} else if (wcscmp(argv[a], L"/v") == 0) {
+			bVerbose = TRUE;
+			optcount++;
+		} else if (wcscmp(argv[a], L"/w") == 0) {
+			bWait = TRUE;
+			optcount++;
+		} else if (wcscmp(argv[a], L"/c") == 0) {
+			bCommandPresent = TRUE;
+			optcount++;
+			break;
+		}
 	}
 
-	if(newProcName[0] == '\0')
-		wcscpy(newProcName, DEFAULT_PROCESS);
+	if(!bCommandPresent) {
+		lpwszNewProcessName = calloc(7, sizeof(wchar_t));
+		wcscpy(lpwszNewProcessName, L"cmd.exe");
+	} else {
+		// Skip optcount arguments
+		lpwszNewProcessName = GetCommandLineArgs(argv, optcount);
+	}
 
 	//Acquire SeDebugPrivilege
 	if(!OpenThreadToken(GetCurrentThread(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, FALSE, &hToken)) {
@@ -99,12 +176,12 @@ int wmain(int argc, WCHAR **argv) {
 
 	if(!SetPrivilege(hToken, SE_DEBUG_NAME, TRUE)) {
 		CloseHandle(hToken);
-		wprintf(L"Failed acquiring the SeDebugPrivilege.\r\n");
+		VERB_PRINT(L"Failed acquiring the SeDebugPrivilege.\r\n");
 
 		returnStatus = 0xDEAD;
 		goto cleanupandexit;
 	} else {
-		wprintf(L"SeDebugPrivilege acquired.\r\n");
+		VERB_PRINT(L"SeDebugPrivilege acquired.\r\n");
 	}
 
 	//We could acquire a handle with SC_MANAGER_ALL_ACCESS, but it's not really needed.
@@ -120,9 +197,9 @@ int wmain(int argc, WCHAR **argv) {
 
 	if(lpServiceStatusBuffer.dwCurrentState == SERVICE_STOPPED) {
 		if(StartServiceW(hTIService, 0, NULL)) {
-			wprintf(L"Started the TrustedInstaller service.\r\n");
+			VERB_PRINT(L"Started the TrustedInstaller service.\r\n");
 		} else {
-			wprintf(L"Failed starting the TrustedInstaller service.\r\n");
+			VERB_PRINT(L"Failed starting the TrustedInstaller service.\r\n");
 			goto cleanupandexit;
 		}
 	}
@@ -130,16 +207,17 @@ int wmain(int argc, WCHAR **argv) {
 	//With SeDebugPrivilege we can successfully get any handle with PROCESS_ALL_ACCESS, but in this case we need to make sure the service is actually running.
 	hTIProcess = OpenProcess(PROCESS_ALL_ACCESS, 1, lpServiceStatusBuffer.dwProcessId);
 	if(hTIProcess == NULL) {
-		wprintf(L"Failed opening TrustedInstaller process. Retrying..\r\n\tError code: 0x%08lX\r\n", GetLastError());
+		VERB_PRINT(L"Failed opening TrustedInstaller process. Retrying..\r\n\tError code: 0x%08lX\r\n", GetLastError());
 		goto queryService;
 	} else {
-		wprintf(L"TrustedInstaller process handle acquired.\r\n");
+		VERB_PRINT(L"TrustedInstaller process handle acquired.\r\n");
 	}
 
 	//Create the child process.
 
 	ZeroMemory(&startupInfo, sizeof(STARTUPINFOEX));
 	startupInfo.StartupInfo.cb = sizeof(STARTUPINFOEX);
+
 	startupInfo.StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
 	startupInfo.StartupInfo.wShowWindow = SW_SHOWNORMAL;
 
@@ -150,16 +228,18 @@ int wmain(int argc, WCHAR **argv) {
 	InitializeProcThreadAttributeList(startupInfo.lpAttributeList, 1, 0, (PSIZE_T) &attributeListLength);
 	UpdateProcThreadAttribute(startupInfo.lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, &hTIProcess, sizeof(HANDLE), NULL, NULL);
 
-	wprintf(L"Creating specified process.\r\n");
+	VERB_PRINT(L"Creating specified process.\r\n");
 	ZeroMemory(&newProcInfo, sizeof(newProcInfo));
+
+	DWORD dwCreationFlags = CREATE_SUSPENDED | EXTENDED_STARTUPINFO_PRESENT | CREATE_NEW_CONSOLE;
 
 	if(CreateProcessW(
 			NULL,
-			newProcName, //Not sanitized, shouldn't matter.
+			lpwszNewProcessName,
 			NULL,
 			NULL,
 			FALSE,
-			CREATE_SUSPENDED | CREATE_NEW_CONSOLE | EXTENDED_STARTUPINFO_PRESENT,
+			dwCreationFlags,
 			NULL,
 			NULL,
 			&startupInfo.StartupInfo,
@@ -167,10 +247,11 @@ int wmain(int argc, WCHAR **argv) {
 	){
 		DeleteProcThreadAttributeList(startupInfo.lpAttributeList);
 
-		wprintf(L"Created Process ID = %ld\r\nResuming main thread.\r\n", newProcInfo.dwProcessId);
+		wprintf(L"Created Process ID = %ld\r\n", newProcInfo.dwProcessId);
 		ResumeThread(newProcInfo.hThread);
-		//There is no need to start it suspended, but it can be used to set properties before the window is shown.
-		//Maybe in the future it'll be used.
+
+		if(bWait)
+			WaitForSingleObject(newProcInfo.hProcess, INFINITE);
 
 		// Free unneeded handles from newProcInfo.
 		CloseHandle(newProcInfo.hProcess);
@@ -184,7 +265,7 @@ int wmain(int argc, WCHAR **argv) {
 
 	cleanupandexit:
 
-	free(newProcName);
+	free(lpwszNewProcessName);
 
 	if(hToken)
 		CloseHandle(hToken);
