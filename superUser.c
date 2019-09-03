@@ -123,7 +123,7 @@ int wmain(int argc, wchar_t *argv[]) {
 	HANDLE hToken;
 
 	BOOLEAN bVerbose = FALSE, bWait = FALSE;
-	wchar_t *lpwszNewProcessName;
+	wchar_t lpwszNewProcessName[MAX_COMMANDLINE];
 
 	STARTUPINFOEX startupInfo;
 	size_t attributeListLength;
@@ -159,11 +159,9 @@ int wmain(int argc, wchar_t *argv[]) {
 	}
 
 	if(!bCommandPresent) {
-		lpwszNewProcessName = calloc(7, sizeof(wchar_t));
 		wcscpy(lpwszNewProcessName, L"cmd.exe");
 	} else {
-		// Skip optcount arguments
-		lpwszNewProcessName = GetCommandLineArgs(argv, optcount);
+		wcscpy(lpwszNewProcessName, GetCommandLineArgs(argv, optcount));
 	}
 
 	//Acquire SeDebugPrivilege
@@ -264,8 +262,6 @@ int wmain(int argc, wchar_t *argv[]) {
 	}
 
 	cleanupandexit:
-
-	free(lpwszNewProcessName);
 
 	if(hToken)
 		CloseHandle(hToken);
