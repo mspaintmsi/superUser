@@ -9,13 +9,53 @@
 #include <winsvc.h>
 #include <winbase.h>
 
+// In some cases this is not defined. Not sure why.
+#define SE_DELEGATE_SESSION_USER_IMPERSONATE_NAME TEXT("SeDelegateSessionUserImpersonatePrivilege")
+
+const wchar_t *lplpcwszTokenPrivileges[35] = {
+	SE_ASSIGNPRIMARYTOKEN_NAME,
+	SE_AUDIT_NAME,
+	SE_BACKUP_NAME,
+	SE_CHANGE_NOTIFY_NAME,
+	SE_CREATE_GLOBAL_NAME,
+	SE_CREATE_PAGEFILE_NAME,
+	SE_CREATE_PERMANENT_NAME,
+	SE_CREATE_SYMBOLIC_LINK_NAME,
+	SE_CREATE_TOKEN_NAME,
+	SE_DEBUG_NAME,
+	SE_DELEGATE_SESSION_USER_IMPERSONATE_NAME,
+	SE_ENABLE_DELEGATION_NAME,
+	SE_IMPERSONATE_NAME,
+	SE_INC_BASE_PRIORITY_NAME,
+	SE_INCREASE_QUOTA_NAME,
+	SE_LOAD_DRIVER_NAME,
+	SE_LOCK_MEMORY_NAME,
+	SE_MACHINE_ACCOUNT_NAME,
+	SE_MANAGE_VOLUME_NAME,
+	SE_PROF_SINGLE_PROCESS_NAME,
+	SE_RELABEL_NAME,
+	SE_REMOTE_SHUTDOWN_NAME,
+	SE_RESTORE_NAME,
+	SE_SECURITY_NAME,
+	SE_SHUTDOWN_NAME,
+	SE_SYNC_AGENT_NAME,
+	SE_SYSTEM_ENVIRONMENT_NAME,
+	SE_SYSTEM_PROFILE_NAME,
+	SE_SYSTEMTIME_NAME,
+	SE_TAKE_OWNERSHIP_NAME,
+	SE_TCB_NAME,
+	SE_TIME_ZONE_NAME,
+	SE_TRUSTED_CREDMAN_ACCESS_NAME,
+	SE_UNDOCK_NAME,
+	SE_UNSOLICITED_INPUT_NAME
+};
+
 #define DEFAULT_PROCESS L"cmd.exe"
 
 // I couldn't seem to find a constant in the headers for this.
 #define MAX_COMMANDLINE 8192
-// Can be set to any number
-#define MAX_ARGUMENTS 1000
 
+// wide char printf to be used when the /v option is used.
 #define VERB_PRINT(...) if(bVerbose) { wprintf(__VA_ARGS__); }
 
 BOOL SetPrivilege(
@@ -67,30 +107,6 @@ BOOL SetPrivilege(
 	return TRUE;
 }
 
-// Get all the arguments after the executable path
-/* wchar_t *GetCommandLineArgs(int argc, wchar_t *argv[]) {
-
-	wchar_t *parsedCommandLine = calloc(MAX_COMMANDLINE, sizeof(wchar_t));
-
-	for(int a = 1; a < argc; ++a) {
-		wchar_t lpwszTempCmd[MAX_COMMANDLINE];
-		wprintf(L"Argument %d = \"%s\"\n", a, argv[a]);
-		if((wcscspn(argv[a], L"&<>()@^| ") != wcslen(argv[a])) || (wcscmp(argv[a], L"\0") == 0))
-			// Surround with "
-			swprintf(lpwszTempCmd, sizeof(lpwszTempCmd), L" \"%s\"", argv[a]);
-		else
-			// Leave as is
-			swprintf(lpwszTempCmd, sizeof(lpwszTempCmd), L" %s", argv[a]);
-
-		wcscat(parsedCommandLine, lpwszTempCmd);
-	}
-
-	// Remove leading space
-	swscanf(parsedCommandLine, L" %[^\n]s", parsedCommandLine);
-
-	return parsedCommandLine;
-} */
-
 wchar_t *GetCommandLineArgs(wchar_t *argv[], int skip) {
 	wchar_t *lpwszCommandLine = GetCommandLine();
 	int executablePathLength = wcslen(argv[0]);
@@ -122,7 +138,7 @@ int wmain(int argc, wchar_t *argv[]) {
 	ULONG ulBytesNeeded = 0;
 	HANDLE hToken;
 
-	BOOLEAN bVerbose = FALSE, bWait = FALSE;
+	BOOLEAN bVerbose = FALSE, bWait = FALSE, bCommandPresent = FALSE;
 	wchar_t lpwszNewProcessName[MAX_COMMANDLINE];
 
 	STARTUPINFOEX startupInfo;
@@ -132,8 +148,7 @@ int wmain(int argc, wchar_t *argv[]) {
 
 	int returnStatus = 0;
 
-	int optcount = 1;
-	BOOLEAN bCommandPresent = FALSE;
+	int cOptions = 1;
 	for(int a = 0; a < argc; ++a) {
 		if(wcscmp(argv[a], L"/h") == 0) {
 			// Print help and exit
@@ -147,30 +162,27 @@ int wmain(int argc, wchar_t *argv[]) {
 			exit(0);
 		} else if (wcscmp(argv[a], L"/v") == 0) {
 			bVerbose = TRUE;
-			optcount++;
 		} else if (wcscmp(argv[a], L"/w") == 0) {
 			bWait = TRUE;
-			optcount++;
 		} else if (wcscmp(argv[a], L"/c") == 0) {
 			bCommandPresent = TRUE;
-			optcount++;
 			break;
 		}
+
+		cOptions++;
 	}
 
-	if(!bCommandPresent) {
-		wcscpy(lpwszNewProcessName, L"cmd.exe");
-	} else {
-		wcscpy(lpwszNewProcessName, GetCommandLineArgs(argv, optcount));
-	}
+	if(bCommandPresent)
+		wcscpy(lpwszNewProcessName, GetCommandLineArgs(argv, cOptions));
+	else
+		wcscpy(lpwszNewProcessName, DEFAULT_PROCESS);
 
 	//Acquire SeDebugPrivilege
-	if(!OpenThreadToken(GetCurrentThread(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, FALSE, &hToken)) {
+	if(!OpenThreadToken(GetCurrentThread(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, FALSE, &hToken))
 		if (GetLastError() == ERROR_NO_TOKEN) {
 			ImpersonateSelf(SecurityImpersonation);
 			OpenThreadToken(GetCurrentThread(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, FALSE, &hToken);
 		}
-	}
 
 	if(!SetPrivilege(hToken, SE_DEBUG_NAME, TRUE)) {
 		CloseHandle(hToken);
@@ -178,52 +190,39 @@ int wmain(int argc, wchar_t *argv[]) {
 
 		returnStatus = 0xDEAD;
 		goto cleanupandexit;
-	} else {
-		VERB_PRINT(L"SeDebugPrivilege acquired.\r\n");
 	}
+	VERB_PRINT(L"SeDebugPrivilege acquired.\r\n");
 
-	//We could acquire a handle with SC_MANAGER_ALL_ACCESS, but it's not really needed.
 	hSCManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_CREATE_SERVICE | SC_MANAGER_CONNECT );
-
-	//We need to query its status, start it and get its PID.
 	hTIService = OpenServiceW(hSCManager, L"TrustedInstaller", SERVICE_START | SERVICE_QUERY_STATUS);
 
-	//In theory, this will never fail if we've successfully acquired SeDebugPrivilege, so there's probably no point in error checks.
-	queryService:
+	DWORD dwServiceState;
+	do {
+		QueryServiceStatusEx(hTIService, SC_STATUS_PROCESS_INFO, (BYTE *) &lpServiceStatusBuffer, sizeof(SERVICE_STATUS_PROCESS), &ulBytesNeeded);
+		dwServiceState = lpServiceStatusBuffer.dwCurrentState;
 
-	QueryServiceStatusEx(hTIService, SC_STATUS_PROCESS_INFO, (PBYTE) &lpServiceStatusBuffer, sizeof(SERVICE_STATUS_PROCESS), &ulBytesNeeded);
+		if(dwServiceState == SERVICE_STOPPED)
+			if(StartService(hTIService, 0, NULL))
+				VERB_PRINT("Started the TI service.\n");
 
-	if(lpServiceStatusBuffer.dwCurrentState == SERVICE_STOPPED) {
-		if(StartServiceW(hTIService, 0, NULL)) {
-			VERB_PRINT(L"Started the TrustedInstaller service.\r\n");
-		} else {
-			VERB_PRINT(L"Failed starting the TrustedInstaller service.\r\n");
-			goto cleanupandexit;
-		}
-	}
+	} while (dwServiceState == SERVICE_STOPPED);
 
-	//With SeDebugPrivilege we can successfully get any handle with PROCESS_ALL_ACCESS, but in this case we need to make sure the service is actually running.
-	hTIProcess = OpenProcess(PROCESS_ALL_ACCESS, 1, lpServiceStatusBuffer.dwProcessId);
-	if(hTIProcess == NULL) {
-		VERB_PRINT(L"Failed opening TrustedInstaller process. Retrying..\r\n\tError code: 0x%08lX\r\n", GetLastError());
-		goto queryService;
-	} else {
-		VERB_PRINT(L"TrustedInstaller process handle acquired.\r\n");
-	}
+	// Create child process for TI
 
-	//Create the child process.
-
+	// Initialize startupInfo.
 	ZeroMemory(&startupInfo, sizeof(STARTUPINFOEX));
 	startupInfo.StartupInfo.cb = sizeof(STARTUPINFOEX);
 
+	// Makes the window appear normally, as in some cases it can start minimized.
 	startupInfo.StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
 	startupInfo.StartupInfo.wShowWindow = SW_SHOWNORMAL;
 
+	// Initialize Thred Attribute List for parent assignment.
 	InitializeProcThreadAttributeList(NULL, 1, 0, (PSIZE_T) &attributeListLength);
-
 	startupInfo.lpAttributeList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, attributeListLength);
-
 	InitializeProcThreadAttributeList(startupInfo.lpAttributeList, 1, 0, (PSIZE_T) &attributeListLength);
+
+	// Add the parent process.
 	UpdateProcThreadAttribute(startupInfo.lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, &hTIProcess, sizeof(HANDLE), NULL, NULL);
 
 	VERB_PRINT(L"Creating specified process.\r\n");
@@ -246,11 +245,28 @@ int wmain(int argc, wchar_t *argv[]) {
 		DeleteProcThreadAttributeList(startupInfo.lpAttributeList);
 
 		wprintf(L"Created Process ID = %ld\r\n", newProcInfo.dwProcessId);
+
+		// Add all possible Token privileges for the created process.
+
+		// Not acquiring those privileges is not fatal, but will be reported to the user when verbose.
+		HANDLE hProcessToken;
+		if(OpenProcessToken(newProcInfo.hProcess, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hProcessToken)) {
+			for(int i = 0; i < 35; i++)
+				if(!SetPrivilege(hProcessToken, lplpcwszTokenPrivileges[i], TRUE))
+					VERB_PRINT(L"Could not set %s privilege. Does your group have it?\n", lplpcwszTokenPrivileges[i]);
+		} else {
+			VERB_PRINT(L"Could not adjust token for additional privileges.\nError: 0x%08X\nToken: 0x%08X\n", GetLastError());
+		}
+
 		ResumeThread(newProcInfo.hThread);
 
-		if(bWait)
+		if(bWait) {
+			DWORD dwExitCode = 0;
 			WaitForSingleObject(newProcInfo.hProcess, INFINITE);
 
+			GetExitCodeThread(newProcInfo.hThread, &dwExitCode);
+			VERB_PRINT(L"Main thread exit code: 0x%X\n", dwExitCode);
+		}
 		// Free unneeded handles from newProcInfo.
 		CloseHandle(newProcInfo.hProcess);
 		CloseHandle(newProcInfo.hThread);
