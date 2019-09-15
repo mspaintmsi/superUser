@@ -17,7 +17,7 @@
 
 	<assemblyIdentity type="win32"
 					  name="superUser"
-					  version="1.0.0.0"
+					  version="3.0.0.0"
 	/>
 
 	<!-- Identify the application security requirements. -->

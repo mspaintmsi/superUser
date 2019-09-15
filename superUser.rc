@@ -7,8 +7,8 @@
 #endif
 
 1 VERSIONINFO
-FILEVERSION 2,0,0,0
-PRODUCTVERSION 2,0,0,0
+FILEVERSION 3,0,0,0
+PRODUCTVERSION 3,0,0,0
 FILEOS 0x0
 FILETYPE 0x0
 {
@@ -18,7 +18,7 @@ FILETYPE 0x0
         {
             VALUE "CompanyName", "Awoo~"
             VALUE "FileDescription", "Allows you to run any process with TI privileges."
-            VALUE "FileVersion", "2.0"
+            VALUE "FileVersion", "3.0"
             VALUE "LegalCopyright", "Awoo~ 56709"
             VALUE "OriginalFilename", FILENAME
             VALUE "ProductName", "superUser"
