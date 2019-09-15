@@ -203,7 +203,7 @@ int wmain(int argc, wchar_t *argv[]) {
 
 		if(dwServiceState == SERVICE_STOPPED)
 			if(StartService(hTIService, 0, NULL))
-				VERB_PRINT("Started the TI service.\n");
+				VERB_PRINT(L"Started the TI service.\n");
 
 	} while (dwServiceState == SERVICE_STOPPED);
 
