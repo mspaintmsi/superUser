@@ -1,63 +1,161 @@
-#define _WIN32_WINNT _WIN32_WINNT_VISTA
-#define _UNICODE
+#include "superUser.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <windows.h>
+BOOLEAN bVerbose = FALSE, bWait = FALSE, bCommandPresent = FALSE;
 
-#include <processthreadsapi.h>
-#include <winsvc.h>
-#include <winbase.h>
+int wmain(int argc, wchar_t *argv[]) {
 
-// In some cases this is not defined. Not sure why.
-#define SE_DELEGATE_SESSION_USER_IMPERSONATE_NAME TEXT("SeDelegateSessionUserImpersonatePrivilege")
+	wchar_t lpwszNewProcessName[MAX_COMMANDLINE];
 
-const wchar_t *lplpcwszTokenPrivileges[35] = {
-	SE_ASSIGNPRIMARYTOKEN_NAME,
-	SE_AUDIT_NAME,
-	SE_BACKUP_NAME,
-	SE_CHANGE_NOTIFY_NAME,
-	SE_CREATE_GLOBAL_NAME,
-	SE_CREATE_PAGEFILE_NAME,
-	SE_CREATE_PERMANENT_NAME,
-	SE_CREATE_SYMBOLIC_LINK_NAME,
-	SE_CREATE_TOKEN_NAME,
-	SE_DEBUG_NAME,
-	SE_DELEGATE_SESSION_USER_IMPERSONATE_NAME,
-	SE_ENABLE_DELEGATION_NAME,
-	SE_IMPERSONATE_NAME,
-	SE_INC_BASE_PRIORITY_NAME,
-	SE_INCREASE_QUOTA_NAME,
-	SE_LOAD_DRIVER_NAME,
-	SE_LOCK_MEMORY_NAME,
-	SE_MACHINE_ACCOUNT_NAME,
-	SE_MANAGE_VOLUME_NAME,
-	SE_PROF_SINGLE_PROCESS_NAME,
-	SE_RELABEL_NAME,
-	SE_REMOTE_SHUTDOWN_NAME,
-	SE_RESTORE_NAME,
-	SE_SECURITY_NAME,
-	SE_SHUTDOWN_NAME,
-	SE_SYNC_AGENT_NAME,
-	SE_SYSTEM_ENVIRONMENT_NAME,
-	SE_SYSTEM_PROFILE_NAME,
-	SE_SYSTEMTIME_NAME,
-	SE_TAKE_OWNERSHIP_NAME,
-	SE_TCB_NAME,
-	SE_TIME_ZONE_NAME,
-	SE_TRUSTED_CREDMAN_ACCESS_NAME,
-	SE_UNDOCK_NAME,
-	SE_UNSOLICITED_INPUT_NAME
-};
+	STARTUPINFOEX startupInfo;
 
-#define DEFAULT_PROCESS L"cmd.exe"
+	int iReturnStatus = 0;
 
-// I couldn't seem to find a constant in the headers for this.
-#define MAX_COMMANDLINE 8192
+	int cOptions = 1;
+	for(int a = 0; a < argc; ++a) {
+		if(wcscmp(argv[a], L"/h") == 0) {
+			// Print help and exit
+			wprintf(L"%s [options] /c [Process Name]\n", argv[0]);
+			wprintf(L"Options:\n");
+			wprintf(L"\t/v - Display progress info.\n");
+			wprintf(L"\t/w - Wait for the created process to finish before exiting.\n");
+			wprintf(L"\t/h - Display this help message.\n\n");
+			wprintf(L"\t/c - Specify command/process to execute. If not specified, cmd starts by default.\n\n");
 
-// wide char printf to be used when the /v option is used.
-#define VERB_PRINT(...) if(bVerbose) { wprintf(__VA_ARGS__); }
+			goto cleanupandexit;
+		} else if (wcscmp(argv[a], L"/v") == 0) {
+			bVerbose = TRUE;
+		} else if (wcscmp(argv[a], L"/w") == 0) {
+			bWait = TRUE;
+		} else if (wcscmp(argv[a], L"/c") == 0) {
+			bCommandPresent = TRUE;
+			break;
+		}
 
+		cOptions++;
+	}
+
+	if(bCommandPresent)
+		wcscpy(lpwszNewProcessName, GetCommandLineArgs(argv, cOptions));
+	else
+		wcscpy(lpwszNewProcessName, DEFAULT_PROCESS);
+
+	//Acquire SeDebugPrivilege
+	{
+		HANDLE hToken = OpenCurrentThreadToken();
+
+		if(!SetPrivilege(hToken, SE_DEBUG_NAME, TRUE)) {
+			CloseHandle(hToken);
+			wprintf(L"Could not acquire SeDebugPrivilege.\n");
+
+			iReturnStatus = 0xDEAD;
+			goto cleanupandexit;
+		}
+
+		CloseHandle(hToken);
+		VERB_PRINT(L"SeDebugPrivilege acquired.\r\n");
+	}
+
+	// Start the TrustedInstaller service.
+	// Create child process for TI
+
+	HANDLE hTIProcess = NULL;
+	if(!CreateTrustedInstallerProcessHandle(&hTIProcess)){
+		wprintf(L"Critical failure. Could not open the TI process.");
+
+		iReturnStatus = 0xDAD;
+		goto cleanupandexit;
+	}
+
+	// Initialize startupInfo.
+	{
+		ZeroMemory(&startupInfo, sizeof(STARTUPINFOEX));
+		startupInfo.StartupInfo.cb = sizeof(STARTUPINFOEX);
+
+		startupInfo.StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
+		startupInfo.StartupInfo.wShowWindow = SW_SHOWNORMAL;
+	}
+
+	// Initialize Thread Attribute List for parent assignment.
+	{
+		size_t attributeListLength;
+
+		InitializeProcThreadAttributeList(NULL, 1, 0, (PSIZE_T) &attributeListLength);
+
+		startupInfo.lpAttributeList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, attributeListLength);
+		InitializeProcThreadAttributeList(startupInfo.lpAttributeList, 1, 0, (PSIZE_T) &attributeListLength);
+
+		UpdateProcThreadAttribute(startupInfo.lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, &hTIProcess, sizeof(HANDLE), NULL, NULL);
+	}
+
+	// Accomodate space for the process' information
+	PROCESS_INFORMATION newProcInfo;
+	ZeroMemory(&newProcInfo, sizeof(newProcInfo));
+
+	wprintf(L"Creating process..\n");
+
+	if(CreateProcessW(
+			NULL,
+			lpwszNewProcessName,
+			NULL,
+			NULL,
+			FALSE,
+			CREATE_SUSPENDED | EXTENDED_STARTUPINFO_PRESENT | CREATE_NEW_CONSOLE,
+			NULL,
+			NULL,
+			&startupInfo.StartupInfo,
+			&newProcInfo)
+	){
+		DeleteProcThreadAttributeList(startupInfo.lpAttributeList);
+
+		// Add all possible Token privileges for the created process.
+		// Not acquiring some those privileges is not fatal, but will be reported to the user when verbose.
+
+		HANDLE hProcessToken;
+		if(OpenProcessToken(newProcInfo.hProcess, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hProcessToken)) {
+			for(int i = 0; i < 35; i++)
+				if(!SetPrivilege(hProcessToken, lplpcwszTokenPrivileges[i], TRUE))
+					VERB_PRINT(L"Could not set %s privilege. Does your group have it?\n", lplpcwszTokenPrivileges[i]);
+		} else {
+			VERB_PRINT(L"Could not adjust token for additional privileges.\nError: 0x%08X\n", GetLastError());
+		}
+
+		wprintf(L"Created Process ID = %ld\r\n", newProcInfo.dwProcessId);
+
+		ResumeThread(newProcInfo.hThread);
+
+		// If waiting to finish.
+		if(bWait) {
+			DWORD dwExitCode = 0;
+			WaitForSingleObject(newProcInfo.hProcess, INFINITE);
+
+			GetExitCodeThread(newProcInfo.hThread, &dwExitCode);
+			VERB_PRINT(L"Main thread exit code: 0x%X\n", dwExitCode);
+		}
+		// Free unneeded handles from newProcInfo.
+		CloseHandle(newProcInfo.hProcess);
+		CloseHandle(newProcInfo.hThread);
+
+	} else {
+		//It will happen when an incorrect process name is specified. (Will exit with error 0x00000002 - File not found)
+		wprintf(L"Process Creation Failed.\r\n\tError code: 0x%X\r\n", GetLastError());
+		iReturnStatus = 0xDEDDED;
+	}
+
+	cleanupandexit:
+
+	if(hTIProcess)
+		CloseHandle(hTIProcess);
+
+	return iReturnStatus;
+}
+
+/*
+ * Used for enabling/disabling a privilege for a given token.
+ * Will return false in case of failure.
+ * Most failures occur when the user's group does not have a given privilege.
+ * 
+ * See the comments in the header's array of privileges for examples of tokens most users won't have.
+ */
 BOOL SetPrivilege(
 	HANDLE hToken,
 	LPCTSTR Privilege,
@@ -107,6 +205,9 @@ BOOL SetPrivilege(
 	return TRUE;
 }
 
+/*
+ * A messy way to acquire a valid commandline string from the argv array excluding the beginning arguments.
+ */
 wchar_t *GetCommandLineArgs(wchar_t *argv[], int skip) {
 	wchar_t *lpwszCommandLine = GetCommandLine();
 	int executablePathLength = wcslen(argv[0]);
@@ -129,167 +230,57 @@ wchar_t *GetCommandLineArgs(wchar_t *argv[], int skip) {
 	return lpwszCommandLine;
 }
 
-int wmain(int argc, wchar_t *argv[]) {
-
-	SC_HANDLE hSCManager = NULL;
-	SC_HANDLE hTIService = NULL;
-	HANDLE hTIProcess = NULL;
-	SERVICE_STATUS_PROCESS lpServiceStatusBuffer = { 0 };
-	ULONG ulBytesNeeded = 0;
+/* 
+ * Returns the current thread's token for adding the SeDebugPrivilege. 
+ */
+HANDLE OpenCurrentThreadToken() {
 	HANDLE hToken;
 
-	BOOLEAN bVerbose = FALSE, bWait = FALSE, bCommandPresent = FALSE;
-	wchar_t lpwszNewProcessName[MAX_COMMANDLINE];
-
-	STARTUPINFOEX startupInfo;
-	size_t attributeListLength;
-
-	PROCESS_INFORMATION newProcInfo;
-
-	int returnStatus = 0;
-
-	int cOptions = 1;
-	for(int a = 0; a < argc; ++a) {
-		if(wcscmp(argv[a], L"/h") == 0) {
-			// Print help and exit
-			wprintf(L"%s [options] /c [Process Name]\n", argv[0]);
-			wprintf(L"Options:\n");
-			wprintf(L"\t/v - Display progress info.\n");
-			wprintf(L"\t/w - Wait for the created process to finish before exiting.\n");
-			wprintf(L"\t/h - Display help info.\n\n");
-			wprintf(L"\t/c - Specify command/process to execute. MUST BE THE LAST ARGUMENT. If it's not specified cmd starts by default.\n\n");
-
-			exit(0);
-		} else if (wcscmp(argv[a], L"/v") == 0) {
-			bVerbose = TRUE;
-		} else if (wcscmp(argv[a], L"/w") == 0) {
-			bWait = TRUE;
-		} else if (wcscmp(argv[a], L"/c") == 0) {
-			bCommandPresent = TRUE;
-			break;
-		}
-
-		cOptions++;
-	}
-
-	if(bCommandPresent)
-		wcscpy(lpwszNewProcessName, GetCommandLineArgs(argv, cOptions));
-	else
-		wcscpy(lpwszNewProcessName, DEFAULT_PROCESS);
-
-	//Acquire SeDebugPrivilege
 	if(!OpenThreadToken(GetCurrentThread(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, FALSE, &hToken))
-		if (GetLastError() == ERROR_NO_TOKEN) {
+		if(GetLastError() == ERROR_NO_TOKEN) {
 			ImpersonateSelf(SecurityImpersonation);
 			OpenThreadToken(GetCurrentThread(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, FALSE, &hToken);
 		}
 
-	if(!SetPrivilege(hToken, SE_DEBUG_NAME, TRUE)) {
-		CloseHandle(hToken);
-		VERB_PRINT(L"Failed acquiring the SeDebugPrivilege.\r\n");
+	return hToken;
+}
 
-		returnStatus = 0xDEAD;
-		goto cleanupandexit;
-	}
-	VERB_PRINT(L"SeDebugPrivilege acquired.\r\n");
+/* 
+ * Handles acquiring the TI Process handle. 
+ */
+BOOL CreateTrustedInstallerProcessHandle(HANDLE *lpProcessHandle) {
+	HANDLE hSCManager, hTIService, hTIProcess;
+	SERVICE_STATUS_PROCESS lpServiceStatusBuffer = { 0 };
 
-	hSCManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_CREATE_SERVICE | SC_MANAGER_CONNECT );
+	unsigned long ulBytesNeeded;
+
+	hSCManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_CREATE_SERVICE | SC_MANAGER_CONNECT);
 	hTIService = OpenServiceW(hSCManager, L"TrustedInstaller", SERVICE_START | SERVICE_QUERY_STATUS);
 
-	DWORD dwServiceState;
+	if(hTIService == NULL || hSCManager == NULL)
+		return FALSE;
+
+	DWORD dwServiceStatus = 0;
 	do {
 		QueryServiceStatusEx(hTIService, SC_STATUS_PROCESS_INFO, (BYTE *) &lpServiceStatusBuffer, sizeof(SERVICE_STATUS_PROCESS), &ulBytesNeeded);
-		dwServiceState = lpServiceStatusBuffer.dwCurrentState;
 
-		if(dwServiceState == SERVICE_STOPPED)
-			if(StartService(hTIService, 0, NULL))
-				VERB_PRINT(L"Started the TI service.\n");
+		dwServiceStatus = lpServiceStatusBuffer.dwCurrentState;
+		if(dwServiceStatus == SERVICE_STOPPED)
+			if(!StartService(hTIService, 0, NULL))
+				return FALSE;
 
-	} while (dwServiceState == SERVICE_STOPPED);
+	} while (dwServiceStatus == SERVICE_STOPPED);
 
-	// Create child process for TI
+	// Get process handle.
+	hTIProcess = OpenProcess(PROCESS_CREATE_PROCESS, FALSE, lpServiceStatusBuffer.dwProcessId);
 
-	// Initialize startupInfo.
-	ZeroMemory(&startupInfo, sizeof(STARTUPINFOEX));
-	startupInfo.StartupInfo.cb = sizeof(STARTUPINFOEX);
+	if(lpProcessHandle != NULL && hTIProcess != NULL)
+		*lpProcessHandle = hTIProcess;
+	else
+		return FALSE;
 
-	// Makes the window appear normally, as in some cases it can start minimized.
-	startupInfo.StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
-	startupInfo.StartupInfo.wShowWindow = SW_SHOWNORMAL;
+	CloseServiceHandle(hSCManager);
+	CloseServiceHandle(hTIService);
 
-	// Initialize Thred Attribute List for parent assignment.
-	InitializeProcThreadAttributeList(NULL, 1, 0, (PSIZE_T) &attributeListLength);
-	startupInfo.lpAttributeList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, attributeListLength);
-	InitializeProcThreadAttributeList(startupInfo.lpAttributeList, 1, 0, (PSIZE_T) &attributeListLength);
-
-	// Add the parent process.
-	UpdateProcThreadAttribute(startupInfo.lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, &hTIProcess, sizeof(HANDLE), NULL, NULL);
-
-	VERB_PRINT(L"Creating specified process.\r\n");
-	ZeroMemory(&newProcInfo, sizeof(newProcInfo));
-
-	DWORD dwCreationFlags = CREATE_SUSPENDED | EXTENDED_STARTUPINFO_PRESENT | CREATE_NEW_CONSOLE;
-
-	if(CreateProcessW(
-			NULL,
-			lpwszNewProcessName,
-			NULL,
-			NULL,
-			FALSE,
-			dwCreationFlags,
-			NULL,
-			NULL,
-			&startupInfo.StartupInfo,
-			&newProcInfo)
-	){
-		DeleteProcThreadAttributeList(startupInfo.lpAttributeList);
-
-		wprintf(L"Created Process ID = %ld\r\n", newProcInfo.dwProcessId);
-
-		// Add all possible Token privileges for the created process.
-
-		// Not acquiring those privileges is not fatal, but will be reported to the user when verbose.
-		HANDLE hProcessToken;
-		if(OpenProcessToken(newProcInfo.hProcess, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hProcessToken)) {
-			for(int i = 0; i < 35; i++)
-				if(!SetPrivilege(hProcessToken, lplpcwszTokenPrivileges[i], TRUE))
-					VERB_PRINT(L"Could not set %s privilege. Does your group have it?\n", lplpcwszTokenPrivileges[i]);
-		} else {
-			VERB_PRINT(L"Could not adjust token for additional privileges.\nError: 0x%08X\nToken: 0x%08X\n", GetLastError());
-		}
-
-		ResumeThread(newProcInfo.hThread);
-
-		if(bWait) {
-			DWORD dwExitCode = 0;
-			WaitForSingleObject(newProcInfo.hProcess, INFINITE);
-
-			GetExitCodeThread(newProcInfo.hThread, &dwExitCode);
-			VERB_PRINT(L"Main thread exit code: 0x%X\n", dwExitCode);
-		}
-		// Free unneeded handles from newProcInfo.
-		CloseHandle(newProcInfo.hProcess);
-		CloseHandle(newProcInfo.hThread);
-
-	} else {
-		//It will happen when an incorrect process name is specified. (Will exit with error 0x00000002 - File not found)
-		wprintf(L"Process Creation Failed.\r\n\tError code: 0x%08lX\r\n", GetLastError());
-		returnStatus = 0xDEDDED;
-	}
-
-	cleanupandexit:
-
-	if(hToken)
-		CloseHandle(hToken);
-
-	if(hSCManager)
-		CloseServiceHandle(hSCManager);
-
-	if(hTIService)
-		CloseServiceHandle(hTIService);
-
-	if(hTIProcess)
-		CloseHandle(hTIProcess);
-
-	return returnStatus;
+	return TRUE;
 }
