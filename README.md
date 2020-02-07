@@ -20,6 +20,7 @@ Simply run superUser from the command prompt (preferably one with admin privileg
 | /v      | Verbose. Display progress info.                                |
 | /w      | Wait for the created process to exit. Used for scripts.        |
 | /c      | Used to specify the command to run. Without it cmd is started. |
+
 Note: You can also use a dash (-) in place of the slash (/) in commands.
 
 ## Exit Codes
