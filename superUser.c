@@ -15,6 +15,14 @@
 		5 - Process creation failed
  */
 
+/* Fix for the MSVCRT */
+__declspec(dllimport) FILE* __cdecl __iob_func();
+
+FILE* __cdecl __acrt_iob_func(unsigned Index)
+{
+	return (FILE*)((char*)__iob_func() + Index * (sizeof(char*) * 3 + sizeof(int) * 5));
+}
+
 #define wputs _putws
 #define MAX_COMMANDLINE 8192 /* Presumably the maximum commandline length */
 #define wprintfv(...) \
