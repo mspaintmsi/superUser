@@ -140,7 +140,7 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
-      <AdditionalDependencies>kernel32.lib;msvcrt.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;msvcrt32.lib;advapi32.lib</AdditionalDependencies>
       <RandomizedBaseAddress>true</RandomizedBaseAddress>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
@@ -179,7 +179,7 @@
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <UACUIAccess>false</UACUIAccess>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
-      <AdditionalDependencies>kernel32.lib;msvcrt.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;msvcrt64.lib;advapi32.lib</AdditionalDependencies>
       <RandomizedBaseAddress>true</RandomizedBaseAddress>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
