@@ -146,12 +146,12 @@ static inline int createTrustedInstallerProcess(wchar_t* lpwszImageName) {
 
 	/* Initialize attribute lists for "parent assignment" */
 	
-	size_t attributeListLength;
+	SIZE_T attributeListLength;
 
-	InitializeProcThreadAttributeList(NULL, 1, 0, (size_t*)&attributeListLength);
+	InitializeProcThreadAttributeList(NULL, 1, 0, (PSIZE_T)&attributeListLength);
 
 	startupInfo.lpAttributeList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, attributeListLength);
-	InitializeProcThreadAttributeList(startupInfo.lpAttributeList, 1, 0, (size_t*)&attributeListLength);
+	InitializeProcThreadAttributeList(startupInfo.lpAttributeList, 1, 0, (PSIZE_T)&attributeListLength);
 
 	UpdateProcThreadAttribute(startupInfo.lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, &hTIPHandle, sizeof(HANDLE), NULL, NULL);
 
@@ -257,11 +257,10 @@ done_params:
 		// Skip ahead 3 characters ("-c ")
 		lpwszCommand += 3;
 
-		wprintf(L"Commandline apparently: \'%s\'\n", lpwszCommand);
 		lpwszImageName = lpwszCommand;
-
 	} else {
-		lpwszImageName = L"cmd.exe";
+		lpwszImageName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 7 * sizeof(wchar_t));
+		wcscpy(lpwszImageName, L"cmd.exe");
 	}
 
 	wprintfv(L"[D] Your commandline is \"%s\"\n", lpwszImageName);
@@ -269,7 +268,6 @@ done_params:
 	/* Acquire SeDebugPrivilege and create process */
 
 	int status = acquireSeDebugPrivilege();
-	
 	if(!status) {
 		fwprintf(stderr, L"Acquiring SeDebugPrivilege failed!");
 		return 2;
