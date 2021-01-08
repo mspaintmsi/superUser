@@ -2,6 +2,9 @@
 
 #include <winnt.h>
 
+/* for some reason this one is not defined in mingw headers? */
+#define SE_DELEGATE_SESSION_USER_IMPERSONATE_NAME TEXT("SeDelegateSessionUserImpersonatePrivilege")
+
 const wchar_t* lplpcwszTokenPrivileges[35] = {
 	SE_ASSIGNPRIMARYTOKEN_NAME,
 	SE_AUDIT_NAME,
