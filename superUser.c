@@ -208,8 +208,8 @@ int wmain(int argc, wchar_t *argv[]) {
 
 	/* Parse commandline options */
 
-	for (int i = 1; i < argc; ++i)
-		if ((*argv[i] == '/' || *argv[i] == '-') && *(argv[i] + 1) != '\0') {
+	for (int i = 1; i < argc; ++i) {
+		if ((*argv[i] == L'/' || *argv[i] == L'-') && *(argv[i] + 1) != L'\0') {
 			/* Check for an at-least-two-character string beginning with '/' or '-' */
 			cParams++;
 
@@ -244,26 +244,24 @@ Options: (You can use either '-' or '/')\n\
 				break;
 			}
 		}
+	}
 done_params:
 
 	if (params.bCommandPresent) {
-		/* Get commandline arguments */
-		wchar_t* lpwszCommandLine = GetCommandLine();
-		size_t cCharSkip = 1;
-
-		if (*lpwszCommandLine == '\"') /* Skip surrounding quotation marks, if present */
-			cCharSkip += 2;
+		// Find "c" parameter offset. 
+		wchar_t* lpwszSuperUserCommandLine = GetCommandLine();
+		wchar_t* lpwszCommand = wcsstr(lpwszSuperUserCommandLine, L"/c");
+		if(lpwszCommand == NULL)
+			lpwszCommand = wcsstr(lpwszSuperUserCommandLine, L"-c");
 		
-		for (unsigned int i = 0; i < cParams + 1; ++i)
-			cCharSkip += wcslen(argv[i]) + 1;
-		
-		lpwszImageName = calloc(wcslen(lpwszCommandLine + cCharSkip), sizeof(wchar_t));
-		wcscpy_s(lpwszImageName, wcslen(lpwszCommandLine + cCharSkip) + 1, lpwszCommandLine + cCharSkip);
+		// Skip ahead 3 characters ("-c ")
+		lpwszCommand += 3;
 
-	}
-	else {
-		lpwszImageName = calloc(7, sizeof(wchar_t));
-		wcscpy_s(lpwszImageName, 8, L"cmd.exe");
+		wprintf(L"Commandline apparently: \'%s\'\n", lpwszCommand);
+		lpwszImageName = lpwszCommand;
+
+	} else {
+		lpwszImageName = L"cmd.exe";
 	}
 
 	wprintfv(L"[D] Your commandline is \"%s\"\n", lpwszImageName);
