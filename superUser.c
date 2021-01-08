@@ -21,13 +21,6 @@
 if(params.bVerbose) \
 	wprintf(__VA_ARGS__); /* Only use when bVerbose in scope */
 
-static inline void acquireSeDebugPrivilege(void);
-static inline int createTrustedInstallerProcess(wchar_t* lpwszImageName);
-static inline HANDLE getTrustedInstallerPHandle(void);
-static inline void setAllPrivileges(HANDLE hProcessToken);
-static inline int enableTokenPrivilege(HANDLE hToken, const wchar_t* lpwcszPrivilege);
-void printHelp(void);
-
 struct parameters {
 	unsigned int bVerbose : 1;			/* Whether to print debug messages or not.*/
 	unsigned int bWait : 1;				/* Whether to wait to finish created process */
