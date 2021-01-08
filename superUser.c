@@ -68,7 +68,7 @@ static inline int enableTokenPrivilege(
 	return 1;
 }
 
-static inline void acquireSeDebugPrivilege(void) {
+static inline int acquireSeDebugPrivilege(void) {
 	HANDLE hThreadToken;
 	int retry = 1;
 
@@ -81,10 +81,10 @@ reacquire_token:
 		goto reacquire_token;
 	}
 
-	if (!enableTokenPrivilege(hThreadToken, SE_DEBUG_NAME)) {
-		fwprintf(stderr, L"Acquiring SeDebugPrivilege failed!");
-		exit(2);
-	}
+	if (!enableTokenPrivilege(hThreadToken, SE_DEBUG_NAME))
+		return 0;
+
+	return 1;
 }
 
 static inline void setAllPrivileges(HANDLE hProcessToken) {
@@ -129,8 +129,6 @@ cleanup_and_fail:
 static inline int createTrustedInstallerProcess(wchar_t* lpwszImageName) {
 	
 	STARTUPINFOEX startupInfo = { 0 };
-
-	acquireSeDebugPrivilege();
 
 	/* Start the TrustedInstaller service */
 	HANDLE hTIPHandle = getTrustedInstallerPHandle();
@@ -269,6 +267,15 @@ done_params:
 	}
 
 	wprintfv(L"[D] Your commandline is \"%s\"\n", lpwszImageName);
+
+	/* Acquire SeDebugPrivilege and create process */
+
+	int status = acquireSeDebugPrivilege();
+	
+	if(!status) {
+		fwprintf(stderr, L"Acquiring SeDebugPrivilege failed!");
+		return 2;
+	}
 
 	createTrustedInstallerProcess(lpwszImageName);
 
