@@ -1,9 +1,9 @@
 #pragma once
 
 #include <winnt.h>
-
-/* for some reason this one is not defined in mingw headers? */
-#define SE_DELEGATE_SESSION_USER_IMPERSONATE_NAME TEXT("SeDelegateSessionUserImpersonatePrivilege")
+#ifdef CYGWIN
+#include "winnt2.h"
+#endif
 
 const wchar_t* lplpcwszTokenPrivileges[35] = {
 	SE_ASSIGNPRIMARYTOKEN_NAME,
