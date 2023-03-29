@@ -259,7 +259,7 @@ done_params:
 
 		lpwszImageName = lpwszCommand;
 	} else {
-		lpwszImageName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 7 * sizeof(wchar_t));
+		lpwszImageName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 8 * sizeof(wchar_t));
 		wcscpy(lpwszImageName, L"cmd.exe");
 	}
 
