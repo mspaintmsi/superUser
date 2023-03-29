@@ -12,48 +12,48 @@
 		2 - Failed acquiring SeDebugPrivilege
 		4 - Could not start/open the TrustedInstaller service
 		5 - Process creation failed
- */
+*/
 
 #define wputs _putws
 #define wprintfv(...) \
 if (params.bVerbose) wprintf(__VA_ARGS__); /* Only use when bVerbose in scope */
 
 struct parameters {
-	unsigned int bVerbose : 1;			/* Whether to print debug messages or not.*/
+	unsigned int bVerbose : 1;		/* Whether to print debug messages or not.*/
 	unsigned int bWait : 1;				/* Whether to wait to finish created process */
 	unsigned int bCommandPresent : 1;	/* Whether there is a user-specified command ("/c" argument) */
 };
 
-struct parameters params = { 0 };
+struct parameters params = {0};
 
 
 static inline int enableTokenPrivilege(
 	HANDLE hToken,
-	const wchar_t *lpwcszPrivilege
+	const wchar_t* lpwcszPrivilege
 ) {
 	TOKEN_PRIVILEGES tp;
 	LUID luid;
 	TOKEN_PRIVILEGES prevTp;
-	DWORD cbPrevious = sizeof(TOKEN_PRIVILEGES);
+	DWORD cbPrevious = sizeof( TOKEN_PRIVILEGES );
 
-	if (!LookupPrivilegeValue(NULL, lpwcszPrivilege, &luid))
+	if (!LookupPrivilegeValue( NULL, lpwcszPrivilege, &luid ))
 		return 0; /* Cannot lookup privilege value */
 
 	tp.PrivilegeCount = 1;
-	tp.Privileges[0].Luid = luid;
-	tp.Privileges[0].Attributes = 0;
+	tp.Privileges[ 0 ].Luid = luid;
+	tp.Privileges[ 0 ].Attributes = 0;
 
-	AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), &prevTp, &cbPrevious);
+	AdjustTokenPrivileges( hToken, FALSE, &tp, sizeof( TOKEN_PRIVILEGES ), &prevTp, &cbPrevious );
 
 	if (GetLastError() != ERROR_SUCCESS)
 		return 0;
 
 	prevTp.PrivilegeCount = 1;
-	prevTp.Privileges[0].Luid = luid;
+	prevTp.Privileges[ 0 ].Luid = luid;
 
-	prevTp.Privileges[0].Attributes |= SE_PRIVILEGE_ENABLED;
+	prevTp.Privileges[ 0 ].Attributes |= SE_PRIVILEGE_ENABLED;
 
-	AdjustTokenPrivileges(hToken, FALSE, &prevTp, cbPrevious, NULL, NULL);
+	AdjustTokenPrivileges( hToken, FALSE, &prevTp, cbPrevious, NULL, NULL );
 
 	if (GetLastError() != ERROR_SUCCESS)
 		return 0;
@@ -68,9 +68,9 @@ static inline int acquireSeDebugPrivilege( void )
 	int retry = 1;
 
 reacquire_token:
-	OpenThreadToken(GetCurrentThread(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, FALSE, &hThreadToken);
+	OpenThreadToken( GetCurrentThread(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, FALSE, &hThreadToken );
 	if (GetLastError() == ERROR_NO_TOKEN && retry) {
-		ImpersonateSelf(SecurityImpersonation);
+		ImpersonateSelf( SecurityImpersonation );
 		retry--;
 
 		goto reacquire_token;
@@ -81,49 +81,49 @@ reacquire_token:
 		return 2;
 	}
 
-		return 0;
+	return 0;
 }
 
 
 static inline void setAllPrivileges( HANDLE hProcessToken )
 {
 	/* Iterate over lplpwcszTokenPrivileges to add all privileges to a token */
-	for (int i = 0; i < (sizeof(lplpcwszTokenPrivileges) / sizeof(*lplpcwszTokenPrivileges)); ++i)
-		if (!enableTokenPrivilege(hProcessToken, lplpcwszTokenPrivileges[i]))
-			wprintfv(L"[D] Could not set privilege [%ls], you most likely don't have it.\n", lplpcwszTokenPrivileges[i]);
+	for (int i = 0; i < (sizeof( lplpcwszTokenPrivileges ) / sizeof( *lplpcwszTokenPrivileges )); ++i)
+		if (!enableTokenPrivilege( hProcessToken, lplpcwszTokenPrivileges[ i ] ))
+			wprintfv( L"[D] Could not set privilege [%ls], you most likely don't have it.\n", lplpcwszTokenPrivileges[ i ] );
 }
 
 
 static inline HANDLE getTrustedInstallerPHandle( void )
 {
 	HANDLE hSCManager, hTIService;
-	SERVICE_STATUS_PROCESS lpServiceStatusBuffer = { 0 };
+	SERVICE_STATUS_PROCESS lpServiceStatusBuffer = {0};
 
-	hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE | SC_MANAGER_CONNECT);
-	hTIService = OpenService(hSCManager, L"TrustedInstaller", SERVICE_START | SERVICE_QUERY_STATUS);
+	hSCManager = OpenSCManager( NULL, NULL, SC_MANAGER_CREATE_SERVICE | SC_MANAGER_CONNECT );
+	hTIService = OpenService( hSCManager, L"TrustedInstaller", SERVICE_START | SERVICE_QUERY_STATUS );
 
 	if (hTIService == NULL)
 		goto cleanup_and_fail;
 
 	do {
 		unsigned long ulBytesNeeded;
-		QueryServiceStatusEx(hTIService, SC_STATUS_PROCESS_INFO, (unsigned char*)&lpServiceStatusBuffer, sizeof(SERVICE_STATUS_PROCESS), &ulBytesNeeded);
+		QueryServiceStatusEx( hTIService, SC_STATUS_PROCESS_INFO, (unsigned char*) &lpServiceStatusBuffer, sizeof( SERVICE_STATUS_PROCESS ), &ulBytesNeeded );
 
 		if (lpServiceStatusBuffer.dwCurrentState == SERVICE_STOPPED)
-			if (!StartService(hTIService, 0, NULL))
+			if (!StartService( hTIService, 0, NULL ))
 				goto cleanup_and_fail;
 
 	}
 	while (lpServiceStatusBuffer.dwCurrentState == SERVICE_STOPPED);
 
-	CloseServiceHandle(hSCManager);
-	CloseServiceHandle(hTIService);
+	CloseServiceHandle( hSCManager );
+	CloseServiceHandle( hTIService );
 
-	return OpenProcess(PROCESS_CREATE_PROCESS, FALSE, lpServiceStatusBuffer.dwProcessId);
+	return OpenProcess( PROCESS_CREATE_PROCESS, FALSE, lpServiceStatusBuffer.dwProcessId );
 
 cleanup_and_fail:
-	CloseServiceHandle(hSCManager);
-	CloseServiceHandle(hTIService);
+	CloseServiceHandle( hSCManager );
+	CloseServiceHandle( hTIService );
 
 	return NULL;
 }
@@ -134,7 +134,7 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 	/* Start the TrustedInstaller service */
 	HANDLE hTIPHandle = getTrustedInstallerPHandle();
 	if (hTIPHandle == NULL) {
-		fwprintf(stderr, L"[E] Could not open/start the TrustedInstaller service\n");
+		fwprintf( stderr, L"[E] Could not open/start the TrustedInstaller service\n" );
 		return 3;
 	}
 
@@ -142,7 +142,7 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 
 	/* Initialize STARTUPINFO */
 
-	startupInfo.StartupInfo.cb = sizeof(STARTUPINFOEX);
+	startupInfo.StartupInfo.cb = sizeof( STARTUPINFOEX );
 
 	startupInfo.StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
 	startupInfo.StartupInfo.wShowWindow = SW_SHOWNORMAL;
@@ -151,16 +151,16 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 
 	SIZE_T attributeListLength;
 
-	InitializeProcThreadAttributeList(NULL, 1, 0, (PSIZE_T)&attributeListLength);
+	InitializeProcThreadAttributeList( NULL, 1, 0, (PSIZE_T) &attributeListLength );
 
-	startupInfo.lpAttributeList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, attributeListLength);
-	InitializeProcThreadAttributeList(startupInfo.lpAttributeList, 1, 0, (PSIZE_T)&attributeListLength);
+	startupInfo.lpAttributeList = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, attributeListLength );
+	InitializeProcThreadAttributeList( startupInfo.lpAttributeList, 1, 0, (PSIZE_T) &attributeListLength );
 
-	UpdateProcThreadAttribute(startupInfo.lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, &hTIPHandle, sizeof(HANDLE), NULL, NULL);
+	UpdateProcThreadAttribute( startupInfo.lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, &hTIPHandle, sizeof( HANDLE ), NULL, NULL );
 
 	/* Create process */
-	PROCESS_INFORMATION processInfo = { 0 };
-	wprintfv(L"[D] Creating specified process\n");
+	PROCESS_INFORMATION processInfo = {0};
+	wprintfv( L"[D] Creating specified process\n" );
 
 	if (CreateProcess(
 		NULL,
@@ -174,30 +174,30 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 		&startupInfo.StartupInfo,
 		&processInfo
 	)) {
-		DeleteProcThreadAttributeList(startupInfo.lpAttributeList);
-		HeapFree(GetProcessHeap(), 0, startupInfo.lpAttributeList);
+		DeleteProcThreadAttributeList( startupInfo.lpAttributeList );
+		HeapFree( GetProcessHeap(), 0, startupInfo.lpAttributeList );
 
 		HANDLE hProcessToken;
-		OpenProcessToken(processInfo.hProcess, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hProcessToken);
-		setAllPrivileges(hProcessToken);
+		OpenProcessToken( processInfo.hProcess, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hProcessToken );
+		setAllPrivileges( hProcessToken );
 
-		wprintfv(L"[D] Created process ID: %ld and assigned additional token privileges.\n [D] Resuming..\n", processInfo.dwProcessId);
+		wprintfv( L"[D] Created process ID: %ld and assigned additional token privileges.\n [D] Resuming..\n", processInfo.dwProcessId );
 
-		ResumeThread(processInfo.hThread);
+		ResumeThread( processInfo.hThread );
 
 		if (params.bWait) {
 			/* TODO Add somehow returning the child's exit code */
-			wprintfv(L"[D] Waiting for process to exit\n");
-			WaitForSingleObject(processInfo.hProcess, INFINITE);
-			wprintfv(L"[D] Process exited\n");
+			wprintfv( L"[D] Waiting for process to exit\n" );
+			WaitForSingleObject( processInfo.hProcess, INFINITE );
+			wprintfv( L"[D] Process exited\n" );
 		}
 
-		CloseHandle(processInfo.hThread);
-		CloseHandle(processInfo.hProcess);
+		CloseHandle( processInfo.hThread );
+		CloseHandle( processInfo.hProcess );
 	}
 	else {
 		/* Most commonly - 0x2 - The system cannot find the file specified. */
-		fwprintf(stderr, L"[E] Process creation failed. Error code: 0x%08X\n", GetLastError());
+		fwprintf( stderr, L"[E] Process creation failed. Error code: 0x%08X\n", GetLastError() );
 		return 4;
 	}
 
