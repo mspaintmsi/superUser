@@ -16,7 +16,6 @@
  */
 
 #define wputs _putws
-#define MAX_COMMANDLINE 8192 /* Presumably the maximum commandline length */
 #define wprintfv(...) \
 if(params.bVerbose) \
 	wprintf(__VA_ARGS__); /* Only use when bVerbose in scope */
@@ -28,7 +27,7 @@ struct parameters {
 };
 
 struct parameters params = { 0 };
-unsigned int cParams = 0;
+
 
 static inline void printHelp(void) {
 	
@@ -211,7 +210,6 @@ int wmain(int argc, wchar_t *argv[]) {
 	for (int i = 1; i < argc; ++i) {
 		if ((*argv[i] == L'/' || *argv[i] == L'-') && *(argv[i] + 1) != L'\0') {
 			/* Check for an at-least-two-character string beginning with '/' or '-' */
-			cParams++;
 
 			switch (*(argv[i] + 1)) {
 			case 'h':
