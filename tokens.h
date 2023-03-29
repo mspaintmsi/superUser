@@ -5,7 +5,7 @@
 #include "winnt2.h"
 #endif
 
-const wchar_t* lplpcwszTokenPrivileges[35] = {
+const wchar_t* lplpcwszTokenPrivileges[ 35 ] = {
 	SE_ASSIGNPRIMARYTOKEN_NAME,
 	SE_AUDIT_NAME,
 	SE_BACKUP_NAME,
