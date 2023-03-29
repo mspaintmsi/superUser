@@ -2,7 +2,6 @@
 #define _WIN32_WINNT _WIN32_WINNT_VISTA
 
 #include <Windows.h>
-
 #include <stdio.h>
 
 #include "tokens.h" /* Defines lplpwcszTokenPrivileges */
@@ -17,8 +16,7 @@
 
 #define wputs _putws
 #define wprintfv(...) \
-if(params.bVerbose) \
-	wprintf(__VA_ARGS__); /* Only use when bVerbose in scope */
+if (params.bVerbose) wprintf(__VA_ARGS__); /* Only use when bVerbose in scope */
 
 struct parameters {
 	unsigned int bVerbose : 1;			/* Whether to print debug messages or not.*/
@@ -63,7 +61,9 @@ static inline int enableTokenPrivilege(
 	return 1;
 }
 
-static inline int acquireSeDebugPrivilege(void) {
+
+static inline int acquireSeDebugPrivilege( void )
+{
 	HANDLE hThreadToken;
 	int retry = 1;
 
@@ -76,20 +76,26 @@ reacquire_token:
 		goto reacquire_token;
 	}
 
-	if (!enableTokenPrivilege(hThreadToken, SE_DEBUG_NAME))
-		return 0;
+	if (!enableTokenPrivilege( hThreadToken, SE_DEBUG_NAME )) {
+		fwprintf( stderr, L"Acquiring SeDebugPrivilege failed!" );
+		return 2;
+	}
 
-	return 1;
+		return 0;
 }
 
-static inline void setAllPrivileges(HANDLE hProcessToken) {
+
+static inline void setAllPrivileges( HANDLE hProcessToken )
+{
 	/* Iterate over lplpwcszTokenPrivileges to add all privileges to a token */
 	for (int i = 0; i < (sizeof(lplpcwszTokenPrivileges) / sizeof(*lplpcwszTokenPrivileges)); ++i)
 		if (!enableTokenPrivilege(hProcessToken, lplpcwszTokenPrivileges[i]))
 			wprintfv(L"[D] Could not set privilege [%ls], you most likely don't have it.\n", lplpcwszTokenPrivileges[i]);
 }
 
-static inline HANDLE getTrustedInstallerPHandle(void) {
+
+static inline HANDLE getTrustedInstallerPHandle( void )
+{
 	HANDLE hSCManager, hTIService;
 	SERVICE_STATUS_PROCESS lpServiceStatusBuffer = { 0 };
 
@@ -107,7 +113,8 @@ static inline HANDLE getTrustedInstallerPHandle(void) {
 			if (!StartService(hTIService, 0, NULL))
 				goto cleanup_and_fail;
 
-	} while (lpServiceStatusBuffer.dwCurrentState == SERVICE_STOPPED);
+	}
+	while (lpServiceStatusBuffer.dwCurrentState == SERVICE_STOPPED);
 
 	CloseServiceHandle(hSCManager);
 	CloseServiceHandle(hTIService);
@@ -121,16 +128,17 @@ cleanup_and_fail:
 	return NULL;
 }
 
-static inline int createTrustedInstallerProcess(wchar_t* lpwszImageName) {
 
-	STARTUPINFOEX startupInfo = { 0 };
-
+static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
+{
 	/* Start the TrustedInstaller service */
 	HANDLE hTIPHandle = getTrustedInstallerPHandle();
 	if (hTIPHandle == NULL) {
 		fwprintf(stderr, L"[E] Could not open/start the TrustedInstaller service\n");
-		exit(3);
+		return 3;
 	}
+
+	STARTUPINFOEX startupInfo = {0};
 
 	/* Initialize STARTUPINFO */
 
@@ -186,16 +194,16 @@ static inline int createTrustedInstallerProcess(wchar_t* lpwszImageName) {
 
 		CloseHandle(processInfo.hThread);
 		CloseHandle(processInfo.hProcess);
-
-		return 1;
 	}
 	else {
 		/* Most commonly - 0x2 - The system cannot find the file specified. */
 		fwprintf(stderr, L"[E] Process creation failed. Error code: 0x%08X\n", GetLastError());
-		exit(4);
+		return 4;
 	}
 
+	return 0;
 }
+
 
 static inline void printHelp( void )
 {
@@ -207,6 +215,7 @@ Options: (You can use either '-' or '/')\n\
 \t/h - Display this help message.\n\
 \t/c - Specify command to execute. If not specified, a cmd instance is spawned.\n" );
 }
+
 
 int wmain( int argc, wchar_t* argv[] )
 {
@@ -273,16 +282,10 @@ done_params:
 	wchar_t* lpwszImageName = HeapAlloc( GetProcessHeap(), 0, nCommandLineBufSize );
 	memcpy( lpwszImageName, lpwszCommandLine, nCommandLineBufSize );
 
+	int errCode = acquireSeDebugPrivilege();
+	if (! errCode) errCode = createTrustedInstallerProcess( lpwszImageName );
 
-	/* Acquire SeDebugPrivilege and create process */
+	HeapFree( GetProcessHeap(), 0, lpwszImageName );
 
-	int status = acquireSeDebugPrivilege();
-	if(!status) {
-		fwprintf(stderr, L"Acquiring SeDebugPrivilege failed!");
-		return 2;
-	}
-
-	createTrustedInstallerProcess(lpwszImageName);
-
-	return 0;
+	return errCode;
 }
