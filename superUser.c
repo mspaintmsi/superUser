@@ -91,7 +91,7 @@ static inline void setAllPrivileges(HANDLE hProcessToken) {
 	/* Iterate over lplpwcszTokenPrivileges to add all privileges to a token */
 	for (int i = 0; i < (sizeof(lplpcwszTokenPrivileges) / sizeof(*lplpcwszTokenPrivileges)); ++i)
 		if (!enableTokenPrivilege(hProcessToken, lplpcwszTokenPrivileges[i]))
-			wprintfv(L"[D] Could not set privilege [%s], you most likely don't have it.\n", lplpcwszTokenPrivileges[i]);
+			wprintfv(L"[D] Could not set privilege [%ls], you most likely don't have it.\n", lplpcwszTokenPrivileges[i]);
 }
 
 static inline HANDLE getTrustedInstallerPHandle(void) {
@@ -263,7 +263,7 @@ done_params:
 		wcscpy(lpwszImageName, L"cmd.exe");
 	}
 
-	wprintfv(L"[D] Your commandline is \"%s\"\n", lpwszImageName);
+	wprintfv(L"[D] Your commandline is \"%ls\"\n", lpwszImageName);
 
 	/* Acquire SeDebugPrivilege and create process */
 
