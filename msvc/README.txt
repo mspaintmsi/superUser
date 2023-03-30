@@ -1,17 +1,18 @@
 Visual Studio / MSVCRT
 ======================
 
-By default, Visual Studio uses the Visual C++ runtime (msvcrtXX.dll) included in the latest "Visual C++ Redistributable". The compiled program needs this DLL to run.
+By default, Visual Studio uses the Visual C++ runtime (vcruntimeXXX.dll) included in the latest "Visual C++ Redistributable". The compiled program needs this DLL to run.
 
-To eliminate this dependency, the program can be statically linked with the library, but this increases enormously the size of the executable (hundreds of KBytes).
+To eliminate this dependency, the program can be statically linked with the library, but this increases enormously the size of the executable (more than a hundred KBytes).
 
 The solution is to link against the unversioned msvcrt.dll that comes with all versions of Windows.
 This will completely eliminate any dependency on a specific toolchain/dll on end-user systems.
 Moreover, the size of the executable is very small (around 13 KB !).
 
-To do so, the program must be statically linked against the MSVCRT.LIB library. This is not included with Visual Studio. It must be extracted from the Windows Driver Kit (WDK).
+To do so, the program must be statically linked against the minimal MSVCRT.LIB import library. This one is not included in Visual Studio. It must be extracted from the Windows Driver Kit (WDK).
+It should not be confused with the normal MSVCRT.LIB file contained in Visual Studio, which requires the classic VC++ runtime.
 
-We need both versions of the library, a 32-bit and a 64-bit, renamed msvcrt32.lib and msvcrt64.lib. These files must be copied to this /msvc directory before compiling/linking the project with Visual Studio.
+We need both versions of the library, a 32-bit and a 64-bit, renamed msvcrt32.lib and msvcrt64.lib. These files must be copied to this "msvc" directory before compiling/linking the project with Visual Studio.
 
 The WDK 7.1 can be downloaded directly from Microsoft:
 
@@ -26,5 +27,8 @@ Extract the _msvcrt.lib_* files and rename them to msvcrt*.lib:
 libs_x86fre_cab001.cab / _msvcrt.lib_00025  -> msvcrt32.lib
 libs_x64fre_cab001.cab / _msvcrt.lib_00024  -> msvcrt64.lib
 
-and copy them to the /msvc directory.
+and copy them to the "msvc" directory.
 
+Then you can build the project with Visual Studio.
+
+This creates superUser32.exe and superUser64.exe in the project directory ("msvc").
