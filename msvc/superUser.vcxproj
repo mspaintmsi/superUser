@@ -168,15 +168,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\superUser.c" />
+  </ItemGroup>
+  <ItemGroup>
     <ClInclude Include="..\tokens.h" />
     <ClInclude Include="msvcrt.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="superUser.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\superUser.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
