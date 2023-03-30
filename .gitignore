@@ -1,5 +1,6 @@
+*.dll
 *.exe
+*.lib
 *.o
 *.out
-*.dll
 *.res
