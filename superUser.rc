@@ -7,29 +7,30 @@
 #endif
 
 1 VERSIONINFO
-FILEVERSION 5,0,0,0
-PRODUCTVERSION 5,0,0,0
-FILEOS 0x0
-FILETYPE 0x0
+FILEVERSION 5,1,0,0
+PRODUCTVERSION 5,1,0,0
+FILEOS 0x40004
+FILETYPE 0x1
 {
-    BLOCK "StringFileInfo"
-    {
-        BLOCK "080904E4"
-        {
-            VALUE "CompanyName", "Awoo~"
-            VALUE "FileDescription", "Allows you to run any process with TI privileges."
-            VALUE "FileVersion", "5.0"
-            VALUE "LegalCopyright", "Awoo~ 56709"
-            VALUE "OriginalFilename", FILENAME
-            VALUE "ProductName", "superUser"
-            VALUE "ProductVersion", "5.0"
-        }
-    }
+	BLOCK "StringFileInfo"
+	{
+		BLOCK "000904b0"
+		{
+			VALUE "CompanyName", "Awoo~"
+			VALUE "FileDescription", "Run any process with TrustedInstaller privileges"
+			VALUE "FileVersion", "5.1"
+			VALUE "InternalName", "superUser"
+			VALUE "LegalCopyright", "Copyright (C) 2023"
+			VALUE "OriginalFilename", FILENAME
+			VALUE "ProductName", "superUser"
+			VALUE "ProductVersion", "5.1"
+		}
+	}
 
-    BLOCK "VarFileInfo"
-    {
-        VALUE "Translation", 0x0809, 0x04E4
-    }
+	BLOCK "VarFileInfo"
+	{
+		VALUE "Translation", 0x0009, 0x04B0
+	}
 }
 
 1 24 manifest.xml
