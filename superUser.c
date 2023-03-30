@@ -3,6 +3,9 @@
 
 #include <Windows.h>
 #include <stdio.h>
+#ifndef __GNUC__
+#include "msvc/msvcrt.h"
+#endif
 
 #include "tokens.h" /* Defines lplpwcszTokenPrivileges */
 
