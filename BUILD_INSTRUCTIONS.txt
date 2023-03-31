@@ -15,7 +15,7 @@ You will need to download the library files from Microsoft as indicated.
 CYGWIN
 ======
 
-Run the Cygwin installer, available from https://www.cygwin.com/setup-x86.exe.
+Run the Cygwin installer, available from https://www.cygwin.com/setup-x86_64.exe.
 When you get to the package selection page, select "Category" in the list "View" at the top left, and expand the tree by clicking on "All" and "Devel".
 
 Then choose the following packages (you can use the search box to reduce the list), by selecting the version to install in the column "New":
