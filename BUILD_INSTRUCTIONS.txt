@@ -1,0 +1,72 @@
+
+BUILDING FROM SOURCE
+********************
+
+
+VISUAL STUDIO
+=============
+
+The "msvc" directory contains what is needed to build the project. Read the file "msvc/README.txt", which explains how.
+
+You will need to download the library files from Microsoft as indicated.
+
+
+
+CYGWIN
+======
+
+Run the Cygwin installer, available from https://www.cygwin.com/setup-x86.exe.
+When you get to the package selection page, select "Category" in the list "View" at the top left, and expand the tree by clicking on "All" and "Devel".
+
+Then choose the following packages (you can use the search box to reduce the list), by selecting the version to install in the column "New":
+
+	- make
+	- mingw64-i686-binutils
+	- mingw64-i686-gcc-core
+	- mingw64-x86_64-binutils
+	- mingw64-x86_64-gcc-core
+
+Open a Cygwin terminal and run the following commands:
+
+	cd /cygdrive/c/Dev/superUser 	# (or wherever you put the source to)
+	make
+
+If successful, the files "superUser32.exe" and "superUser64.exe" are created.
+
+
+
+MSYS2
+=====
+
+If you prefer to use the MSYS2 platform, run the installer following the instructions: https://www.msys2.org/
+
+When done, close the "MSYS2 UCRT64" terminal. DO NOT install anything in the UCRT64 environment.
+
+
+You will need to install the following packages in the following environments.
+
+Open a "MSYS2 MSYS" terminal and run:
+
+	pacman -S make
+	pacman -S pactoys
+	exit
+
+Open a "MSYS2 MINGW64" terminal and run:
+
+	pacboy -S gcc
+
+
+To build the 64-bit executable, in the "MSYS2 MINGW64" terminal already open, run:
+
+	cd /c/Dev/superUser 	# (or wherever you put the source to)
+	make
+
+If successful, the file "superUser64.exe" is created.
+
+
+To build the 32-bit executable, open the "MSYS2 MINGW32" terminal and run:
+
+	cd /c/Dev/superUser 	# (or wherever you put the source to)
+	make
+
+If successful, the file "superUser32.exe" is created.
