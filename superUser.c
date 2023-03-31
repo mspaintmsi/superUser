@@ -13,8 +13,8 @@
 	Return codes -
 		1 - Invalid argument
 		2 - Failed acquiring SeDebugPrivilege
-		4 - Could not start/open the TrustedInstaller service
-		5 - Process creation failed
+		3 - Could not open/start the TrustedInstaller service
+		4 - Process creation failed
 */
 
 #define wputs _putws
