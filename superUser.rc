@@ -1,6 +1,6 @@
-#ifdef BUILD32
+#ifdef TARGET32
     #define FILENAME "superUser32.exe"
-#elif BUILD64
+#elif TARGET64
     #define FILENAME "superUser64.exe"
 #else
     #define FILENAME "superUser.exe"

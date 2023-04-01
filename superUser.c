@@ -1,7 +1,7 @@
 /* Windows Vista, the earliest to utilize the Trusted Installer */
 #define _WIN32_WINNT _WIN32_WINNT_VISTA
 
-#include <Windows.h>
+#include <windows.h>
 #include <stdio.h>
 #ifndef __GNUC__
 #include "msvc/msvcrt.h"

@@ -70,3 +70,25 @@ To build the 32-bit executable, open the "MSYS2 MINGW32" terminal and run:
 	make
 
 If successful, the file "superUser32.exe" is created.
+
+
+
+LINUX
+=====
+
+To build on Linux, native executables running on Windows.
+
+Tested on Linux Mint based on Ubuntu.
+
+
+Install the "mingw-w64" package:
+
+	sudo apt install mingw-w64
+
+
+Open a terminal and run the following commands:
+
+	cd $HOME/Desktop/superUser 	# (or wherever you put the source to)
+	make
+
+If successful, the files "superUser32.exe" and "superUser64.exe" are created.

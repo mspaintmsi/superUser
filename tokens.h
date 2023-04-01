@@ -1,7 +1,7 @@
 #pragma once
 
 #include <winnt.h>
-#ifdef CYGWIN
+#ifdef __GNUC__
 #include "winnt2.h"
 #endif
 
