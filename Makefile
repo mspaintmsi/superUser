@@ -1,11 +1,11 @@
 ﻿#
 # superUser Makefile
 #
-# Build native executables running on Windows on different platforms.
+# Build native executables running on Windows, on different platforms.
 #
-#	*	Windows 
+#	* Windows 
 #		- Cygwin / MinGW-w64
-#		- MSYS2 / MinGW32 or MinGW64
+#		- MSYS2 / MINGW32, MINGW64, CLANG32, CLANG64, UCRT64
 #
 #	* Linux
 #		- with mingw-w64 package
@@ -18,9 +18,9 @@ HOST64 =
 INCLUDE =
 TARGETS = x86 x64
 
-ifeq ($(MSYSTEM),MINGW32)	# MSYS2 MinGW32
+ifeq (32,$(findstring 32,$(MSYSTEM)))	# MSYS2 32-bit
 TARGETS = x86
-else ifeq ($(MSYSTEM),MINGW64)	# MSYS2 MinGW64
+else ifeq (64,$(findstring 64,$(MSYSTEM)))	# MSYS2 64-bit
 TARGETS = x64
 else	# Cygwin or Linux
 HOST32 = i686-w64-mingw32-
