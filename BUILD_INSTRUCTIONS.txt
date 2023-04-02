@@ -28,7 +28,7 @@ Then choose the following packages (you can use the search box to reduce the lis
 
 Open a Cygwin terminal and run the following commands:
 
-	cd /cygdrive/c/Dev/superUser 	# (or wherever you put the source to)
+	cd /cygdrive/c/Users/$USER/Desktop/superUser 	# (or wherever you put the source to)
 	make
 
 If successful, the files "superUser32.exe" and "superUser64.exe" are created.
@@ -38,27 +38,26 @@ If successful, the files "superUser32.exe" and "superUser64.exe" are created.
 MSYS2
 =====
 
-If you prefer to use the MSYS2 platform, run the installer following the instructions: https://www.msys2.org/
+If you prefer to use the MSYS2 platform, run the installer following these instructions: https://www.msys2.org/
+Do NOT install the packages "*ucrt*" indicated in the "Installation" procedure.
 
-When done, close the "MSYS2 UCRT64" terminal. DO NOT install anything in the UCRT64 environment.
-
-
-You will need to install the following packages in the following environments.
-
-Open a "MSYS2 MSYS" terminal and run:
+In the "MSYS2 UCRT64" terminal, run:
 
 	pacman -S make
-	pacman -S pactoys
-	exit
+	pacman -S mingw-w64-i686-gcc
+	pacman -S mingw-w64-x86_64-gcc
 
-Open a "MSYS2 MINGW64" terminal and run:
+Run the following command several times until all the packages are up-to-date:
+(read the beginning of this page for details: https://www.msys2.org/docs/updating/ )
 
-	pacboy -S gcc
+	pacman -Suy
+
+When done, close the "MSYS2 UCRT64" terminal.
 
 
-To build the 64-bit executable, in the "MSYS2 MINGW64" terminal already open, run:
+To build the 64-bit executable, open the "MSYS2 MINGW64" terminal and run:
 
-	cd /c/Dev/superUser 	# (or wherever you put the source to)
+	cd /c/Users/$USER/Desktop/superUser 	# (or wherever you put the source to)
 	make
 
 If successful, the file "superUser64.exe" is created.
@@ -66,10 +65,13 @@ If successful, the file "superUser64.exe" is created.
 
 To build the 32-bit executable, open the "MSYS2 MINGW32" terminal and run:
 
-	cd /c/Dev/superUser 	# (or wherever you put the source to)
+	cd /c/Users/$USER/Desktop/superUser 	# (or wherever you put the source to)
 	make
 
 If successful, the file "superUser32.exe" is created.
+
+
+It is also possible to use the CLANG32/CLANG64 environments, which have a newer compiler (llvm) that builds smaller executables (19-22 KB). To do this, you will need to install the appropriate toolchains (mingw-w64-clang-i686-gcc-compat and mingw-w64-clang-x86_64-gcc-compat). Generated executables require the UCRT dll to run (included in Windows 10 or installed by the cumulative updates in older versions).
 
 
 
@@ -81,9 +83,9 @@ To build on Linux, native executables running on Windows.
 Tested on Linux Mint based on Ubuntu.
 
 
-Install the "mingw-w64" package:
+Install the "gcc-mingw-w64" package:
 
-	sudo apt install mingw-w64
+	sudo apt install gcc-mingw-w64
 
 
 Open a terminal and run the following commands:

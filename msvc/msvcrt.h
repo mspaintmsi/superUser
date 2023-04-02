@@ -7,8 +7,10 @@
 
 	Prerequisites:
 
-	- The project must be linked against MSVCRT32.LIB or MSVCRT64.LIB,
-		These files are pulled from the Windows Driver Kit (WDK).
+	- The project must be linked against MSVCRT32.LIB or MSVCRT64.LIB.
+		These files are the 32-bit and 64-bit versions of the minimal MSVCRT library
+		(not the normal one included in Visual Studio). They are pulled from the
+		Windows Driver Kit (WDK).
 	- The following VS project settings must be set :
 		o C/C++ / Code generation / Runtime library : Multithread (/MT)
 		o C/C++ / Preprocessor / Definitions : _NO_CRT_STDIO_INLINE
@@ -60,7 +62,7 @@ struct _old_iobuf {
 // Otherwise, the size for the 64-bit architecture is wrong !
 // The pointers are aligned to a multiple of a pointer size (4 or 8 bytes).
 //
-// This DOESN'T work:
+// This DOES NOT work:
 // CRT_FILE_SIZE = (sizeof( char* ) * 3 + sizeof( int ) * 5)
 //  gives 32 for 32-bit (good) and 44 for 64-bit (wrong!)
 //  The right size for 64-bit is 48 bytes.
