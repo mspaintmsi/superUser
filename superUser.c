@@ -3,7 +3,7 @@
 
 #include <windows.h>
 #include <stdio.h>
-#ifndef __GNUC__
+#ifdef _MSC_VER
 #include "msvc/msvcrt.h"
 #endif
 

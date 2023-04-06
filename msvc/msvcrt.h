@@ -20,6 +20,8 @@
 		  Linker / Input / Ignore specific default libraries : libcmt.lib;libcmtd.lib
 */
 
+#if defined(_MSC_VER) && (_MSC_VER >= 1900) && defined(_NO_CRT_STDIO_INLINE)
+
 #include <stdio.h>
 
 // Support for old CRT with VC2015 or newer
@@ -80,4 +82,5 @@ FILE* __cdecl __acrt_iob_func( unsigned index )
 	return (FILE*) ((char*) __iob_func() + index * sizeof( struct _old_iobuf ));
 }
 
+#endif // _MSC_VER
 #endif // _INC_MSVCRT
