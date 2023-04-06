@@ -8,7 +8,7 @@ VISUAL STUDIO
 
 The "msvc" directory contains what is needed to build the project. Read the file "msvc/README.txt", which explains how.
 
-You will need to download the library files from Microsoft as indicated.
+You will need to download the library files from Microsoft as indicated. If you don't want to do this, see the alternative in "msvc/ucrt".
 
 
 

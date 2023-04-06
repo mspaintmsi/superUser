@@ -1,11 +1,11 @@
 Visual Studio / MSVCRT
 ======================
 
-By default, Visual Studio uses the Visual C++ runtime (vcruntimeXXX.dll) included in the latest "Visual C++ Redistributable". The compiled program needs this DLL to run.
+By default, Visual Studio (since 2015) uses the Visual C++ runtime (vcruntimeXXX.dll) included in the latest "Visual C++ Redistributable", and the UCRT dlls. The compiled program needs these DLLs to run.
 
 To eliminate this dependency, the program can be statically linked with the library, but this increases enormously the size of the executable (more than a hundred KBytes).
 
-The solution is to link against the unversioned msvcrt.dll that comes with all versions of Windows.
+The solution is to link against the old unversioned msvcrt.dll that comes with all versions of Windows.
 This will completely eliminate any dependency on a specific toolchain/dll on end-user systems.
 Moreover, the size of the executable is very small (around 13 KB !).
 
@@ -18,6 +18,7 @@ The WDK 7.1 can be downloaded directly from Microsoft:
 
 https://www.microsoft.com/en-us/download/details.aspx?id=11800
 File: GRMWDK_EN_7600_1.ISO
+Size: 619 MBytes
 SHA1: DE6ABDB8EB4E08942ADD4AA270C763ED4E3D8242
 SHA256: 5EDC723B50EA28A070CAD361DD0927DF402B7A861A036BBCF11D27EBBA77657D
 
