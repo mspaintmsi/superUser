@@ -22,7 +22,7 @@ Size: 619 MBytes
 SHA1: DE6ABDB8EB4E08942ADD4AA270C763ED4E3D8242
 SHA256: 5EDC723B50EA28A070CAD361DD0927DF402B7A861A036BBCF11D27EBBA77657D
 
-The script "Extract_msvcrt_libs.cmd" can automatically extract the msvcrt*.lib files from the WDK iso file.
+The "extract_msvcrt_libs.cmd" script can automatically extract the msvcrt*.lib files from the WDK iso file.
 It requires 7-Zip application (https://7-zip.org) to be installed. Put the iso in the "msvc" directory, and run the script.
 
 If you don't want to use the script or 7-Zip, you can do it manually:
