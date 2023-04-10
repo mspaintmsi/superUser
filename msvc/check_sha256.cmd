@@ -18,7 +18,7 @@ set "hash_file_name=SHA256SUMS"
 
 setlocal EnableDelayedExpansion
 
-echo.
+echo(
 if not exist "%hash_file_name%" (
 	echo Hash file cannot be found ^("%hash_file_name%"^).
 	set "exit_code=3"
@@ -72,7 +72,7 @@ set "exit_code=0"
 if %files_found% equ 0 (
 	echo No files found.
 ) else (
-	if not "%read_errors%%failures%"=="00" echo.
+	if not "%read_errors%%failures%"=="00" echo(
 	if %read_errors% neq 0 (
 		echo WARNING: %read_errors% file^(s^) could not be open/read.
 		set "exit_code=1"
@@ -84,7 +84,7 @@ if %files_found% equ 0 (
 )
 
 :end
-echo.
+echo(
 pause
 exit /b %exit_code%
 
@@ -98,22 +98,27 @@ set "file=%~1"
 set "file_hash=%~2"
 echo Checking "%file%" ...
 set "hash="
-for /f "skip=1 delims=" %%h in (
-	'certutil -hashfile "%file%" SHA256'
-	) do if not defined hash set "hash=%%h"
-
+:: Empty file
+for /f %%f in ("%file%") do if %%~zf equ 0 (
+	set "hash=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+)
+if not defined hash (
+	for /f "skip=1 delims=" %%h in (
+		'certutil -hashfile "%file%" SHA256'
+		) do if not defined hash set "hash=%%h"
+)
 :: CertUtil start error
 if not defined hash (
 	echo An error has occurred.
 	exit /b 3
 )
-echo.%hash% | find /i "CertUtil" >nul
+echo(%hash%| find /i "CertUtil" >nul
 if %errorlevel% equ 0 (
 	echo FAILED: Unable to open/read the file.
 	exit /b 2
 )
 set "hash=%hash: =%"
-if not "%hash%"=="%file_hash%" (
+if /i not "%hash%"=="%file_hash%" (
 	echo FAILED
 	exit /b 1
 )
