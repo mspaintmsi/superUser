@@ -1,2 +1,5 @@
 # Set default behavior to automatically normalize line endings.
 * text=auto
+
+# Windows script files must have crlf line endings to avoid strange behaviour.
+*.cmd text eol=crlf
