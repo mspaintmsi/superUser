@@ -32,7 +32,7 @@ if not exist "%seven_zip_dir%\7z.exe" if exist "%seven_zip_dir2%\7z.exe" (
 )
 set "seven_zip=%seven_zip_dir%\7z.exe"
 
-echo.
+echo(
 for %%# in ("%wdk_filename%" "%seven_zip%" "%seven_zip_dir%\7z.dll") do if not exist "%%~#" (
 	echo Required file "%%~#" is missing.
 	set "exit_code=1"
@@ -45,12 +45,12 @@ if errorlevel 1 (
 	set "exit_code=2"
 	goto end
 )
-echo.
+echo(
 
 echo Extracting %cab_x86% and %cab_x64% ...
 "%seven_zip%" e -aoa "%wdk_filename%" "WDK\%cab_x86%" "WDK\%cab_x64%" >nul
 if errorlevel 1 goto error
-echo.
+echo(
 
 echo Extracting %lib_x86% ...
 "%seven_zip%" e -aoa "%cab_x86%" _msvcrt.lib_00025 >nul
@@ -60,7 +60,7 @@ if exist "%lib_x86%" goto error
 ren _msvcrt.lib_00025 "%lib_x86%"
 if errorlevel 1 goto error
 del "%cab_x86%" >nul 2>&1
-echo.
+echo(
 
 echo Extracting %lib_x64% ...
 "%seven_zip%" e -aoa "%cab_x64%" _msvcrt.lib_00024 >nul
@@ -70,13 +70,13 @@ if exist "%lib_x64%" goto error
 ren _msvcrt.lib_00024 "%lib_x64%"
 if errorlevel 1 goto error
 del "%cab_x64%" >nul 2>&1
-echo.
+echo(
 
 echo Done.
 set "exit_code=0"
 
 :end
-echo.
+echo(
 pause
 exit /b %exit_code%
 
@@ -94,22 +94,27 @@ set "file=%~1"
 set "file_hash=%~2"
 echo Checking "%file%" ...
 set "hash="
-for /f "skip=1 delims=" %%h in (
-	'certutil -hashfile "%file%" SHA256'
-	) do if not defined hash set "hash=%%h"
-
+:: Empty file
+for /f %%f in ("%file%") do if %%~zf equ 0 (
+	set "hash=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+)
+if not defined hash (
+	for /f "skip=1 delims=" %%h in (
+		'certutil -hashfile "%file%" SHA256'
+		) do if not defined hash set "hash=%%h"
+)
 :: CertUtil start error
 if not defined hash (
 	echo An error has occurred.
 	exit /b 3
 )
-echo.%hash% | find /i "CertUtil" >nul
+echo(%hash%| find /i "CertUtil" >nul
 if %errorlevel% equ 0 (
 	echo FAILED: Unable to open/read the file.
 	exit /b 2
 )
 set "hash=%hash: =%"
-if not "%hash%"=="%file_hash%" (
+if /i not "%hash%"=="%file_hash%" (
 	echo SHA256 hash does not match:
 	echo "%hash%"
 	echo instead of:
