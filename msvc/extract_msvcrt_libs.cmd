@@ -1,6 +1,6 @@
 @echo off
 ::
-:: Extracts msvcrt*.lib files from WDK 7.1 iso file.
+:: Extract msvcrt*.lib files from WDK 7.1 iso file.
 ::
 :: - Requires the installation of 7-Zip (from https://7-zip.org ).
 ::   Please set the 7-Zip install directory below.
@@ -9,6 +9,13 @@
 ::   GRMWDK_EN_7600_1.ISO
 ::   	or (same file with another name)
 ::   en_windows_driver_kit_version_7.1.0_x86_x64_ia64_dvd_496758.iso
+::
+:: Error codes:
+:: 	1:	A required file is missing.
+:: 	2:	The WDK file could not be open/read.
+:: 	3:	The WDK file hash does not match.
+:: 	4:	The Windows utility "CertUtil.exe" could not be started.
+:: 	10:	Another error has occured.
 ::
 
 :: *** 7-Zip install directory ***
@@ -23,6 +30,11 @@ set "cab_x64=libs_x64fre_cab001.cab"
 set "lib_x86=msvcrt32.lib"
 set "lib_x64=msvcrt64.lib"
 
+set "err_prefix=%~n0:"
+set "interactive="
+echo %cmdcmdline%| find /i "%~0" >nul
+if not errorlevel 1 set "interactive=1"
+
 set "exit_code=10"
 
 if not exist "%wdk_filename%" if exist "%wdk_filename2%" set "wdk_filename=%wdk_filename2%"
@@ -34,7 +46,7 @@ set "seven_zip=%seven_zip_dir%\7z.exe"
 
 echo(
 for %%# in ("%wdk_filename%" "%seven_zip%" "%seven_zip_dir%\7z.dll") do if not exist "%%~#" (
-	echo Required file "%%~#" is missing.
+	echo %err_prefix% Required file "%%~#" is missing.>&2
 	set "exit_code=1"
 	goto end
 )
@@ -42,7 +54,7 @@ for %%# in ("%wdk_filename%" "%seven_zip%" "%seven_zip_dir%\7z.dll") do if not e
 :: Check WDK file
 call :check_file "%wdk_filename%" "%wdk_sha256%"
 if errorlevel 1 (
-	set "exit_code=2"
+	set /a "exit_code = %errorlevel% + 1"
 	goto end
 )
 echo(
@@ -76,17 +88,21 @@ echo Done.
 set "exit_code=0"
 
 :end
-echo(
-pause
+if defined interactive (
+	echo(
+	pause
+)
 exit /b %exit_code%
 
 :error
-echo An error has occurred.
+echo %err_prefix% An error has occurred.>&2
 goto end
 
 
 ::
-:: Read the file and compute the hash.
+:: check_file
+::
+:: Read the file, compute and compare the hash.
 ::
 :check_file
 setlocal
@@ -95,7 +111,7 @@ set "file_hash=%~2"
 echo Checking "%file%" ...
 set "hash="
 :: Empty file
-for /f %%f in ("%file%") do if %%~zf equ 0 (
+for /f "delims=" %%f in ("%file%") do if %%~zf equ 0 (
 	set "hash=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 )
 if not defined hash (
@@ -103,22 +119,19 @@ if not defined hash (
 		'certutil -hashfile "%file%" SHA256'
 		) do if not defined hash set "hash=%%h"
 )
-:: CertUtil start error
+:: CertUtil launch error
 if not defined hash (
-	echo An error has occurred.
+	echo %err_prefix% An error has occurred.>&2
 	exit /b 3
 )
 echo(%hash%| find /i "CertUtil" >nul
 if %errorlevel% equ 0 (
 	echo FAILED: Unable to open/read the file.
-	exit /b 2
+	exit /b 1
 )
 set "hash=%hash: =%"
 if /i not "%hash%"=="%file_hash%" (
-	echo SHA256 hash does not match:
-	echo "%hash%"
-	echo instead of:
-	echo "%file_hash%"
-	exit /b 1
+	echo FAILED: SHA256 hash does not match.
+	exit /b 2
 )
 exit /b 0
