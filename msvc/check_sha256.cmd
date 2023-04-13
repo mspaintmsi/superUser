@@ -17,12 +17,15 @@
 :: 	1:	Some lines of the hash file are incorrectly formatted.
 :: 	2:	Some files could not be open/read.
 :: 	3:	Some file hashes do not match.
-:: 	4:	The hash file cannot be found.
+:: 	4:	The hash file could not be found.
 :: 	5:	The hash file is empty.
 :: 	6:	The Windows utility "CertUtil.exe" could not be started.
 ::
 
 set "hash_file_name=SHA256SUMS"
+
+:: To ignore missing files, set "ignore_missing=1" otherwise "ignore_missing="
+set "ignore_missing=1"
 
 setlocal EnableDelayedExpansion
 set "err_prefix=%~n0:"
@@ -32,7 +35,7 @@ if not errorlevel 1 set "interactive=1"
 
 echo(
 if not exist "%hash_file_name%" (
-	echo %err_prefix% Hash file cannot be found ^("%hash_file_name%"^).>&2
+	echo %err_prefix% Hash file could not be found ^("%hash_file_name%"^).>&2
 	set "exit_code=4"
 	goto end
 )
@@ -56,8 +59,9 @@ for /f "usebackq tokens=1*" %%i in ("%hash_file_name%") do (
 		set /a line_format_errors += 1
 		echo %err_prefix% !error_msg! at line !line_number!, file "%hash_file_name%".>&2
 	) else (
-		:: Missing files are ignored
-		if exist "!filename!" (
+		set "do_check=1"
+		if defined ignore_missing if not exist "!filename!" set "do_check="
+		if defined do_check (
 			set /a files_found += 1
 
 			:: Read the file, compute and compare the hash
@@ -153,7 +157,7 @@ exit /b 0
 
 
 ::
-:: check_file
+:: check_file <filename> <hash>
 ::
 :: Read the file, compute and compare the hash.
 ::
@@ -162,6 +166,14 @@ setlocal
 set "file=%~1"
 set "file_hash=%~2"
 echo Checking "%file%" ...
+if not exist "%file%" (
+	echo FAILED: No such file or directory.
+	exit /b 1
+)
+if exist "%file%\" (
+	echo FAILED: This is a directory.
+	exit /b 1
+)
 set "hash="
 :: Empty file
 for /f "delims=" %%f in ("%file%") do if %%~zf equ 0 (
