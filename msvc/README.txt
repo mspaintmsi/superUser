@@ -37,4 +37,9 @@ and copy them to the "msvc" directory.
 
 Then you can build the project with Visual Studio.
 
-This creates superUser32.exe and superUser64.exe in the project directory ("msvc").
+- Open the "msvc\superUser" project.
+- In the toolbar, choose the "Release" configuration.
+- Select the platform (x64 or x86).
+- Build the project (menu Build > Build Solution, or press Ctrl+Shift+B).
+
+This creates superUser32.exe or superUser64.exe in the project directory ("msvc").

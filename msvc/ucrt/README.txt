@@ -9,6 +9,9 @@ The generated executables require the UCRT dlls to run (included in Windows 10 o
 
 The executable size is around 23-29 KB.
 
-Open the "msvc\ucrt\superUser" project and build it.
+- Open the "msvc\ucrt\superUser" project with Visual Studio.
+- In the toolbar, choose the "Release" configuration.
+- Select the platform (x64 or x86).
+- Build the project (menu Build > Build Solution, or press Ctrl+Shift+B).
 
-This creates superUser32.exe and superUser64.exe in the project directory ("msvc\ucrt").
+This creates superUser32.exe or superUser64.exe in the project directory ("msvc\ucrt").
