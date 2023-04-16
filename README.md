@@ -22,7 +22,7 @@ Simply run superUser from the command prompt (preferably one with admin privileg
 | /w      | Wait for the created process to exit. Used for scripts.         |
 | /c      | Used to specify the command to run. Without it, cmd is started. |
 
-Notes: You can also use a dash (-) in place of the slash (/) in command.
+Notes: You can also use a dash (-) in place of the slash (/) in command.  
 Multiple options can be grouped together, option c last (eg: /wrc).
 
 ## Exit Codes
