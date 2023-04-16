@@ -22,9 +22,10 @@
 if (params.bVerbose) wprintf(__VA_ARGS__); /* Only use when bVerbose in scope */
 
 struct parameters {
-	unsigned int bVerbose : 1;		/* Whether to print debug messages or not.*/
-	unsigned int bWait : 1;				/* Whether to wait to finish created process */
-	unsigned int bCommandPresent : 1;	/* Whether there is a user-specified command ("/c" argument) */
+	unsigned int bVerbose : 1;        /* Whether to print debug messages or not.*/
+	unsigned int bWait : 1;           /* Whether to wait to finish created process */
+	unsigned int bReturnCode : 1;     /* Whether to return process exit code to standard output */
+	unsigned int bCommandPresent : 1; /* Whether there is a user-specified command ("/c" argument) */
 };
 
 struct parameters params = {0};
@@ -165,7 +166,7 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 	PROCESS_INFORMATION processInfo = {0};
 	wprintfv( L"[D] Creating specified process\n" );
 
-	if (CreateProcess(
+	BOOL bCreateResult = CreateProcess(
 		NULL,
 		lpwszImageName,
 		NULL,
@@ -176,10 +177,11 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 		NULL,
 		&startupInfo.StartupInfo,
 		&processInfo
-	)) {
-		DeleteProcThreadAttributeList( startupInfo.lpAttributeList );
-		HeapFree( GetProcessHeap(), 0, startupInfo.lpAttributeList );
+	);
+	DeleteProcThreadAttributeList( startupInfo.lpAttributeList );
+	HeapFree( GetProcessHeap(), 0, startupInfo.lpAttributeList );
 
+	if (bCreateResult) {
 		HANDLE hProcessToken;
 		OpenProcessToken( processInfo.hProcess, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hProcessToken );
 		setAllPrivileges( hProcessToken );
@@ -189,10 +191,16 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 		ResumeThread( processInfo.hThread );
 
 		if (params.bWait) {
-			/* TODO Add somehow returning the child's exit code */
 			wprintfv( L"[D] Waiting for process to exit\n" );
 			WaitForSingleObject( processInfo.hProcess, INFINITE );
 			wprintfv( L"[D] Process exited\n" );
+
+			/* Return the child's exit code to the standard output if requested */
+			DWORD dwExitCode;
+			if (GetExitCodeProcess( processInfo.hProcess, &dwExitCode )) {
+				wprintfv( L"[D] Process exit code: %ld\n", dwExitCode );
+				if (params.bReturnCode) wprintf( L"%ld\n", dwExitCode );
+			}
 		}
 
 		CloseHandle( processInfo.hThread );
@@ -222,24 +230,27 @@ Options: (You can use either '-' or '/')\n\
 
 int wmain( int argc, wchar_t* argv[] )
 {
-	/* Name of the process to create - basically what's after "/c" or "cmd.exe" */
+	// Name of the process to create - basically what's after "/c" or "cmd.exe"
 	wchar_t* lpwszCommandLine = NULL;
 
-	/* Parse commandline options */
+	// Parse commandline options
 
 	int iCommandArgIndex, iCommandArgOffset;
 
 	for (int i = 1; i < argc; i++) {
-		/* Check for an at-least-two-character string beginning with '/' or '-' */
+		// Check for an at-least-two-character string beginning with '/' or '-'
 		if ((*argv[ i ] == L'/' || *argv[ i ] == L'-') && argv[ i ][ 1 ] != L'\0') {
 			int j = 1;
 			wchar_t opt;
 			while ((opt = argv[ i ][ j ]) != L'\0') {
-				/* Multiple options can be grouped together, the c option last. */
+				// Multiple options can be grouped together, option c last (eg: /wrc)
 				switch (opt) {
 				case 'h':
 					printHelp();
 					return 0;
+				case 'r':
+					params.bReturnCode = 1;
+					break;
 				case 'v':
 					params.bVerbose = 1;
 					break;
