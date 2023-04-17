@@ -11,13 +11,11 @@
 		These files are the 32-bit and 64-bit versions of the minimal MSVCRT library
 		(not the normal one included in Visual Studio). They are pulled from the
 		Windows Driver Kit (WDK).
-	- The following VS project settings must be set :
+	- The following VS project settings must be set:
 		o C/C++ / Code generation / Runtime library : Multithread (/MT)
-		o C/C++ / Preprocessor / Definitions : _NO_CRT_STDIO_INLINE
+		o C/C++ / Preprocessor / Definitions : Add "_NO_CRT_STDIO_INLINE"
 		o Linker / Input / Additional dependencies : Add "msvcrt32.lib" or "msvcrt64.lib"
-		o Linker / Input / Ignore all default libraries : Yes (/NODEFAULTLIB)
-			OR
-		  Linker / Input / Ignore specific default libraries : libcmt.lib;libcmtd.lib
+		o Linker / Input / Ignore specific default libraries : libcmt.lib;libcmtd.lib
 */
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && defined(_NO_CRT_STDIO_INLINE)
