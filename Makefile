@@ -42,6 +42,8 @@ CCFLAGS = $(OPT) $(INCLUDE)
 LDFLAGS = -Wl,--exclude-all-symbols,--dynamicbase,--nxcompat,--subsystem,console
 WRFLAGS = --codepage=65001 -O coff
 
+.PHONY: all clean x86 x64
+
 all: $(TARGETS)
 
 clean:
@@ -50,7 +52,7 @@ clean:
 x86: superUser32.exe
 x64: superUser64.exe
 
-superUser32.exe superUser64.exe: tokens.h
+superUser32.exe superUser64.exe: tokens.h winnt2.h
 
 superUser32.exe: superUser.c superUser32.res
 	$(CC32) $(OPT32) $(CCFLAGS) $< superUser32.res -o $@ $(LDFLAGS)
