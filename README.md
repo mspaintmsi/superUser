@@ -23,7 +23,7 @@ Simply run superUser from the command prompt (preferably one with admin privileg
 | /c      | Used to specify the command to run. Without it, cmd is started. |
 
 Notes: You can also use a dash (-) in place of the slash (/) in command.  
-Multiple options can be grouped together, option c last (eg: /wrc).
+Multiple options can be grouped together, the c option last (e.g., /wrc).
 
 ## Exit Codes
 | Exit Code |                      Meaning                      |
