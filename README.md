@@ -16,11 +16,11 @@ Simply run superUser from the command prompt (preferably one with admin privileg
 #### ```superUser [options] /c <process name>```
 |  Option |  Meaning                                                        |
 |---------|-----------------------------------------------------------------|
+| /c      | Used to specify the command to run. Without it, cmd is started. |
 | /h      | Display the help message.                                       |
 | /r      | Return process exit code to the standard output. Requires /w.   |
 | /v      | Verbose. Display progress info.                                 |
 | /w      | Wait for the created process to exit. Used for scripts.         |
-| /c      | Used to specify the command to run. Without it, cmd is started. |
 
 Notes: You can also use a dash (-) in place of the slash (/) in command.  
 Multiple options can be grouped together, the c option last (e.g., /wrc).

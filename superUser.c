@@ -221,10 +221,11 @@ static inline void printHelp( void )
 	wputs(
 		L"superUser.exe [options] /c [Process Name]\n\
 Options: (You can use either '-' or '/')\n\
-\t/v - Display verbose messages.\n\
-\t/w - Wait for the created process to finish before exiting.\n\
+\t/c - Specify command to execute. If not specified, a cmd instance is spawned.\n\
 \t/h - Display this help message.\n\
-\t/c - Specify command to execute. If not specified, a cmd instance is spawned.\n" );
+\t/r - Return process exit code to the standard output. Requires /w.\n\
+\t/v - Display verbose messages.\n\
+\t/w - Wait for the created process to finish before exiting." );
 }
 
 
