@@ -1,6 +1,7 @@
 @echo off
 ::
-:: Check the SHA256 hash for the files listed in the SHA256SUMS file.
+:: Check the SHA256 hash for the files listed in the SHA256SUMS or
+:: SHA256SUMS.txt file.
 ::
 :: Missing files are ignored.
 ::
@@ -33,7 +34,13 @@ set "interactive="
 echo %cmdcmdline%| find /i "%~0" >nul
 if not errorlevel 1 set "interactive=1"
 
+set "hash_file_name2=%hash_file_name%.txt"
+if not exist "%hash_file_name%" if exist "%hash_file_name2%" (
+	set "hash_file_name=%hash_file_name2%"
+)
+
 echo(
+
 if not exist "%hash_file_name%" (
 	echo %err_prefix% Hash file could not be found ^("%hash_file_name%"^).>&2
 	set "exit_code=4"
