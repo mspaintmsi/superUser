@@ -38,6 +38,7 @@ Both the exit code of superUser and the exit code of the child process can be ob
 
 
 setlocal EnableDelayedExpansion
+set "exit_code="
 superUser64 /wrc "my_process_name" params...  >test_main.tmp
 if errorlevel 1 (
 	echo The superUser exit code is "%errorlevel%"
