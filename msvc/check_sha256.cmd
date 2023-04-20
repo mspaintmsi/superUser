@@ -47,7 +47,7 @@ if not exist "%hash_file_name%" (
 	goto end
 )
 
-set "files_found=0"
+set "files_checked=0"
 set "line_format_errors=0"
 set "read_errors=0"
 set "failures=0"
@@ -69,7 +69,7 @@ for /f "usebackq tokens=1*" %%i in ("%hash_file_name%") do (
 		set "do_check=1"
 		if defined ignore_missing if not exist "!filename!" set "do_check="
 		if defined do_check (
-			set /a files_found += 1
+			set /a files_checked += 1
 
 			:: Read the file, compute and compare the hash
 			call :check_file "!filename!" "!file_hash!"
@@ -93,29 +93,29 @@ set "exit_code=0"
 :: Display information or warning messages
 
 : No files to check were found
-if %files_found% equ 0 (
+if %files_checked% equ 0 (
 	echo %err_prefix% No files found.>&2
-) else (
-	if not "%line_format_errors%%read_errors%%failures%"=="000" echo(>&2
+)
 
-	:: Some lines are incorrectly formatted
-	if %line_format_errors% neq 0 (
-		if %line_format_errors% equ 1 (set "w=line is") else set "w=lines are"
-		echo %err_prefix% WARNING: %line_format_errors% !w! incorrectly formatted.>&2
-		set "exit_code=1"
-	)
-	:: Some files could not be open/read
-	if %read_errors% neq 0 (
-		if %read_errors% equ 1 (set "w=file") else set "w=files"
-		echo %err_prefix% WARNING: %read_errors% !w! could not be open/read.>&2
-		set "exit_code=2"
-	)
-	:: Some file hashes did not match
-	if %failures% neq 0 (
-		if %failures% equ 1 (set "w=checksum") else set "w=checksums"
-		echo %err_prefix% WARNING: %failures% computed !w! did NOT match.>&2
-		set "exit_code=3"
-	)
+if not "%line_format_errors%%read_errors%%failures%"=="000" echo(>&2
+
+:: Some lines are incorrectly formatted
+if %line_format_errors% neq 0 (
+	if %line_format_errors% equ 1 (set "w=line is") else set "w=lines are"
+	echo %err_prefix% WARNING: %line_format_errors% !w! incorrectly formatted.>&2
+	set "exit_code=1"
+)
+:: Some files could not be open/read
+if %read_errors% neq 0 (
+	if %read_errors% equ 1 (set "w=file") else set "w=files"
+	echo %err_prefix% WARNING: %read_errors% !w! could not be open/read.>&2
+	set "exit_code=2"
+)
+:: Some file hashes did not match
+if %failures% neq 0 (
+	if %failures% equ 1 (set "w=checksum") else set "w=checksums"
+	echo %err_prefix% WARNING: %failures% computed !w! did NOT match.>&2
+	set "exit_code=3"
 )
 
 :end
