@@ -1,12 +1,16 @@
 
-superUser scripting
-*******************
+SCRIPTING
+*********
 
 
-superUser can return the exit code of the child process, to the standard output,
-when the /w and /r options are used.
+To run superUser from a script and wait for the child process to exit, use 
+the /w option.
 
-In a script, to retrieve it and copy it into a variable, there are several solutions.
+To retrieve the exit code of the completed process, additionally use 
+the /r option. It returns this code to standard output.
+
+To copy it into a variable, there are several solutions.
+
 
 
 Solution 1
@@ -29,8 +33,28 @@ error occurs.
 Solution 2
 ----------
 
-Using this method, both the exit code of superUser and the exit code of the child
-process can be obtained.
+This method uses a temporary file.
+Both the exit code of superUser and the exit code of the child process can be obtained.
+
+
+setlocal EnableDelayedExpansion
+superUser64 /wrc "my_process_name" params...  >test_main.tmp
+if errorlevel 1 (
+	echo The superUser exit code is "%errorlevel%"
+) else (
+	set /p exit_code=<test_main.tmp
+	if defined exit_code (
+		echo The child process exit code is "!exit_code!"
+	) else echo An unknown error has occurred.
+)
+del test_main.tmp
+
+
+
+Solution 3
+----------
+
+Like the previous method, but without a temporary file.
 
 
 set "exit_code="
@@ -57,6 +81,7 @@ its exit code and, if the /r option is used, prints it on standard output.
 In all cases, the code is copied into the "exit_code" variable. The first character 
 is tested to know where it comes from. If this is a "#", it is a superUser exit code, 
 otherwise an exit code of the child process.
+
 
 
 Testing
@@ -88,7 +113,7 @@ cd "%~dp0"
 echo Calling "test_process.cmd" script...
 echo(
 
-:: Solution 2
+:: Solution 3
 set "exit_code="
 setlocal DisableDelayedExpansion
 for /f %%c in ('cmd /v:on /c
@@ -122,7 +147,7 @@ Calling "test_process.cmd" script...
 The child process exit code is "123"
 
 
-Calling "unknown_test_process.cmd" script...
+Calling "unknown_process.cmd" script...
 
 [E] Process creation failed. Error code: 0x00000002
 The superUser exit code is "4"
