@@ -1,4 +1,4 @@
-/* Windows Vista, the earliest to utilize the Trusted Installer */
+// Windows Vista, the earliest to utilize the Trusted Installer
 #define _WIN32_WINNT _WIN32_WINNT_VISTA
 
 #include <windows.h>
@@ -7,29 +7,35 @@
 #include "msvc/msvcrt.h"
 #endif
 
-#include "tokens.h" /* Defines lplpwcszTokenPrivileges */
+#include "tokens.h" // Defines lplpwcszTokenPrivileges
 
 /*
-	Return codes -
+	Return codes (without /r option):
 		1 - Invalid argument
 		2 - Failed acquiring SeDebugPrivilege
 		3 - Could not open/start the TrustedInstaller service
 		4 - Process creation failed
+
+	If /r option is specified, exit code of the child process is returned.
+	If superUser fails, it returns the code -(EXIT_CODE_BASE + errCode),
+	where errCode is one of the codes listed above.
 */
 
 #define wputs _putws
 #define wprintfv(...) \
-if (params.bVerbose) wprintf(__VA_ARGS__); /* Only use when bVerbose in scope */
+if (params.bVerbose) wprintf(__VA_ARGS__); // Only use when bVerbose in scope
+#define EXIT_CODE_BASE 1000000
 
 struct parameters {
-	unsigned int bVerbose : 1;        /* Whether to print debug messages or not.*/
-	unsigned int bWait : 1;           /* Whether to wait to finish created process */
-	unsigned int bReturnCode : 1;     /* Whether to return process exit code to standard output */
-	unsigned int bCommandPresent : 1; /* Whether there is a user-specified command ("/c" argument) */
+	unsigned int bCommandPresent : 1; // Whether there is a user-specified command ("/c" argument)
+	unsigned int bVerbose : 1;        // Whether to print debug messages or not
+	unsigned int bWait : 1;           // Whether to wait to finish created process
+	unsigned int bReturnCode : 1;     // Whether to return process exit code
+	unsigned int bSeamless : 1;       // Whether child process shares parent's console
 };
 
 struct parameters params = {0};
-
+int nChildExitCode = 0;
 
 static inline int enableTokenPrivilege(
 	HANDLE hToken,
@@ -41,7 +47,7 @@ static inline int enableTokenPrivilege(
 	DWORD cbPrevious = sizeof( TOKEN_PRIVILEGES );
 
 	if (!LookupPrivilegeValue( NULL, lpwcszPrivilege, &luid ))
-		return 0; /* Cannot lookup privilege value */
+		return 0; // Cannot lookup privilege value
 
 	tp.PrivilegeCount = 1;
 	tp.Privileges[ 0 ].Luid = luid;
@@ -91,7 +97,7 @@ reacquire_token:
 
 static inline void setAllPrivileges( HANDLE hProcessToken )
 {
-	/* Iterate over lplpwcszTokenPrivileges to add all privileges to a token */
+	// Iterate over lplpwcszTokenPrivileges to add all privileges to a token
 	for (int i = 0; i < (sizeof( lplpcwszTokenPrivileges ) / sizeof( *lplpcwszTokenPrivileges )); ++i)
 		if (!enableTokenPrivilege( hProcessToken, lplpcwszTokenPrivileges[ i ] ))
 			wprintfv( L"[D] Could not set privilege [%ls], you most likely don't have it.\n", lplpcwszTokenPrivileges[ i ] );
@@ -135,7 +141,7 @@ cleanup_and_fail:
 
 static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 {
-	/* Start the TrustedInstaller service */
+	// Start the TrustedInstaller service
 	HANDLE hTIPHandle = getTrustedInstallerPHandle();
 	if (hTIPHandle == NULL) {
 		fwprintf( stderr, L"[E] Could not open/start the TrustedInstaller service\n" );
@@ -144,14 +150,14 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 
 	STARTUPINFOEX startupInfo = {0};
 
-	/* Initialize STARTUPINFO */
+	// Initialize STARTUPINFO
 
 	startupInfo.StartupInfo.cb = sizeof( STARTUPINFOEX );
 
 	startupInfo.StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
 	startupInfo.StartupInfo.wShowWindow = SW_SHOWNORMAL;
 
-	/* Initialize attribute lists for "parent assignment" */
+	// Initialize attribute lists for "parent assignment"
 
 	SIZE_T attributeListLength;
 
@@ -162,9 +168,12 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 
 	UpdateProcThreadAttribute( startupInfo.lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, &hTIPHandle, sizeof( HANDLE ), NULL, NULL );
 
-	/* Create process */
+	// Create process
 	PROCESS_INFORMATION processInfo = {0};
 	wprintfv( L"[D] Creating specified process\n" );
+
+	DWORD dwCreationFlags = CREATE_SUSPENDED | EXTENDED_STARTUPINFO_PRESENT;
+	if (! params.bSeamless) dwCreationFlags |= CREATE_NEW_CONSOLE;
 
 	BOOL bCreateResult = CreateProcess(
 		NULL,
@@ -172,7 +181,7 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 		NULL,
 		NULL,
 		FALSE,
-		CREATE_SUSPENDED | EXTENDED_STARTUPINFO_PRESENT | CREATE_NEW_CONSOLE,
+		dwCreationFlags,
 		NULL,
 		NULL,
 		&startupInfo.StartupInfo,
@@ -186,7 +195,7 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 		OpenProcessToken( processInfo.hProcess, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hProcessToken );
 		setAllPrivileges( hProcessToken );
 
-		wprintfv( L"[D] Created process ID: %ld and assigned additional token privileges.\n [D] Resuming..\n", processInfo.dwProcessId );
+		wprintfv( L"[D] Created process ID: %ld and assigned additional token privileges.\n", processInfo.dwProcessId );
 
 		ResumeThread( processInfo.hThread );
 
@@ -195,11 +204,11 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 			WaitForSingleObject( processInfo.hProcess, INFINITE );
 			wprintfv( L"[D] Process exited\n" );
 
-			/* Return the child's exit code to the standard output if requested */
+			// Return the child's exit code to the standard output if requested
 			DWORD dwExitCode;
 			if (GetExitCodeProcess( processInfo.hProcess, &dwExitCode )) {
+				nChildExitCode = dwExitCode;
 				wprintfv( L"[D] Process exit code: %ld\n", dwExitCode );
-				if (params.bReturnCode) wprintf( L"%ld\n", dwExitCode );
 			}
 		}
 
@@ -207,7 +216,7 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 		CloseHandle( processInfo.hProcess );
 	}
 	else {
-		/* Most commonly - 0x2 - The system cannot find the file specified. */
+		// Most commonly - 0x2 - The system cannot find the file specified.
 		fwprintf( stderr, L"[E] Process creation failed. Error code: 0x%08X\n", GetLastError() );
 		return 4;
 	}
@@ -221,11 +230,12 @@ static inline void printHelp( void )
 	wputs(
 		L"superUser.exe [options] /c [Process Name]\n\
 Options: (You can use either '-' or '/')\n\
-\t/c - Specify command to execute. If not specified, a cmd instance is spawned.\n\
-\t/h - Display this help message.\n\
-\t/r - Return process exit code to the standard output. Requires /w.\n\
-\t/v - Display verbose messages.\n\
-\t/w - Wait for the created process to finish before exiting." );
+  /c - Specify command to execute. If not specified, a cmd instance is spawned.\n\
+  /h - Display this help message.\n\
+  /r - Return exit code of child process. Requires /w.\n\
+  /s - Child process shares parent's console.\n\
+  /v - Display verbose messages.\n\
+  /w - Wait for the created process to finish before exiting." );
 }
 
 
@@ -251,6 +261,9 @@ int wmain( int argc, wchar_t* argv[] )
 					return 0;
 				case 'r':
 					params.bReturnCode = 1;
+					break;
+				case 's':
+					params.bSeamless = 1;
 					break;
 				case 'v':
 					params.bVerbose = 1;
@@ -302,5 +315,9 @@ done_params:
 
 	HeapFree( GetProcessHeap(), 0, lpwszImageName );
 
+	if (params.bReturnCode) {
+		if (errCode) errCode = -(EXIT_CODE_BASE + errCode);
+		else errCode = nChildExitCode;
+	}
 	return errCode;
 }
