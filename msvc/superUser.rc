@@ -24,8 +24,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 5,2,0,0
- PRODUCTVERSION 5,2,0,0
+ FILEVERSION 5,3,0,0
+ PRODUCTVERSION 5,3,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -42,12 +42,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Awoo~"
             VALUE "FileDescription", "Run any process with TrustedInstaller privileges"
-            VALUE "FileVersion", "5.2.0.0"
+            VALUE "FileVersion", "5.3.0.0"
             VALUE "InternalName", "superUser"
             VALUE "LegalCopyright", "Copyright (C) 2023"
             VALUE "OriginalFilename", "superUser.exe"
             VALUE "ProductName", "superUser"
-            VALUE "ProductVersion", "5.2.0.0"
+            VALUE "ProductVersion", "5.3.0.0"
         END
     END
     BLOCK "VarFileInfo"
