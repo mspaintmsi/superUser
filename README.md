@@ -1,5 +1,5 @@
 # About
-superUser is a simple and lightweight utility to start any process with TrustedInstaller privileges.
+_superUser_ is a simple and lightweight utility to start any process with TrustedInstaller privileges.
 
 # How it Works
 The program acquires the Trusted Installer's Process' handle and creates a new (user-specified) process attributing Trusted Installer as its parent.
@@ -11,7 +11,7 @@ There are two ways to run the program:
 Double click the executable, grant admin privileges and wait for a command prompt to appear.
 
 ## From the Command Prompt
-Simply run superUser from the command prompt (preferably one with admin privileges) using the following arguments:
+Simply run _superUser_ from the command prompt (preferably one with admin privileges) using the following arguments:
 
 #### ```superUser [options] /c <process name>```
 |  Option |  Meaning                                                        |
@@ -34,4 +34,4 @@ Multiple options can be grouped together, the c option last (e.g., `/wrc`).
 |     4     | Process creation failed (prints error code)       |
 
 If the `/r` option is specified, the exit code of the child process is returned.
-If superUser fails, it returns a code from -1000001 to -1000004 (e.g., -1000002 instead of 2).
+If _superUser_ fails, it returns a code from -1000001 to -1000004 (e.g., -1000002 instead of 2).

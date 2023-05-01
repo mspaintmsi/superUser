@@ -20,7 +20,7 @@ code if it fails):
 	echo Exit code is: %errorlevel%
 
 
-Returns only the superUser exit code, not the child process exit code:
+Returns only the _superUser_ exit code, not the child process exit code:
 
 	superUser64 /wc child_process.exe
 	echo superUser exit code is: %errorlevel%
