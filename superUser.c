@@ -28,10 +28,9 @@ if (params.bVerbose) wprintf(__VA_ARGS__); // Only use when bVerbose in scope
 
 struct parameters {
 	unsigned int bCommandPresent : 1; // Whether there is a user-specified command ("/c" argument)
+	unsigned int bReturnCode : 1;     // Whether to return process exit code
 	unsigned int bVerbose : 1;        // Whether to print debug messages or not
 	unsigned int bWait : 1;           // Whether to wait to finish created process
-	unsigned int bReturnCode : 1;     // Whether to return process exit code
-	unsigned int bSeamless : 1;       // Whether child process shares parent's console
 };
 
 struct parameters params = {0};
@@ -172,16 +171,13 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 	PROCESS_INFORMATION processInfo = {0};
 	wprintfv( L"[D] Creating specified process\n" );
 
-	DWORD dwCreationFlags = CREATE_SUSPENDED | EXTENDED_STARTUPINFO_PRESENT;
-	if (! params.bSeamless) dwCreationFlags |= CREATE_NEW_CONSOLE;
-
 	BOOL bCreateResult = CreateProcess(
 		NULL,
 		lpwszImageName,
 		NULL,
 		NULL,
 		FALSE,
-		dwCreationFlags,
+		CREATE_SUSPENDED | CREATE_NEW_CONSOLE | EXTENDED_STARTUPINFO_PRESENT,
 		NULL,
 		NULL,
 		&startupInfo.StartupInfo,
@@ -233,7 +229,6 @@ Options: (You can use either '-' or '/')\n\
   /c - Specify command to execute. If not specified, a cmd instance is spawned.\n\
   /h - Display this help message.\n\
   /r - Return exit code of child process. Requires /w.\n\
-  /s - Child process shares parent's console.\n\
   /v - Display verbose messages.\n\
   /w - Wait for the created process to finish before exiting." );
 }
@@ -261,9 +256,6 @@ int wmain( int argc, wchar_t* argv[] )
 					return 0;
 				case 'r':
 					params.bReturnCode = 1;
-					break;
-				case 's':
-					params.bSeamless = 1;
 					break;
 				case 'v':
 					params.bVerbose = 1;

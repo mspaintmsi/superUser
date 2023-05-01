@@ -19,7 +19,6 @@ Simply run superUser from the command prompt (preferably one with admin privileg
 | /c      | Used to specify the command to run. Without it, cmd is started. |
 | /h      | Display the help message.                                       |
 | /r      | Return the exit code of the child process. Requires /w.         |
-| /s      | Child process shares the parent's console.                      |
 | /v      | Verbose. Display progress info.                                 |
 | /w      | Wait for the created process to exit. Used for scripts.         |
 
