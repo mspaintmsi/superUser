@@ -21,10 +21,10 @@
 	where errCode is one of the codes listed above.
 */
 
+#define EXIT_CODE_BASE 1000000
 #define wputs _putws
 #define wprintfv(...) \
 if (params.bVerbose) wprintf(__VA_ARGS__); // Only use when bVerbose in scope
-#define EXIT_CODE_BASE 1000000
 
 struct parameters {
 	unsigned int bCommandPresent : 1; // Whether there is a user-specified command ("/c" argument)
@@ -33,8 +33,9 @@ struct parameters {
 	unsigned int bWait : 1;           // Whether to wait to finish created process
 };
 
-struct parameters params = {0};
-int nChildExitCode = 0;
+static struct parameters params = {0};
+static int nChildExitCode = 0;
+
 
 static inline int enableTokenPrivilege(
 	HANDLE hToken,
@@ -200,7 +201,7 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 			WaitForSingleObject( processInfo.hProcess, INFINITE );
 			wprintfv( L"[D] Process exited\n" );
 
-			// Return the child's exit code to the standard output if requested
+			// Get the child's exit code
 			DWORD dwExitCode;
 			if (GetExitCodeProcess( processInfo.hProcess, &dwExitCode )) {
 				nChildExitCode = dwExitCode;
@@ -218,6 +219,16 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 	}
 
 	return 0;
+}
+
+
+static inline int getExitCode( int code )
+{
+	if (params.bReturnCode) {
+		if (code) code = -(EXIT_CODE_BASE + code);
+		else code = nChildExitCode;
+	}
+	return code;
 }
 
 
@@ -270,17 +281,22 @@ int wmain( int argc, wchar_t* argv[] )
 					goto done_params;
 				default:
 					fwprintf( stderr, L"[E] Invalid option\n" );
-					return 1;
+					return getExitCode( 1 );
 				}
 				j++;
 			}
 		}
 		else {
 			fwprintf( stderr, L"[E] Invalid argument\n" );
-			return 1;
+			return getExitCode( 1 );
 		}
 	}
 done_params:
+
+	if (params.bReturnCode && ! params.bWait) {
+		fwprintf( stderr, L"[E] Option /r requires /w\n" );
+		return getExitCode( 1 );
+	}
 
 	if (params.bCommandPresent) {
 		// Find "c" parameter offset.
@@ -307,9 +323,5 @@ done_params:
 
 	HeapFree( GetProcessHeap(), 0, lpwszImageName );
 
-	if (params.bReturnCode) {
-		if (errCode) errCode = -(EXIT_CODE_BASE + errCode);
-		else errCode = nChildExitCode;
-	}
-	return errCode;
+	return getExitCode( errCode );
 }
