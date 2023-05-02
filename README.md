@@ -14,24 +14,26 @@ Double click the executable, grant admin privileges and wait for a command promp
 Simply run _superUser_ from the command prompt (preferably one with admin privileges) using the following arguments:
 
 #### ```superUser [options] /c <process name>```
-|  Option |  Meaning                                                        |
-|---------|-----------------------------------------------------------------|
-| /c      | Used to specify the command to run. Without it, cmd is started. |
-| /h      | Display the help message.                                       |
-| /r      | Return the exit code of the child process. Requires /w.         |
-| /v      | Verbose. Display progress info.                                 |
-| /w      | Wait for the created process to exit. Used for scripts.         |
+
+|  Option |                         Meaning                                 |
+|:-------:|-----------------------------------------------------------------|
+|   /c    | Used to specify the command to run. Without it, cmd is started. |
+|   /h    | Display the help message.                                       |
+|   /r    | Return the exit code of the child process. Requires /w.         |
+|   /v    | Verbose. Display progress info.                                 |
+|   /w    | Wait for the created process to exit. Used for scripts.         |
 
 Notes: You can also use a dash (-) in place of the slash (/) in command.  
 Multiple options can be grouped together, the c option last (e.g., `/wrc`).
 
 ## Exit Codes
-| Exit Code |                      Meaning                      |
-|:---------:|:-------------------------------------------------:|
-|     1     | Invalid argument                                  |
-|     2     | Failed acquiring SeDebugPrivilege                 |
-|     3     | Could not open/start the TrustedInstaller service |
-|     4     | Process creation failed (prints error code)       |
+
+| Exit Code |                      Meaning                       |
+|:---------:|----------------------------------------------------|
+|     1     | Invalid argument.                                  |
+|     2     | Failed acquiring SeDebugPrivilege.                 |
+|     3     | Could not open/start the TrustedInstaller service. |
+|     4     | Process creation failed (prints error code).       |
 
 If the `/r` option is specified, the exit code of the child process is returned.
 If _superUser_ fails, it returns a code from -1000001 to -1000004 (e.g., -1000002 instead of 2).
