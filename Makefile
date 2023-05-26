@@ -39,7 +39,7 @@ OPT32 = -m32
 OPT64 = -m64
 OPT = -municode -Os -s -flto -fno-ident -Wall
 CCFLAGS = $(OPT) $(INCLUDE)
-LDFLAGS = -Wl,--exclude-all-symbols,--dynamicbase,--nxcompat,--subsystem,console
+LDFLAGS = -lwtsapi32 -Wl,--exclude-all-symbols,--dynamicbase,--nxcompat,--subsystem,console
 WRFLAGS = --codepage=65001 -O coff
 
 .PHONY: all clean x86 x64

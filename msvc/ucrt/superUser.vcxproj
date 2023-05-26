@@ -92,7 +92,7 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ucrtd.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>ucrtd.lib;advapi32.lib;wtsapi32.lib</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <SubSystem>Console</SubSystem>
@@ -112,7 +112,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ucrt.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>ucrt.lib;advapi32.lib;wtsapi32.lib</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
@@ -133,7 +133,7 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ucrtd.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>ucrtd.lib;advapi32.lib;wtsapi32.lib</AdditionalDependencies>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <SubSystem>Console</SubSystem>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
@@ -152,7 +152,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ucrt.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>ucrt.lib;advapi32.lib;wtsapi32.lib</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
@@ -160,7 +160,6 @@
       <SubSystem>Console</SubSystem>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <IgnoreSpecificDefaultLibraries>libucrt.lib</IgnoreSpecificDefaultLibraries>
-      <MergeSections>.pdata=.rdata</MergeSections>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -9,6 +9,10 @@ To retrieve the exit code of the completed process, additionally use the `/r`
 option. _superUser_ returns this code, unless it fails itself. In this case, it 
 returns a code from -1000001 to -1000004 instead of the normal code from 1 to 4.
 
+By default, the child process creates a new console (window). If you specify the
+`/s` option, it shares the console of the parent. In other words, it doesn't open
+another window. This is useful for running commands or small scripts.
+
 
 Examples
 --------
@@ -17,6 +21,12 @@ This example returns the exit code of the child process (or the _superUser_ erro
 code if it fails):
 
 	superUser64 /wrc child_process.exe
+	echo Exit code is: %errorlevel%
+
+
+As above, but the process uses the current console:
+
+	superUser64 /wrsc child_process.exe
 	echo Exit code is: %errorlevel%
 
 

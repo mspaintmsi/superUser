@@ -77,7 +77,7 @@ If successful, the file `superUser32.exe` is created.
 
 
 It is also possible to use the __CLANG32/CLANG64__ environments, which have a newer
-compiler (llvm) that builds smaller executables (19-22 KB). To do this, you will
+compiler (llvm) that builds smaller executables (20-24 KB). To do this, you will
 need to install the appropriate packages as above (`mingw-w64-clang-i686-gcc-compat`
 and `mingw-w64-clang-x86_64-gcc-compat`). Generated executables require the UCRT
 dll to run (included in Windows 10 or installed by the cumulative updates in

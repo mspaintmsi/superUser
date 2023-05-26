@@ -13,7 +13,7 @@ hundred KBytes).
 The solution is to link against the old unversioned `msvcrt.dll` that comes with
 all versions of Windows. This will completely eliminate any dependency on a
 specific toolchain/dll on end-user systems. Moreover, the size of the executable
-is very small (around 13 KB !).
+is very small (around 14 KB !).
 
 To do so, the program must be statically linked against the minimal `MSVCRT.LIB`
 import library. This one is not included in Visual Studio. It must be extracted

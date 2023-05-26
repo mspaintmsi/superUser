@@ -2,6 +2,7 @@
 #define _WIN32_WINNT _WIN32_WINNT_VISTA
 
 #include <windows.h>
+#include <wtsapi32.h>
 #include <stdio.h>
 #ifdef _MSC_VER
 #include "msvc/msvcrt.h"
@@ -15,6 +16,7 @@
 		2 - Failed acquiring SeDebugPrivilege
 		3 - Could not open/start the TrustedInstaller service
 		4 - Process creation failed
+		5 - Another fatal error occurred
 
 	If /r option is specified, exit code of the child process is returned.
 	If superUser fails, it returns the code -(EXIT_CODE_BASE + errCode),
@@ -29,6 +31,7 @@ if (params.bVerbose) wprintf(__VA_ARGS__); // Only use when bVerbose in scope
 struct parameters {
 	unsigned int bCommandPresent : 1; // Whether there is a user-specified command ("/c" argument)
 	unsigned int bReturnCode : 1;     // Whether to return process exit code
+	unsigned int bSeamless : 1;       // Whether child process shares parent's console
 	unsigned int bVerbose : 1;        // Whether to print debug messages or not
 	unsigned int bWait : 1;           // Whether to wait to finish created process
 };
@@ -37,7 +40,7 @@ static struct parameters params = {0};
 static int nChildExitCode = 0;
 
 
-static inline int enableTokenPrivilege(
+static int enableTokenPrivilege(
 	HANDLE hToken,
 	const wchar_t* lpwcszPrivilege
 ) {
@@ -46,14 +49,15 @@ static inline int enableTokenPrivilege(
 	TOKEN_PRIVILEGES prevTp;
 	DWORD cbPrevious = sizeof( TOKEN_PRIVILEGES );
 
-	if (!LookupPrivilegeValue( NULL, lpwcszPrivilege, &luid ))
+	if (! LookupPrivilegeValue( NULL, lpwcszPrivilege, &luid ))
 		return 0; // Cannot lookup privilege value
 
 	tp.PrivilegeCount = 1;
 	tp.Privileges[ 0 ].Luid = luid;
 	tp.Privileges[ 0 ].Attributes = 0;
 
-	AdjustTokenPrivileges( hToken, FALSE, &tp, sizeof( TOKEN_PRIVILEGES ), &prevTp, &cbPrevious );
+	AdjustTokenPrivileges( hToken, FALSE, &tp, sizeof( TOKEN_PRIVILEGES ), &prevTp, 
+		&cbPrevious );
 
 	if (GetLastError() != ERROR_SUCCESS)
 		return 0;
@@ -72,13 +76,25 @@ static inline int enableTokenPrivilege(
 }
 
 
-static inline int acquireSeDebugPrivilege( void )
+static void setAllPrivileges( HANDLE hProcessToken, BOOL bSilent )
+{
+	// Iterate over lplpwcszTokenPrivileges to add all privileges to a token
+	for (int i = 0; i < (sizeof( lplpcwszTokenPrivileges ) / 
+		sizeof( *lplpcwszTokenPrivileges )); ++i)
+		if (! enableTokenPrivilege( hProcessToken, lplpcwszTokenPrivileges[ i ] ) &&
+			! bSilent)
+			wprintfv( L"[D] Could not set privilege [%ls], you most likely don't have it.\n", lplpcwszTokenPrivileges[ i ] );
+}
+
+
+static int acquireSeDebugPrivilege( void )
 {
 	HANDLE hThreadToken;
 	int retry = 1;
 
 reacquire_token:
-	OpenThreadToken( GetCurrentThread(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, FALSE, &hThreadToken );
+	OpenThreadToken( GetCurrentThread(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, FALSE,
+		&hThreadToken );
 	if (GetLastError() == ERROR_NO_TOKEN && retry) {
 		ImpersonateSelf( SecurityImpersonation );
 		retry--;
@@ -86,8 +102,8 @@ reacquire_token:
 		goto reacquire_token;
 	}
 
-	if (!enableTokenPrivilege( hThreadToken, SE_DEBUG_NAME )) {
-		fwprintf( stderr, L"Acquiring SeDebugPrivilege failed!" );
+	if (! enableTokenPrivilege( hThreadToken, SE_DEBUG_NAME )) {
+		fwprintf( stderr, L"[E] Acquiring SeDebugPrivilege failed" );
 		return 2;
 	}
 
@@ -95,32 +111,74 @@ reacquire_token:
 }
 
 
-static inline void setAllPrivileges( HANDLE hProcessToken )
+static int createSystemContext( void )
 {
-	// Iterate over lplpwcszTokenPrivileges to add all privileges to a token
-	for (int i = 0; i < (sizeof( lplpcwszTokenPrivileges ) / sizeof( *lplpcwszTokenPrivileges )); ++i)
-		if (!enableTokenPrivilege( hProcessToken, lplpcwszTokenPrivileges[ i ] ))
-			wprintfv( L"[D] Could not set privilege [%ls], you most likely don't have it.\n", lplpcwszTokenPrivileges[ i ] );
+	DWORD dwSysPid = (DWORD) -1;
+	PWTS_PROCESS_INFOW pProcList = NULL;
+	DWORD dwProcCount = 0;
+
+	if (WTSEnumerateProcessesW( WTS_CURRENT_SERVER_HANDLE, 0, 1,
+		&pProcList, &dwProcCount )) {
+		for (DWORD i = 0; i < dwProcCount; i++) {
+			PWTS_PROCESS_INFOW pProc = &pProcList[ i ];
+			if (! pProc->SessionId && pProc->pProcessName &&
+				(! _wcsicmp( L"lsass.exe", pProc->pProcessName )) &&
+				pProc->pUserSid &&
+				IsWellKnownSid( pProc->pUserSid, WinLocalSystemSid )) {
+				dwSysPid = pProc->ProcessId;
+				break;
+			}
+		}
+		WTSFreeMemory( pProcList );
+	}
+
+	HANDLE hToken = NULL;
+
+	if (dwSysPid != (DWORD) -1) {
+		HANDLE hSysProcess = OpenProcess( MAXIMUM_ALLOWED, FALSE, dwSysPid );
+		if (hSysProcess) {
+			HANDLE hSysToken = NULL;
+			if (OpenProcessToken( hSysProcess, MAXIMUM_ALLOWED, &hSysToken )) {
+				if (! DuplicateTokenEx( hSysToken, MAXIMUM_ALLOWED, NULL,
+					SecurityImpersonation, TokenImpersonation, &hToken )) hToken = NULL;
+				CloseHandle( hSysToken );
+			}
+			CloseHandle( hSysProcess );
+		}
+	}
+	if (! hToken) {
+		fwprintf( stderr, L"[E] Failed to create system context" );
+		return 5;
+	}
+	setAllPrivileges( hToken, TRUE );
+	SetThreadToken( NULL, hToken );
+	CloseHandle( hToken );
+
+	return 0;
 }
 
 
-static inline HANDLE getTrustedInstallerPHandle( void )
+static int getTrustedInstallerToken( PHANDLE phToken )
 {
 	HANDLE hSCManager, hTIService;
 	SERVICE_STATUS_PROCESS lpServiceStatusBuffer = {0};
 
-	hSCManager = OpenSCManager( NULL, NULL, SC_MANAGER_CREATE_SERVICE | SC_MANAGER_CONNECT );
-	hTIService = OpenService( hSCManager, L"TrustedInstaller", SERVICE_START | SERVICE_QUERY_STATUS );
+	hSCManager = OpenSCManager( NULL, NULL, 
+		SC_MANAGER_CREATE_SERVICE | SC_MANAGER_CONNECT );
+	hTIService = OpenService( hSCManager, L"TrustedInstaller", 
+		SERVICE_START | SERVICE_QUERY_STATUS );
 
 	if (hTIService == NULL)
 		goto cleanup_and_fail;
 
 	do {
 		unsigned long ulBytesNeeded;
-		QueryServiceStatusEx( hTIService, SC_STATUS_PROCESS_INFO, (unsigned char*) &lpServiceStatusBuffer, sizeof( SERVICE_STATUS_PROCESS ), &ulBytesNeeded );
+		QueryServiceStatusEx( hTIService, SC_STATUS_PROCESS_INFO, 
+			(unsigned char*) &lpServiceStatusBuffer, sizeof( SERVICE_STATUS_PROCESS ), 
+			&ulBytesNeeded );
 
 		if (lpServiceStatusBuffer.dwCurrentState == SERVICE_STOPPED)
-			if (!StartService( hTIService, 0, NULL ))
+			if (! StartService( hTIService, 0, NULL ))
 				goto cleanup_and_fail;
 
 	}
@@ -129,72 +187,85 @@ static inline HANDLE getTrustedInstallerPHandle( void )
 	CloseServiceHandle( hSCManager );
 	CloseServiceHandle( hTIService );
 
-	return OpenProcess( PROCESS_CREATE_PROCESS, FALSE, lpServiceStatusBuffer.dwProcessId );
+	*phToken = NULL;
+	HANDLE hTIPHandle = OpenProcess(
+		MAXIMUM_ALLOWED, FALSE, lpServiceStatusBuffer.dwProcessId );
+	if (hTIPHandle) {
+		// Get the TrustedInstaller process token
+		HANDLE hTIToken = NULL;
+		if (OpenProcessToken( hTIPHandle, MAXIMUM_ALLOWED, &hTIToken )) {
+			if (! DuplicateTokenEx( hTIToken, MAXIMUM_ALLOWED, NULL,
+				SecurityIdentification, TokenPrimary, phToken )) *phToken = NULL;
+			CloseHandle( hTIToken );
+		}
+		CloseHandle( hTIPHandle );
+	}
+
+	if (! *phToken) {
+		fwprintf( stderr, L"[E] Failed to create TrustedInstaller token\n" );
+		return 5;
+	}
+	return 0;
 
 cleanup_and_fail:
 	CloseServiceHandle( hSCManager );
 	CloseServiceHandle( hTIService );
 
-	return NULL;
+	fwprintf( stderr, L"[E] Could not open/start the TrustedInstaller service\n" );
+	return 3;
 }
 
 
-static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
+static int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 {
-	// Start the TrustedInstaller service
-	HANDLE hTIPHandle = getTrustedInstallerPHandle();
-	if (hTIPHandle == NULL) {
-		fwprintf( stderr, L"[E] Could not open/start the TrustedInstaller service\n" );
-		return 3;
+	// Start the TrustedInstaller service and get the token
+	HANDLE hToken = NULL;
+	int errCode = getTrustedInstallerToken( &hToken );
+	if (errCode) return errCode;
+
+	// Get the console session id and set it in the token
+	DWORD dwSessionID = WTSGetActiveConsoleSessionId();
+	if (dwSessionID != (DWORD) -1) {
+		SetTokenInformation( hToken, TokenSessionId, (PVOID) &dwSessionID, 
+			sizeof( DWORD ) );
 	}
 
-	STARTUPINFOEX startupInfo = {0};
+	// Set all privileges in the child process token
+	setAllPrivileges( hToken, FALSE );
+
 
 	// Initialize STARTUPINFO
 
-	startupInfo.StartupInfo.cb = sizeof( STARTUPINFOEX );
-
-	startupInfo.StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
-	startupInfo.StartupInfo.wShowWindow = SW_SHOWNORMAL;
-
-	// Initialize attribute lists for "parent assignment"
-
-	SIZE_T attributeListLength;
-
-	InitializeProcThreadAttributeList( NULL, 1, 0, (PSIZE_T) &attributeListLength );
-
-	startupInfo.lpAttributeList = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, attributeListLength );
-	InitializeProcThreadAttributeList( startupInfo.lpAttributeList, 1, 0, (PSIZE_T) &attributeListLength );
-
-	UpdateProcThreadAttribute( startupInfo.lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, &hTIPHandle, sizeof( HANDLE ), NULL, NULL );
+	STARTUPINFO startupInfo = {0};
+	startupInfo.cb = sizeof( STARTUPINFO );
+	startupInfo.dwFlags = STARTF_USESHOWWINDOW;
+	startupInfo.wShowWindow = SW_SHOWNORMAL;
 
 	// Create process
+
 	PROCESS_INFORMATION processInfo = {0};
+	DWORD dwCreationFlags = 0;
+	if (! params.bSeamless) dwCreationFlags |= CREATE_NEW_CONSOLE;
+
 	wprintfv( L"[D] Creating specified process\n" );
 
-	BOOL bCreateResult = CreateProcess(
+	BOOL bCreateResult = CreateProcessAsUser(
+		hToken,
 		NULL,
 		lpwszImageName,
 		NULL,
 		NULL,
 		FALSE,
-		CREATE_SUSPENDED | CREATE_NEW_CONSOLE | EXTENDED_STARTUPINFO_PRESENT,
+		dwCreationFlags,
 		NULL,
 		NULL,
-		&startupInfo.StartupInfo,
+		&startupInfo,
 		&processInfo
 	);
-	DeleteProcThreadAttributeList( startupInfo.lpAttributeList );
-	HeapFree( GetProcessHeap(), 0, startupInfo.lpAttributeList );
+	CloseHandle( hToken );
 
 	if (bCreateResult) {
-		HANDLE hProcessToken;
-		OpenProcessToken( processInfo.hProcess, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hProcessToken );
-		setAllPrivileges( hProcessToken );
-
-		wprintfv( L"[D] Created process ID: %ld and assigned additional token privileges.\n", processInfo.dwProcessId );
-
-		ResumeThread( processInfo.hThread );
+		wprintfv( L"[D] Created process ID: %ld\n", processInfo.dwProcessId );
 
 		if (params.bWait) {
 			wprintfv( L"[D] Waiting for process to exit\n" );
@@ -209,12 +280,13 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 			}
 		}
 
-		CloseHandle( processInfo.hThread );
 		CloseHandle( processInfo.hProcess );
+		CloseHandle( processInfo.hThread );
 	}
 	else {
 		// Most commonly - 0x2 - The system cannot find the file specified.
-		fwprintf( stderr, L"[E] Process creation failed. Error code: 0x%08X\n", GetLastError() );
+		fwprintf( stderr, L"[E] Process creation failed. Error code: 0x%08X\n", 
+			GetLastError() );
 		return 4;
 	}
 
@@ -222,7 +294,7 @@ static inline int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 }
 
 
-static inline int getExitCode( int code )
+static int getExitCode( int code )
 {
 	if (params.bReturnCode) {
 		if (code) code = -(EXIT_CODE_BASE + code);
@@ -232,7 +304,7 @@ static inline int getExitCode( int code )
 }
 
 
-static inline void printHelp( void )
+static void printHelp( void )
 {
 	wputs(
 		L"superUser.exe [options] /c [Process Name]\n\
@@ -240,6 +312,7 @@ Options: (You can use either '-' or '/')\n\
   /c - Specify command to execute. If not specified, a cmd instance is spawned.\n\
   /h - Display this help message.\n\
   /r - Return exit code of child process. Requires /w.\n\
+  /s - Child process shares parent's console. Requires /w.\n\
   /v - Display verbose messages.\n\
   /w - Wait for the created process to finish before exiting." );
 }
@@ -268,6 +341,9 @@ int wmain( int argc, wchar_t* argv[] )
 				case 'r':
 					params.bReturnCode = 1;
 					break;
+				case 's':
+					params.bSeamless = 1;
+					break;
 				case 'v':
 					params.bVerbose = 1;
 					break;
@@ -293,8 +369,8 @@ int wmain( int argc, wchar_t* argv[] )
 	}
 done_params:
 
-	if (params.bReturnCode && ! params.bWait) {
-		fwprintf( stderr, L"[E] Option /r requires /w\n" );
+	if ((params.bReturnCode || params.bSeamless) && ! params.bWait) {
+		fwprintf( stderr, L"[E] /r or /s option requires /w\n" );
 		return getExitCode( 1 );
 	}
 
@@ -319,6 +395,7 @@ done_params:
 	memcpy( lpwszImageName, lpwszCommandLine, nCommandLineBufSize );
 
 	int errCode = acquireSeDebugPrivilege();
+	if (! errCode) errCode = createSystemContext();
 	if (! errCode) errCode = createTrustedInstallerProcess( lpwszImageName );
 
 	HeapFree( GetProcessHeap(), 0, lpwszImageName );
