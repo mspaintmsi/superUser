@@ -20,17 +20,17 @@ Examples
 This example returns the exit code of the child process (or the _superUser_ error 
 code if it fails):
 
-	superUser64 /wrc child_process.exe
+	superUser64 /wr child_process.exe
 	echo Exit code is: %errorlevel%
 
 
 As above, but the process uses the current console:
 
-	superUser64 /wrsc child_process.exe
+	superUser64 /wrs child_process.exe
 	echo Exit code is: %errorlevel%
 
 
 Returns only the _superUser_ exit code, not the child process exit code:
 
-	superUser64 /wc child_process.exe
+	superUser64 /w child_process.exe
 	echo superUser exit code is: %errorlevel%

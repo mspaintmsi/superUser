@@ -164,7 +164,7 @@
       <SubSystem>Console</SubSystem>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
-      <MergeSections>.pdata=.text</MergeSections>
+      <MergeSections>.pdata=.rdata</MergeSections>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

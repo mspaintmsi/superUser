@@ -13,11 +13,10 @@ Double click the executable, grant admin privileges and wait for a command promp
 ## From the Command Prompt
 Simply run _superUser_ from the command prompt (preferably one with admin privileges) using the following arguments:
 
-#### ```superUser [options] /c <process name>```
+#### ```superUser [options] [command_to_run]```
 
 |  Option |                         Meaning                                 |
 |:-------:|-----------------------------------------------------------------|
-|   /c    | Used to specify the command to run. Without it, cmd is started. |
 |   /h    | Display the help message.                                       |
 |   /r    | Return the exit code of the child process. Requires /w.         |
 |   /s    | Child process shares parent's console. Requires /w.             |
@@ -25,7 +24,9 @@ Simply run _superUser_ from the command prompt (preferably one with admin privil
 |   /w    | Wait for the created process to exit. Used for scripts.         |
 
 Notes: You can also use a dash (-) in place of the slash (/) in command.  
-Multiple options can be grouped together, the c option last (e.g., `/wrc`).
+Multiple options can be grouped together (e.g., `/wrs`).  
+If `command_to_run` is not specified, `cmd.exe` is started.
+
 
 ## Exit Codes
 

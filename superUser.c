@@ -29,7 +29,6 @@
 if (params.bVerbose) wprintf(__VA_ARGS__); // Only use when bVerbose in scope
 
 struct parameters {
-	unsigned int bCommandPresent : 1; // Whether there is a user-specified command ("/c" argument)
 	unsigned int bReturnCode : 1;     // Whether to return process exit code
 	unsigned int bSeamless : 1;       // Whether child process shares parent's console
 	unsigned int bVerbose : 1;        // Whether to print debug messages or not
@@ -56,7 +55,7 @@ static int enableTokenPrivilege(
 	tp.Privileges[ 0 ].Luid = luid;
 	tp.Privileges[ 0 ].Attributes = 0;
 
-	AdjustTokenPrivileges( hToken, FALSE, &tp, sizeof( TOKEN_PRIVILEGES ), &prevTp, 
+	AdjustTokenPrivileges( hToken, FALSE, &tp, sizeof( TOKEN_PRIVILEGES ), &prevTp,
 		&cbPrevious );
 
 	if (GetLastError() != ERROR_SUCCESS)
@@ -79,7 +78,7 @@ static int enableTokenPrivilege(
 static void setAllPrivileges( HANDLE hProcessToken, BOOL bSilent )
 {
 	// Iterate over lplpwcszTokenPrivileges to add all privileges to a token
-	for (int i = 0; i < (sizeof( lplpcwszTokenPrivileges ) / 
+	for (int i = 0; i < (sizeof( lplpcwszTokenPrivileges ) /
 		sizeof( *lplpcwszTokenPrivileges )); ++i)
 		if (! enableTokenPrivilege( hProcessToken, lplpcwszTokenPrivileges[ i ] ) &&
 			! bSilent)
@@ -163,9 +162,9 @@ static int getTrustedInstallerToken( PHANDLE phToken )
 	HANDLE hSCManager, hTIService;
 	SERVICE_STATUS_PROCESS lpServiceStatusBuffer = {0};
 
-	hSCManager = OpenSCManager( NULL, NULL, 
+	hSCManager = OpenSCManager( NULL, NULL,
 		SC_MANAGER_CREATE_SERVICE | SC_MANAGER_CONNECT );
-	hTIService = OpenService( hSCManager, L"TrustedInstaller", 
+	hTIService = OpenService( hSCManager, L"TrustedInstaller",
 		SERVICE_START | SERVICE_QUERY_STATUS );
 
 	if (hTIService == NULL)
@@ -173,8 +172,8 @@ static int getTrustedInstallerToken( PHANDLE phToken )
 
 	do {
 		unsigned long ulBytesNeeded;
-		QueryServiceStatusEx( hTIService, SC_STATUS_PROCESS_INFO, 
-			(unsigned char*) &lpServiceStatusBuffer, sizeof( SERVICE_STATUS_PROCESS ), 
+		QueryServiceStatusEx( hTIService, SC_STATUS_PROCESS_INFO,
+			(unsigned char*) &lpServiceStatusBuffer, sizeof( SERVICE_STATUS_PROCESS ),
 			&ulBytesNeeded );
 
 		if (lpServiceStatusBuffer.dwCurrentState == SERVICE_STOPPED)
@@ -226,7 +225,7 @@ static int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 	// Get the console session id and set it in the token
 	DWORD dwSessionID = WTSGetActiveConsoleSessionId();
 	if (dwSessionID != (DWORD) -1) {
-		SetTokenInformation( hToken, TokenSessionId, (PVOID) &dwSessionID, 
+		SetTokenInformation( hToken, TokenSessionId, (PVOID) &dwSessionID,
 			sizeof( DWORD ) );
 	}
 
@@ -285,7 +284,7 @@ static int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 	}
 	else {
 		// Most commonly - 0x2 - The system cannot find the file specified.
-		fwprintf( stderr, L"[E] Process creation failed. Error code: 0x%08X\n", 
+		fwprintf( stderr, L"[E] Process creation failed. Error code: 0x%08X\n",
 			GetLastError() );
 		return 4;
 	}
@@ -296,6 +295,7 @@ static int createTrustedInstallerProcess( wchar_t* lpwszImageName )
 
 static int getExitCode( int code )
 {
+	if (code == -1) code = 0;  // Print help, exit with code 0
 	if (params.bReturnCode) {
 		if (code) code = -(EXIT_CODE_BASE + code);
 		else code = nChildExitCode;
@@ -307,9 +307,8 @@ static int getExitCode( int code )
 static void printHelp( void )
 {
 	wputs(
-		L"superUser.exe [options] /c [Process Name]\n\
+		L"superUser.exe [options] [command_to_run]\n\
 Options: (You can use either '-' or '/')\n\
-  /c - Specify command to execute. If not specified, a cmd instance is spawned.\n\
   /h - Display this help message.\n\
   /r - Return exit code of child process. Requires /w.\n\
   /s - Child process shares parent's console. Requires /w.\n\
@@ -318,83 +317,148 @@ Options: (You can use either '-' or '/')\n\
 }
 
 
-int wmain( int argc, wchar_t* argv[] )
+static BOOL getArgument( BOOL bQuotedString, wchar_t** ppArgument,
+	wchar_t** ppArgumentIndex )
 {
-	// Name of the process to create - basically what's after "/c" or "cmd.exe"
-	wchar_t* lpwszCommandLine = NULL;
+	// Current pointer to the remainder of the line to be parsed.
+	// Initialized with the full command line on the first call.
+	static wchar_t* p = NULL;
+	if (! p) p = GetCommandLine();
 
-	// Parse commandline options
+	// Free the previous argument (if it exists)
+	if (*ppArgument) HeapFree( GetProcessHeap(), 0, *ppArgument );
+	*ppArgument = NULL;
 
-	int iCommandArgIndex, iCommandArgOffset;
+	// Search argument
 
-	for (int i = 1; i < argc; i++) {
-		// Check for an at-least-two-character string beginning with '/' or '-'
-		if ((*argv[ i ] == L'/' || *argv[ i ] == L'-') && argv[ i ][ 1 ] != L'\0') {
-			int j = 1;
-			wchar_t opt;
-			while ((opt = argv[ i ][ j ]) != L'\0') {
-				// Multiple options can be grouped together, option c last (eg: /wrc)
-				switch (opt) {
-				case 'h':
-					printHelp();
-					return 0;
-				case 'r':
-					params.bReturnCode = 1;
-					break;
-				case 's':
-					params.bSeamless = 1;
-					break;
-				case 'v':
-					params.bVerbose = 1;
-					break;
-				case 'w':
-					params.bWait = 1;
-					break;
-				case 'c':
-					params.bCommandPresent = 1;
-					iCommandArgIndex = i;
-					iCommandArgOffset = j;
-					goto done_params;
-				default:
-					fwprintf( stderr, L"[E] Invalid option\n" );
-					return getExitCode( 1 );
-				}
-				j++;
+	// Skip spaces
+	while (*p == L' ' || *p == L'\t') p++;
+
+	if (*p != L'\0') {
+		// Argument found
+		wchar_t* pBegin = p;
+
+		// Search the end of the argument
+		if (bQuotedString) {
+			// Quotes are interpreted
+			BOOL bQuote = FALSE;
+			while (*p != L'\0') {
+				if (*p == L'"') bQuote = ! bQuote;
+				else if (! bQuote && (*p == L' ' || *p == L'\t')) break;
+				p++;
 			}
 		}
 		else {
-			fwprintf( stderr, L"[E] Invalid argument\n" );
-			return getExitCode( 1 );
+			// Quotes are not interpreted
+			while (*p != L' ' && *p != L'\t' && *p != L'\0') p++;
+		}
+
+		size_t nArgSize = p - pBegin;
+		*ppArgument = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, (nArgSize + 1) * 2 );
+		memcpy( *ppArgument, pBegin, nArgSize * 2 );
+		*ppArgumentIndex = pBegin;
+		return TRUE;
+	}
+
+	// Argument not found
+	return FALSE;
+}
+
+
+int wmain( int argc, wchar_t* argv[] )
+{
+	int errCode = 0;  // superUser error code
+
+	// Command to run (name of process to create followed by parameters) -
+	// basically the first non-option argument or "cmd.exe".
+	wchar_t* lpwszCommandLine = NULL;
+
+	// Parse command line
+
+	wchar_t* lpwszArgument = NULL;  // Command line argument 
+	wchar_t* lpwszArgumentIndex = NULL;  // Pointer to argument in command line
+
+	// Skip program name (argv[0])
+	getArgument( TRUE, &lpwszArgument, &lpwszArgumentIndex );
+
+	// Parse command line options
+
+	while (getArgument( FALSE, &lpwszArgument, &lpwszArgumentIndex )) {
+		// Check for an at-least-two-character string beginning with '/' or '-'
+		if (*lpwszArgument == L'/' || *lpwszArgument == L'-') {
+			if (lpwszArgument[ 1 ] != L'\0') {
+				int j = 1;
+				wchar_t opt;
+				while ((opt = lpwszArgument[ j ]) != L'\0') {
+					// Multiple options can be grouped together (eg: /wrs)
+					switch (opt) {
+					case 'h':
+						printHelp();
+						errCode = -1;
+						goto done_params;
+					case 'r':
+						params.bReturnCode = 1;
+						break;
+					case 's':
+						params.bSeamless = 1;
+						break;
+					case 'v':
+						params.bVerbose = 1;
+						break;
+					case 'w':
+						params.bWait = 1;
+						break;
+					case 'c':
+						/*
+						This option is no longer useful. Do not use it.
+						It is kept only for compatibility with previous versions.
+						*/
+						lpwszCommandLine = lpwszArgumentIndex + (j + 1);
+						while (*lpwszCommandLine == L' ' || *lpwszCommandLine == L'\t')
+							lpwszCommandLine++;
+						goto done_params;
+					default:
+						fwprintf( stderr, L"[E] Invalid option\n" );
+						errCode = 1;
+						goto done_params;
+					}
+					j++;
+				}
+			}
+			else {
+				fwprintf( stderr, L"[E] Invalid argument\n" );
+				errCode = 1;
+				goto done_params;
+			}
+		}
+		else {
+			// Command parameter found
+			lpwszCommandLine = lpwszArgumentIndex;
+			break;
 		}
 	}
 done_params:
+	// Free the last argument (if it exists)
+	if (lpwszArgument) HeapFree( GetProcessHeap(), 0, lpwszArgument );
 
+	if (errCode) return getExitCode( errCode );
+
+	// Check the consistency of the options
 	if ((params.bReturnCode || params.bSeamless) && ! params.bWait) {
 		fwprintf( stderr, L"[E] /r or /s option requires /w\n" );
 		return getExitCode( 1 );
 	}
 
-	if (params.bCommandPresent) {
-		// Find "c" parameter offset.
-		wchar_t* p = wcsstr( GetCommandLine(), argv[ iCommandArgIndex ] );
-
-		// Skip ahead iCommandArgOffset+1 characters ("-...c")
-		p += iCommandArgOffset + 1;
-		// Skip optional spaces before command
-		while (*p == L' ' || *p == L'\t') p++;
-
-		if (*p != L'\0') lpwszCommandLine = p;
-	}
 	if (! lpwszCommandLine) lpwszCommandLine = L"cmd.exe";
 
 	wprintfv( L"[D] Your commandline is \"%ls\"\n", lpwszCommandLine );
 
 	// lpwszCommandLine may be read-only. It must be copied to a writable area.
-	SIZE_T nCommandLineBufSize = (wcslen( lpwszCommandLine ) + 1) * sizeof( wchar_t );
+	size_t nCommandLineBufSize = (wcslen( lpwszCommandLine ) + 1) * sizeof( wchar_t );
 	wchar_t* lpwszImageName = HeapAlloc( GetProcessHeap(), 0, nCommandLineBufSize );
 	memcpy( lpwszImageName, lpwszCommandLine, nCommandLineBufSize );
 
-	int errCode = acquireSeDebugPrivilege();
+	errCode = acquireSeDebugPrivilege();
 	if (! errCode) errCode = createSystemContext();
 	if (! errCode) errCode = createTrustedInstallerProcess( lpwszImageName );
 
