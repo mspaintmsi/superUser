@@ -2,7 +2,7 @@
 _superUser_ is a simple and lightweight utility to start any process with TrustedInstaller privileges.
 
 # How it Works
-The program acquires the Trusted Installer's Process' handle and creates a new (user-specified) process attributing Trusted Installer as its parent.
+The program acquires the Trusted Installer's Process' access token and creates a new (user-specified) process as Trusted Installer using this token.
 
 # Usage
 There are two ways to run the program:
