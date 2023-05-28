@@ -341,6 +341,12 @@ static BOOL getArgument( BOOL bQuotedString, wchar_t** ppArgument,
 		// Search the end of the argument
 		if (bQuotedString) {
 			// Quotes are interpreted
+			/*
+			* This is a simplified algorithm.
+			* In this application, we only need to know the size of the parameter, not its
+			* content. Also, the parsing is different for an executable name (like here)
+			* and for a normal parameter.
+			*/
 			BOOL bQuote = FALSE;
 			while (*p != L'\0') {
 				if (*p == L'"') bQuote = ! bQuote;
