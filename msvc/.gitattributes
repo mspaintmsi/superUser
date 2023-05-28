@@ -3,6 +3,11 @@
 ###############################################################################
 * text=auto
 
+# VS project files have crlf line endings.
+*.sln text eol=crlf
+*.vcxproj text eol=crlf
+*.vcxproj.* text eol=crlf
+
 ###############################################################################
 # Set default behavior for command prompt diff.
 #
