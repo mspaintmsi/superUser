@@ -82,7 +82,8 @@ static void setAllPrivileges( HANDLE hProcessToken, BOOL bSilent )
 		sizeof( *lplpcwszTokenPrivileges )); ++i)
 		if (! enableTokenPrivilege( hProcessToken, lplpcwszTokenPrivileges[ i ] ) &&
 			! bSilent)
-			wprintfv( L"[D] Could not set privilege [%ls], you most likely don't have it.\n", lplpcwszTokenPrivileges[ i ] );
+			wprintfv( L"[D] Could not set privilege [%ls], you most likely don't have it.\n",
+				lplpcwszTokenPrivileges[ i ] );
 }
 
 
@@ -116,6 +117,7 @@ static int createSystemContext( void )
 	PWTS_PROCESS_INFOW pProcList = NULL;
 	DWORD dwProcCount = 0;
 
+	// Get the process id
 	if (WTSEnumerateProcessesW( WTS_CURRENT_SERVER_HANDLE, 0, 1,
 		&pProcList, &dwProcCount )) {
 		for (DWORD i = 0; i < dwProcCount; i++) {
@@ -136,6 +138,7 @@ static int createSystemContext( void )
 	if (dwSysPid != (DWORD) -1) {
 		HANDLE hSysProcess = OpenProcess( MAXIMUM_ALLOWED, FALSE, dwSysPid );
 		if (hSysProcess) {
+			// Get the process token
 			HANDLE hSysToken = NULL;
 			if (OpenProcessToken( hSysProcess, MAXIMUM_ALLOWED, &hSysToken )) {
 				if (! DuplicateTokenEx( hSysToken, MAXIMUM_ALLOWED, NULL,
@@ -167,8 +170,7 @@ static int getTrustedInstallerToken( PHANDLE phToken )
 	hTIService = OpenService( hSCManager, L"TrustedInstaller",
 		SERVICE_START | SERVICE_QUERY_STATUS );
 
-	if (hTIService == NULL)
-		goto cleanup_and_fail;
+	if (hTIService == NULL) goto cleanup_and_fail;
 
 	do {
 		unsigned long ulBytesNeeded;
@@ -177,9 +179,7 @@ static int getTrustedInstallerToken( PHANDLE phToken )
 			&ulBytesNeeded );
 
 		if (lpServiceStatusBuffer.dwCurrentState == SERVICE_STOPPED)
-			if (! StartService( hTIService, 0, NULL ))
-				goto cleanup_and_fail;
-
+			if (! StartService( hTIService, 0, NULL )) goto cleanup_and_fail;
 	}
 	while (lpServiceStatusBuffer.dwCurrentState == SERVICE_STOPPED);
 
@@ -187,8 +187,8 @@ static int getTrustedInstallerToken( PHANDLE phToken )
 	CloseServiceHandle( hTIService );
 
 	*phToken = NULL;
-	HANDLE hTIPHandle = OpenProcess(
-		MAXIMUM_ALLOWED, FALSE, lpServiceStatusBuffer.dwProcessId );
+	HANDLE hTIPHandle = OpenProcess( MAXIMUM_ALLOWED, FALSE,
+		lpServiceStatusBuffer.dwProcessId );
 	if (hTIPHandle) {
 		// Get the TrustedInstaller process token
 		HANDLE hTIToken = NULL;
@@ -317,13 +317,22 @@ Options: (You can use either '-' or '/')\n\
 }
 
 
-static BOOL getArgument( BOOL bQuotedString, wchar_t** ppArgument,
-	wchar_t** ppArgumentIndex )
+static BOOL getArgument( wchar_t** ppArgument, wchar_t** ppArgumentIndex )
 {
 	// Current pointer to the remainder of the line to be parsed.
 	// Initialized with the full command line on the first call.
 	static wchar_t* p = NULL;
-	if (! p) p = GetCommandLine();
+	if (! p) {
+		p = GetCommandLine();
+
+		// Skip program name
+		BOOL bQuote = FALSE;
+		while (*p != L'\0') {
+			if (*p == L'"') bQuote = ! bQuote;
+			else if (! bQuote && (*p == L' ' || *p == L'\t')) break;
+			p++;
+		}
+	}
 
 	// Free the previous argument (if it exists)
 	if (*ppArgument) HeapFree( GetProcessHeap(), 0, *ppArgument );
@@ -339,25 +348,7 @@ static BOOL getArgument( BOOL bQuotedString, wchar_t** ppArgument,
 		wchar_t* pBegin = p;
 
 		// Search the end of the argument
-		if (bQuotedString) {
-			// Quotes are interpreted
-			/*
-			* This is a simplified algorithm.
-			* In this application, we only need to know the size of the parameter, not its
-			* content. Also, the parsing is different for an executable name (like here)
-			* and for a normal parameter.
-			*/
-			BOOL bQuote = FALSE;
-			while (*p != L'\0') {
-				if (*p == L'"') bQuote = ! bQuote;
-				else if (! bQuote && (*p == L' ' || *p == L'\t')) break;
-				p++;
-			}
-		}
-		else {
-			// Quotes are not interpreted
-			while (*p != L' ' && *p != L'\t' && *p != L'\0') p++;
-		}
+		while (*p != L' ' && *p != L'\t' && *p != L'\0') p++;
 
 		size_t nArgSize = p - pBegin;
 		*ppArgument = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, (nArgSize + 1) * 2 );
@@ -379,17 +370,12 @@ int wmain( int argc, wchar_t* argv[] )
 	// basically the first non-option argument or "cmd.exe".
 	wchar_t* lpwszCommandLine = NULL;
 
-	// Parse command line
-
 	wchar_t* lpwszArgument = NULL;  // Command line argument 
 	wchar_t* lpwszArgumentIndex = NULL;  // Pointer to argument in command line
 
-	// Skip program name (argv[0])
-	getArgument( TRUE, &lpwszArgument, &lpwszArgumentIndex );
-
 	// Parse command line options
 
-	while (getArgument( FALSE, &lpwszArgument, &lpwszArgumentIndex )) {
+	while (getArgument( &lpwszArgument, &lpwszArgumentIndex )) {
 		// Check for an at-least-two-character string beginning with '/' or '-'
 		if (*lpwszArgument == L'/' || *lpwszArgument == L'-') {
 			if (lpwszArgument[ 1 ] != L'\0') {
@@ -415,14 +401,15 @@ int wmain( int argc, wchar_t* argv[] )
 						params.bWait = 1;
 						break;
 					case 'c':
-						/*
+					{	/*
 						This option is no longer useful. Do not use it.
 						It is kept only for compatibility with previous versions.
 						*/
-						lpwszCommandLine = lpwszArgumentIndex + (j + 1);
-						while (*lpwszCommandLine == L' ' || *lpwszCommandLine == L'\t')
-							lpwszCommandLine++;
+						wchar_t* p = lpwszArgumentIndex + (j + 1);
+						while (*p == L' ' || *p == L'\t')	p++;
+						lpwszCommandLine = p;
 						goto done_params;
+					}
 					default:
 						fwprintf( stderr, L"[E] Invalid option\n" );
 						errCode = 1;
@@ -438,7 +425,7 @@ int wmain( int argc, wchar_t* argv[] )
 			}
 		}
 		else {
-			// Command parameter found
+			// First non-option argument found
 			lpwszCommandLine = lpwszArgumentIndex;
 			break;
 		}
