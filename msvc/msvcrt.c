@@ -1,8 +1,8 @@
-#pragma once
-#ifndef _INC_MSVCRT
-#define _INC_MSVCRT
-
 /*
+	https://github.com/mspaintmsi/superUser
+
+	msvc/msvcrt.c
+
 	Fix for the MSVCRT library
 
 	Prerequisites:
@@ -41,7 +41,7 @@
 // "_iobuf" structure with alias "FILE", however "FILE" in UCRT is just a
 // pointer to some internal structure.
 
-// Define __iob_func locally because it is missing in UCRT
+// Declare __iob_func locally because it is missing in UCRT
 __declspec(dllimport) FILE* __cdecl __iob_func();
 
 // FILE structure for VS2013 and older
@@ -81,4 +81,3 @@ FILE* __cdecl __acrt_iob_func( unsigned index )
 }
 
 #endif // _MSC_VER
-#endif // _INC_MSVCRT
