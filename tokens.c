@@ -54,37 +54,19 @@ const wchar_t* apcwszTokenPrivileges[ 36 ] = {
 };
 
 
-static int enableTokenPrivilege(
-	HANDLE hToken,
-	const wchar_t* lpwcszPrivilege
-) {
-	TOKEN_PRIVILEGES tp;
+static int enableTokenPrivilege( HANDLE hToken, const wchar_t* pcwszPrivilege )
+{
 	LUID luid;
-	TOKEN_PRIVILEGES prevTp;
-	DWORD cbPrevious = sizeof( TOKEN_PRIVILEGES );
-
-	if (! LookupPrivilegeValue( NULL, lpwcszPrivilege, &luid ))
+	if (! LookupPrivilegeValue( NULL, pcwszPrivilege, &luid ))
 		return 0; // Cannot lookup privilege value
 
+	TOKEN_PRIVILEGES tp;
 	tp.PrivilegeCount = 1;
 	tp.Privileges[ 0 ].Luid = luid;
-	tp.Privileges[ 0 ].Attributes = 0;
+	tp.Privileges[ 0 ].Attributes = SE_PRIVILEGE_ENABLED;
 
-	AdjustTokenPrivileges( hToken, FALSE, &tp, sizeof( TOKEN_PRIVILEGES ), &prevTp,
-		&cbPrevious );
-
-	if (GetLastError() != ERROR_SUCCESS)
-		return 0;
-
-	prevTp.PrivilegeCount = 1;
-	prevTp.Privileges[ 0 ].Luid = luid;
-
-	prevTp.Privileges[ 0 ].Attributes |= SE_PRIVILEGE_ENABLED;
-
-	AdjustTokenPrivileges( hToken, FALSE, &prevTp, cbPrevious, NULL, NULL );
-
-	if (GetLastError() != ERROR_SUCCESS)
-		return 0;
+	AdjustTokenPrivileges( hToken, FALSE, &tp, 0, NULL, NULL );
+	if (GetLastError() != ERROR_SUCCESS) return 0;
 
 	return 1;
 }
@@ -92,7 +74,7 @@ static int enableTokenPrivilege(
 
 void setAllPrivileges( HANDLE hProcessToken, BOOL bSilent )
 {
-	// Iterate over lplpwcszTokenPrivileges to add all privileges to a token
+	// Iterate over apcwszTokenPrivileges to add all privileges to a token
 	for (int i = 0; i < (sizeof( apcwszTokenPrivileges ) /
 		sizeof( *apcwszTokenPrivileges )); i++)
 		if (! enableTokenPrivilege( hProcessToken, apcwszTokenPrivileges[ i ] ) &&
@@ -105,22 +87,23 @@ void setAllPrivileges( HANDLE hProcessToken, BOOL bSilent )
 int acquireSeDebugPrivilege( void )
 {
 	HANDLE hThreadToken = NULL;
+
 	int retry = 1;
-
-	do {
-		if (! OpenThreadToken( GetCurrentThread(),
-			TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, FALSE, &hThreadToken ) &&
-			GetLastError() == ERROR_NO_TOKEN && retry)
-		{
-			ImpersonateSelf( SecurityImpersonation );
-			retry--;
-		}
-		else break;
+	while (! OpenThreadToken( GetCurrentThread(),
+		TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, FALSE, &hThreadToken ) &&
+		GetLastError() == ERROR_NO_TOKEN && retry)
+	{
+		ImpersonateSelf( SecurityImpersonation );
+		retry = 0;
 	}
-	while (TRUE);
 
-	if (! enableTokenPrivilege( hThreadToken, SE_DEBUG_NAME )) {
-		fwprintf( stderr, L"[E] Acquiring SeDebugPrivilege failed" );
+	BOOL bSuccess = FALSE;
+	if (hThreadToken) {
+		bSuccess = enableTokenPrivilege( hThreadToken, SE_DEBUG_NAME );
+		CloseHandle( hThreadToken );
+	}
+	if (! bSuccess) {
+		fwprintf( stderr, L"[E] Acquiring SeDebugPrivilege failed\n" );
 		return 2;
 	}
 
@@ -137,8 +120,8 @@ int createSystemContext( void )
 	// Get the process id
 	if (WTSEnumerateProcessesW( WTS_CURRENT_SERVER_HANDLE, 0, 1,
 		&pProcList, &dwProcCount )) {
-		for (DWORD i = 0; i < dwProcCount; i++) {
-			PWTS_PROCESS_INFOW pProc = &pProcList[ i ];
+		PWTS_PROCESS_INFOW pProc = pProcList;
+		while (dwProcCount > 0) {
 			if (! pProc->SessionId && pProc->pProcessName &&
 				(! _wcsicmp( L"lsass.exe", pProc->pProcessName )) &&
 				pProc->pUserSid &&
@@ -146,6 +129,8 @@ int createSystemContext( void )
 				dwSysPid = pProc->ProcessId;
 				break;
 			}
+			pProc++;
+			dwProcCount--;
 		}
 		WTSFreeMemory( pProcList );
 	}
@@ -165,21 +150,24 @@ int createSystemContext( void )
 			CloseHandle( hSysProcess );
 		}
 	}
-	if (! hToken) {
-		fwprintf( stderr, L"[E] Failed to create system context" );
+
+	BOOL bSuccess = FALSE;
+	if (hToken) {
+		setAllPrivileges( hToken, TRUE );
+		bSuccess = SetThreadToken( NULL, hToken );
+		CloseHandle( hToken );
+	}
+	if (! bSuccess) {
+		fwprintf( stderr, L"[E] Failed to create system context\n" );
 		return 5;
 	}
-	setAllPrivileges( hToken, TRUE );
-	SetThreadToken( NULL, hToken );
-	CloseHandle( hToken );
 
 	return 0;
 }
 
 
-int getTrustedInstallerToken( PHANDLE phToken )
+int getTrustedInstallerToken( HANDLE* phToken )
 {
-	BOOL bFailed = FALSE;
 	HANDLE hSCManager, hTIService;
 	SERVICE_STATUS_PROCESS serviceStatusBuffer = {0};
 
@@ -187,29 +175,31 @@ int getTrustedInstallerToken( PHANDLE phToken )
 		SC_MANAGER_CREATE_SERVICE | SC_MANAGER_CONNECT );
 	hTIService = OpenService( hSCManager, L"TrustedInstaller",
 		SERVICE_START | SERVICE_QUERY_STATUS );
+
+	// Start the TrustedInstaller service
+	BOOL bStopped = TRUE;
 	if (hTIService) {
-		do {
-			DWORD dwBytesNeeded;
+		DWORD dwBytesNeeded;
+		while (
 			QueryServiceStatusEx( hTIService, SC_STATUS_PROCESS_INFO,
 				(LPBYTE) &serviceStatusBuffer, sizeof( SERVICE_STATUS_PROCESS ),
-				&dwBytesNeeded );
-
-			if (serviceStatusBuffer.dwCurrentState == SERVICE_STOPPED)
-				if (! StartService( hTIService, 0, NULL )) { bFailed = TRUE; break; }
+				&dwBytesNeeded ) &&
+			(bStopped = (serviceStatusBuffer.dwCurrentState == SERVICE_STOPPED)) &&
+			StartService( hTIService, 0, NULL )
+			) {
 		}
-		while (serviceStatusBuffer.dwCurrentState == SERVICE_STOPPED);
 	}
-	else bFailed = TRUE;
 
 	CloseServiceHandle( hSCManager );
 	CloseServiceHandle( hTIService );
 
-	if (bFailed) {
+	if (bStopped) {
 		fwprintf( stderr, L"[E] Could not open/start the TrustedInstaller service\n" );
 		return 3;
 	}
 
 	*phToken = NULL;
+
 	HANDLE hTIPHandle = OpenProcess( MAXIMUM_ALLOWED, FALSE,
 		serviceStatusBuffer.dwProcessId );
 	if (hTIPHandle) {
@@ -227,5 +217,6 @@ int getTrustedInstallerToken( PHANDLE phToken )
 		fwprintf( stderr, L"[E] Failed to create TrustedInstaller token\n" );
 		return 5;
 	}
+
 	return 0;
 }
