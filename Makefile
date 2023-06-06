@@ -46,8 +46,8 @@ LDFLAGS = -Wl,--exclude-all-symbols,--dynamicbase,--nxcompat,--subsystem,console
 LDLIBS = -lwtsapi32
 WRFLAGS = --codepage=65001 -O coff
 
-SRCS = superUser.c common.c tokens.c 
-DEPS = common.h tokens.h winnt2.h
+SRCS = superUser.c tokens.c 
+DEPS = tokens.h winnt2.h
 
 .PHONY: all clean x86 x64
 

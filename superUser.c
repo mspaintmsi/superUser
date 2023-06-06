@@ -11,9 +11,21 @@
 */
 
 #include <windows.h>
+#include <stdio.h>
 
-#include "common.h" // Defines global variables (param) and macros
 #include "tokens.h" // Defines tokens and privileges management functions
+
+// Program options
+struct {
+	unsigned int bReturnCode : 1;  // Whether to return process exit code
+	unsigned int bSeamless : 1;    // Whether child process shares parent's console
+	unsigned int bVerbose : 1;     // Whether to print debug messages or not
+	unsigned int bWait : 1;        // Whether to wait to finish created process
+} options = {0};
+
+#define wputs _putws
+#define wprintfv(...) \
+if (options.bVerbose) wprintf(__VA_ARGS__); // Only use when bVerbose in scope
 
 /*
 	Return codes (without /r option):
@@ -47,7 +59,7 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 	}
 
 	// Set all privileges in the child process token
-	setAllPrivileges( hToken, FALSE );
+	setAllPrivileges( hToken, options.bVerbose );
 
 
 	// Initialize STARTUPINFO
@@ -61,7 +73,7 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 
 	PROCESS_INFORMATION processInfo = {0};
 	DWORD dwCreationFlags = 0;
-	if (! params.bSeamless) dwCreationFlags |= CREATE_NEW_CONSOLE;
+	if (! options.bSeamless) dwCreationFlags |= CREATE_NEW_CONSOLE;
 
 	wprintfv( L"[D] Creating specified process\n" );
 
@@ -83,7 +95,7 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 	if (bCreateResult) {
 		wprintfv( L"[D] Created process ID: %ld\n", processInfo.dwProcessId );
 
-		if (params.bWait) {
+		if (options.bWait) {
 			wprintfv( L"[D] Waiting for process to exit\n" );
 			WaitForSingleObject( processInfo.hProcess, INFINITE );
 			wprintfv( L"[D] Process exited\n" );
@@ -113,7 +125,7 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 static int getExitCode( int code )
 {
 	if (code == -1) code = 0;  // Print help, exit with code 0
-	if (params.bReturnCode) {
+	if (options.bReturnCode) {
 		if (code) code = -(EXIT_CODE_BASE + code);
 		else code = nChildExitCode;
 	}
@@ -206,16 +218,16 @@ int wmain( int argc, wchar_t* argv[] )
 						errCode = -1;
 						goto done_params;
 					case 'r':
-						params.bReturnCode = 1;
+						options.bReturnCode = 1;
 						break;
 					case 's':
-						params.bSeamless = 1;
+						options.bSeamless = 1;
 						break;
 					case 'v':
-						params.bVerbose = 1;
+						options.bVerbose = 1;
 						break;
 					case 'w':
-						params.bWait = 1;
+						options.bWait = 1;
 						break;
 					case 'c':
 					{	/*
@@ -254,7 +266,7 @@ done_params:
 	if (errCode) return getExitCode( errCode );
 
 	// Check the consistency of the options
-	if ((params.bReturnCode || params.bSeamless) && ! params.bWait) {
+	if ((options.bReturnCode || options.bSeamless) && ! options.bWait) {
 		fwprintf( stderr, L"[E] /r or /s option requires /w\n" );
 		return getExitCode( 1 );
 	}

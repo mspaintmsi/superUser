@@ -8,10 +8,9 @@
 */
 
 #include <windows.h>
-#include <stdio.h>
 #include <wtsapi32.h>
+#include <stdio.h>
 
-#include "common.h" // Defines global variables (param) and macros
 #include "tokens.h"
 
 const wchar_t* apcwszTokenPrivileges[ 36 ] = {
@@ -72,14 +71,14 @@ static int enableTokenPrivilege( HANDLE hToken, const wchar_t* pcwszPrivilege )
 }
 
 
-void setAllPrivileges( HANDLE hProcessToken, BOOL bSilent )
+void setAllPrivileges( HANDLE hProcessToken, BOOL bVerbose )
 {
 	// Iterate over apcwszTokenPrivileges to add all privileges to a token
 	for (int i = 0; i < (sizeof( apcwszTokenPrivileges ) /
 		sizeof( *apcwszTokenPrivileges )); i++)
 		if (! enableTokenPrivilege( hProcessToken, apcwszTokenPrivileges[ i ] ) &&
-			! bSilent)
-			wprintfv( L"[D] Could not set privilege [%ls], you most likely don't have it.\n",
+			bVerbose)
+			wprintf( L"[D] Could not set privilege [%ls], you most likely don't have it.\n",
 				apcwszTokenPrivileges[ i ] );
 }
 
@@ -153,7 +152,7 @@ int createSystemContext( void )
 
 	BOOL bSuccess = FALSE;
 	if (hToken) {
-		setAllPrivileges( hToken, TRUE );
+		setAllPrivileges( hToken, FALSE );
 		bSuccess = SetThreadToken( NULL, hToken );
 		CloseHandle( hToken );
 	}

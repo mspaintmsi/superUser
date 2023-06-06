@@ -18,9 +18,6 @@
     <ClCompile Include="..\superUser.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\common.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\tokens.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -29,9 +26,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\tokens.h">
       <Filter>Header Files</Filter>
     </ClInclude>
