@@ -229,16 +229,6 @@ int wmain( int argc, wchar_t* argv[] )
 				case 'w':
 					options.bWait = 1;
 					break;
-				case 'c':
-				{	/*
-					This option is no longer useful. Do not use it.
-					It is kept only for compatibility with previous versions.
-					*/
-					wchar_t* p = pwszArgumentIndex + (j + 1);
-					while (*p == L' ' || *p == L'\t') p++;
-					pwszCommandLine = p;
-					goto done_params;
-				}
 				default:
 					fwprintf( stderr, L"[E] Invalid option\n" );
 					errCode = 1;
