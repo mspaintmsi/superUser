@@ -89,7 +89,7 @@ int acquireSeDebugPrivilege( void )
 
 	int retry = 1;
 	while (! OpenThreadToken( GetCurrentThread(),
-		TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, FALSE, &hThreadToken ) &&
+		TOKEN_ADJUST_PRIVILEGES, FALSE, &hThreadToken ) &&
 		GetLastError() == ERROR_NO_TOKEN && retry)
 	{
 		ImpersonateSelf( SecurityImpersonation );
@@ -137,12 +137,13 @@ int createSystemContext( void )
 	HANDLE hToken = NULL;
 
 	if (dwSysPid != (DWORD) -1) {
-		HANDLE hSysProcess = OpenProcess( MAXIMUM_ALLOWED, FALSE, dwSysPid );
+		HANDLE hSysProcess = OpenProcess( PROCESS_QUERY_INFORMATION, FALSE, dwSysPid );
 		if (hSysProcess) {
 			// Get the process token
 			HANDLE hSysToken = NULL;
-			if (OpenProcessToken( hSysProcess, MAXIMUM_ALLOWED, &hSysToken )) {
-				if (! DuplicateTokenEx( hSysToken, MAXIMUM_ALLOWED, NULL,
+			if (OpenProcessToken( hSysProcess, TOKEN_DUPLICATE, &hSysToken )) {
+				if (! DuplicateTokenEx( hSysToken,
+					TOKEN_ADJUST_PRIVILEGES | TOKEN_IMPERSONATE, NULL,
 					SecurityImpersonation, TokenImpersonation, &hToken )) hToken = NULL;
 				CloseHandle( hSysToken );
 			}
@@ -170,8 +171,7 @@ int getTrustedInstallerToken( HANDLE* phToken )
 	HANDLE hSCManager, hTIService;
 	SERVICE_STATUS_PROCESS serviceStatusBuffer = {0};
 
-	hSCManager = OpenSCManager( NULL, NULL,
-		SC_MANAGER_CREATE_SERVICE | SC_MANAGER_CONNECT );
+	hSCManager = OpenSCManager( NULL, NULL, SC_MANAGER_CONNECT );
 	hTIService = OpenService( hSCManager, L"TrustedInstaller",
 		SERVICE_START | SERVICE_QUERY_STATUS );
 
@@ -199,12 +199,12 @@ int getTrustedInstallerToken( HANDLE* phToken )
 
 	*phToken = NULL;
 
-	HANDLE hTIPHandle = OpenProcess( MAXIMUM_ALLOWED, FALSE,
+	HANDLE hTIPHandle = OpenProcess( PROCESS_QUERY_INFORMATION, FALSE,
 		serviceStatusBuffer.dwProcessId );
 	if (hTIPHandle) {
 		// Get the TrustedInstaller process token
 		HANDLE hTIToken = NULL;
-		if (OpenProcessToken( hTIPHandle, MAXIMUM_ALLOWED, &hTIToken )) {
+		if (OpenProcessToken( hTIPHandle, TOKEN_DUPLICATE, &hTIToken )) {
 			if (! DuplicateTokenEx( hTIToken, MAXIMUM_ALLOWED, NULL,
 				SecurityIdentification, TokenPrimary, phToken )) *phToken = NULL;
 			CloseHandle( hTIToken );
