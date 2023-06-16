@@ -23,9 +23,11 @@ Simply run _superUser_ from the command prompt (preferably one with admin privil
 |   /v    | Verbose. Display progress info.                                 |
 |   /w    | Wait for the created process to exit. Used for scripts.         |
 
-Notes: You can also use a dash (-) in place of the slash (/) in command.  
-Multiple options can be grouped together (e.g., `/wrs`).  
-If `command_to_run` is not specified, `cmd.exe` is started.
+Notes:
+- You can also use a dash (-) in place of a slash (/) in front of an option.
+- Multiple options can be grouped together (e.g., `/wrs`).
+- `command_to_run` is the filename of an executable (.exe) or script (.cmd),
+followed by parameters. If not specified, `cmd.exe` is started.
 
 
 ## Exit Codes
@@ -39,4 +41,4 @@ If `command_to_run` is not specified, `cmd.exe` is started.
 |     5     | Another fatal error occurred.                      |
 
 If the `/r` option is specified, the exit code of the child process is returned.
-If _superUser_ fails, it returns a code from -1000001 to -1000004 (e.g., -1000002 instead of 2).
+If _superUser_ fails, it returns a code from -1000001 to -1000005 (e.g., -1000002 instead of 2).
