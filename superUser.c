@@ -90,6 +90,7 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 		&startupInfo,
 		&processInfo
 	);
+	DWORD dwCreateError = bCreateResult ? 0 : GetLastError();
 	CloseHandle( hToken );
 
 	if (bCreateResult) {
@@ -114,7 +115,7 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 	else {
 		// Most commonly - 0x2 - The system cannot find the file specified.
 		fwprintf( stderr, L"[E] Process creation failed. Error code: 0x%08X\n",
-			GetLastError() );
+			dwCreateError );
 		return 4;
 	}
 
