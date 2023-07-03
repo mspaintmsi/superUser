@@ -153,8 +153,9 @@ int createSystemContext( void )
 
 	BOOL bSuccess = FALSE;
 	if (hToken) {
-		setAllPrivileges( hToken, FALSE );
-		bSuccess = SetThreadToken( NULL, hToken );
+		bSuccess =
+			enableTokenPrivilege( hToken, SE_ASSIGNPRIMARYTOKEN_NAME ) &&
+			SetThreadToken( NULL, hToken );
 		CloseHandle( hToken );
 	}
 	if (! bSuccess) {
@@ -173,19 +174,22 @@ int getTrustedInstallerToken( HANDLE* phToken )
 
 	hSCManager = OpenSCManager( NULL, NULL, SC_MANAGER_CONNECT );
 	hTIService = OpenService( hSCManager, L"TrustedInstaller",
-		SERVICE_START | SERVICE_QUERY_STATUS );
+		SERVICE_QUERY_STATUS | SERVICE_START );
 
 	// Start the TrustedInstaller service
 	BOOL bStopped = TRUE;
 	if (hTIService) {
+		int retry = 1;
 		DWORD dwBytesNeeded;
 		while (
 			QueryServiceStatusEx( hTIService, SC_STATUS_PROCESS_INFO,
 				(LPBYTE) &serviceStatusBuffer, sizeof( SERVICE_STATUS_PROCESS ),
 				&dwBytesNeeded ) &&
 			(bStopped = (serviceStatusBuffer.dwCurrentState == SERVICE_STOPPED)) &&
+			retry &&
 			StartService( hTIService, 0, NULL )
 			) {
+			retry = 0;
 		}
 	}
 
@@ -205,7 +209,10 @@ int getTrustedInstallerToken( HANDLE* phToken )
 		// Get the TrustedInstaller process token
 		HANDLE hTIToken = NULL;
 		if (OpenProcessToken( hTIPHandle, TOKEN_DUPLICATE, &hTIToken )) {
-			if (! DuplicateTokenEx( hTIToken, MAXIMUM_ALLOWED, NULL,
+			if (! DuplicateTokenEx( hTIToken,
+				TOKEN_ADJUST_DEFAULT | TOKEN_ADJUST_PRIVILEGES | TOKEN_ADJUST_SESSIONID |
+				TOKEN_ASSIGN_PRIMARY | TOKEN_QUERY,
+				NULL,
 				SecurityIdentification, TokenPrimary, phToken )) *phToken = NULL;
 			CloseHandle( hTIToken );
 		}
