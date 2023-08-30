@@ -16,7 +16,7 @@
 :: 	2:	The WDK file could not be open/read.
 :: 	3:	The WDK file hash does not match.
 :: 	4:	The Windows utility "CertUtil.exe" could not be started.
-:: 	10:	Another error has occured.
+:: 	10:	Another error has occurred.
 ::
 
 :: *** Custom 7-Zip install directory ***
