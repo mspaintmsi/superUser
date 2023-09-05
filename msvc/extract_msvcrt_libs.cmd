@@ -44,9 +44,14 @@ if not exist "%wdk_filename%" if exist "%wdk_filename2%" (
 	set "wdk_filename=%wdk_filename2%"
 )
 :: Search 7-Zip in alternate locations
+if not exist "%seven_zip_dir%\7z.exe" for /f "tokens=2*" %%i in (
+	'reg query "HKLM\SOFTWARE\7-Zip" /v "Path" 2^>nul ^| find "Path"'
+	) do if exist "%%~j\7z.exe" set "seven_zip_dir=%%~j"
 if not exist "%seven_zip_dir%\7z.exe" for %%d in (
 	"%ProgramFiles%\7-Zip" "%ProgramFiles(x86)%\7-Zip" "."
 	) do if exist "%%~d\7z.exe" set "seven_zip_dir=%%~d"
+
+if "%seven_zip_dir:~-1%"=="\" set "seven_zip_dir=%seven_zip_dir:~0,-1%"
 set "seven_zip=%seven_zip_dir%\7z.exe"
 
 echo(
