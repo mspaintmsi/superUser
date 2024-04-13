@@ -28,6 +28,7 @@ Notes:
 - Multiple options can be grouped together (e.g., `/wrs`).
 - `command_to_run` is the filename of an executable (.exe) or script (.cmd),
 followed by parameters. If not specified, `cmd.exe` is started.
+- The /s option only works in superUser 5.5, on Windows Vista, 7, 8, 10 and 11 up to 23H2.
 
 
 ## Exit Codes

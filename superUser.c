@@ -18,7 +18,6 @@
 // Program options
 static struct {
 	unsigned int bReturnCode : 1;  // Whether to return process exit code
-	unsigned int bSeamless : 1;    // Whether child process shares parent's console
 	unsigned int bVerbose : 1;     // Whether to print debug messages or not
 	unsigned int bWait : 1;        // Whether to wait to finish created process
 } options = {0};
@@ -46,39 +45,40 @@ static int nChildExitCode = 0;
 
 static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 {
-	// Start the TrustedInstaller service and get the token
-	HANDLE hToken = NULL;
-	int errCode = getTrustedInstallerToken( &hToken );
+	// Start the TrustedInstaller service and get its process handle
+	HANDLE hTIProcess = NULL;
+	int errCode = getTrustedInstallerProcess( &hTIProcess );
 	if (errCode) return errCode;
-
-	// Get the console session id and set it in the token
-	DWORD dwSessionId = WTSGetActiveConsoleSessionId();
-	if (dwSessionId != (DWORD) -1) {
-		SetTokenInformation( hToken, TokenSessionId, (PVOID) &dwSessionId,
-			sizeof( DWORD ) );
-	}
-
-	// Set all privileges in the child process token
-	setAllPrivileges( hToken, options.bVerbose );
-
 
 	// Initialize STARTUPINFO
 
-	STARTUPINFO startupInfo = {0};
-	startupInfo.cb = sizeof( STARTUPINFO );
-	startupInfo.dwFlags = STARTF_USESHOWWINDOW;
-	startupInfo.wShowWindow = SW_SHOWNORMAL;
+	STARTUPINFOEX startupInfo = {0};
 
+	startupInfo.StartupInfo.cb = sizeof( STARTUPINFOEX );
+	startupInfo.StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
+	startupInfo.StartupInfo.wShowWindow = SW_SHOWNORMAL;
+
+	// Initialize attribute lists for "parent assignment"
+
+	SIZE_T attributeListLength = 0;
+	InitializeProcThreadAttributeList( NULL, 1, 0, (PSIZE_T) &attributeListLength );
+	startupInfo.lpAttributeList = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, 
+		attributeListLength );
+	InitializeProcThreadAttributeList( startupInfo.lpAttributeList, 1, 0, 
+		(PSIZE_T) &attributeListLength );
+
+	UpdateProcThreadAttribute( startupInfo.lpAttributeList, 0, 
+		PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, &hTIProcess, sizeof( HANDLE ), NULL, NULL );
+	
 	// Create process
 
 	PROCESS_INFORMATION processInfo = {0};
-	DWORD dwCreationFlags = 0;
-	if (! options.bSeamless) dwCreationFlags |= CREATE_NEW_CONSOLE;
+	DWORD dwCreationFlags = CREATE_SUSPENDED | EXTENDED_STARTUPINFO_PRESENT |
+		CREATE_NEW_CONSOLE;
 
 	wprintfv( L"[D] Creating specified process\n" );
 
-	BOOL bCreateResult = CreateProcessAsUser(
-		hToken,
+	BOOL bCreateResult = CreateProcess(
 		NULL,
 		pwszImageName,
 		NULL,
@@ -87,13 +87,23 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 		dwCreationFlags,
 		NULL,
 		NULL,
-		&startupInfo,
+		&startupInfo.StartupInfo,
 		&processInfo
 	);
 	DWORD dwCreateError = bCreateResult ? 0 : GetLastError();
-	CloseHandle( hToken );
+	DeleteProcThreadAttributeList( startupInfo.lpAttributeList );
+	HeapFree( GetProcessHeap(), 0, startupInfo.lpAttributeList );
 
 	if (bCreateResult) {
+		HANDLE hToken;
+		OpenProcessToken( processInfo.hProcess, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, 
+			&hToken );
+
+		// Set all privileges in the child process token
+		setAllPrivileges( hToken, options.bVerbose );
+
+		ResumeThread( processInfo.hThread );
+
 		wprintfv( L"[D] Created process ID: %ld\n", processInfo.dwProcessId );
 
 		if (options.bWait) {
@@ -187,7 +197,6 @@ static void printHelp( void )
 Options: (You can use either '-' or '/')\n\
   /h - Display this help message.\n\
   /r - Return exit code of child process. Requires /w.\n\
-  /s - Child process shares parent's console. Requires /w.\n\
   /v - Display verbose messages.\n\
   /w - Wait for the created process to finish before exiting." );
 }
@@ -221,9 +230,6 @@ int wmain( int argc, wchar_t* argv[] )
 				case 'r':
 					options.bReturnCode = 1;
 					break;
-				case 's':
-					options.bSeamless = 1;
-					break;
 				case 'v':
 					options.bVerbose = 1;
 					break;
@@ -251,8 +257,8 @@ done_params:
 	if (errCode) return getExitCode( errCode );
 
 	// Check the consistency of the options
-	if ((options.bReturnCode || options.bSeamless) && ! options.bWait) {
-		fwprintf( stderr, L"[E] /r or /s option requires /w\n" );
+	if (options.bReturnCode && ! options.bWait) {
+		fwprintf( stderr, L"[E] /r option requires /w\n" );
 		return getExitCode( 1 );
 	}
 
@@ -266,7 +272,6 @@ done_params:
 	memcpy( pwszImageName, pwszCommandLine, nCommandLineBufSize );
 
 	errCode = acquireSeDebugPrivilege();
-	if (! errCode) errCode = createSystemContext();
 	if (! errCode) errCode = createTrustedInstallerProcess( pwszImageName );
 
 	HeapFree( GetProcessHeap(), 0, pwszImageName );
