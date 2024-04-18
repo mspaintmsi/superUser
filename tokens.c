@@ -110,7 +110,65 @@ int acquireSeDebugPrivilege( void )
 }
 
 
-int getTrustedInstallerProcess( HANDLE* phTIProcess )
+int createSystemContext( void )
+{
+	DWORD dwSysPid = (DWORD) -1;
+	PWTS_PROCESS_INFOW pProcList = NULL;
+	DWORD dwProcCount = 0;
+
+	// Get the process id
+	if (WTSEnumerateProcessesW( WTS_CURRENT_SERVER_HANDLE, 0, 1,
+		&pProcList, &dwProcCount )) {
+		PWTS_PROCESS_INFOW pProc = pProcList;
+		while (dwProcCount > 0) {
+			if (! pProc->SessionId && pProc->pProcessName &&
+				! _wcsicmp( L"services.exe", pProc->pProcessName ) &&
+				pProc->pUserSid &&
+				IsWellKnownSid( pProc->pUserSid, WinLocalSystemSid )) {
+				dwSysPid = pProc->ProcessId;
+				break;
+			}
+			pProc++;
+			dwProcCount--;
+		}
+		WTSFreeMemory( pProcList );
+	}
+
+	HANDLE hToken = NULL;
+
+	if (dwSysPid != (DWORD) -1) {
+		HANDLE hSysProcess = OpenProcess( PROCESS_QUERY_LIMITED_INFORMATION, FALSE,
+			dwSysPid );
+		if (hSysProcess) {
+			// Get the process token
+			HANDLE hSysToken = NULL;
+			if (OpenProcessToken( hSysProcess, TOKEN_DUPLICATE, &hSysToken )) {
+				if (! DuplicateTokenEx( hSysToken,
+					TOKEN_ADJUST_PRIVILEGES | TOKEN_IMPERSONATE, NULL,
+					SecurityImpersonation, TokenImpersonation, &hToken )) hToken = NULL;
+				CloseHandle( hSysToken );
+			}
+			CloseHandle( hSysProcess );
+		}
+	}
+
+	BOOL bSuccess = FALSE;
+	if (hToken) {
+		bSuccess =
+			enableTokenPrivilege( hToken, SE_ASSIGNPRIMARYTOKEN_NAME ) &&
+			SetThreadToken( NULL, hToken );
+		CloseHandle( hToken );
+	}
+	if (! bSuccess) {
+		fwprintf( stderr, L"[E] Failed to create system context\n" );
+		return 5;
+	}
+
+	return 0;
+}
+
+
+int getTrustedInstallerProcessId( DWORD* pdwTIProcessId )
 {
 	HANDLE hSCManager, hTIService;
 	SERVICE_STATUS_PROCESS serviceStatusBuffer = {0};
@@ -144,13 +202,56 @@ int getTrustedInstallerProcess( HANDLE* phTIProcess )
 		return 3;
 	}
 
-	HANDLE hTIPHandle = OpenProcess( PROCESS_CREATE_PROCESS, FALSE, 
-		serviceStatusBuffer.dwProcessId );
-	if (!hTIPHandle) {
+	*pdwTIProcessId = serviceStatusBuffer.dwProcessId;
+	return 0;
+}
+
+
+int getTrustedInstallerToken( HANDLE* phToken )
+{
+	*phToken = NULL;
+
+	DWORD dwTIProcessId = 0;
+	int errCode = getTrustedInstallerProcessId( &dwTIProcessId );
+	if (errCode) return errCode;
+
+	HANDLE hTIPHandle = OpenProcess( PROCESS_QUERY_INFORMATION, FALSE, dwTIProcessId );
+	if (hTIPHandle) {
+		// Get the TrustedInstaller process token
+		HANDLE hTIToken = NULL;
+		if (OpenProcessToken( hTIPHandle, TOKEN_DUPLICATE, &hTIToken )) {
+			if (! DuplicateTokenEx( hTIToken,
+				TOKEN_ADJUST_DEFAULT | TOKEN_ADJUST_PRIVILEGES | TOKEN_ADJUST_SESSIONID |
+				TOKEN_ASSIGN_PRIMARY | TOKEN_QUERY,
+				NULL,
+				SecurityIdentification, TokenPrimary, phToken )) *phToken = NULL;
+			CloseHandle( hTIToken );
+		}
+		CloseHandle( hTIPHandle );
+	}
+
+	if (! *phToken) {
+		fwprintf( stderr, L"[E] Failed to create TrustedInstaller token\n" );
+		return 5;
+	}
+
+	return 0;
+}
+
+
+int getTrustedInstallerProcess( HANDLE* phProcess )
+{
+	DWORD dwTIProcessId = 0;
+	int errCode = getTrustedInstallerProcessId( &dwTIProcessId );
+	if (errCode) return errCode;
+
+	HANDLE hTIPHandle = OpenProcess( PROCESS_CREATE_PROCESS, FALSE,
+		dwTIProcessId );
+	if (! hTIPHandle) {
 		fwprintf( stderr, L"[E] Failed to open TrustedInstaller process\n" );
 		return 5;
 	}
 
-	*phTIProcess = hTIPHandle;
+	*phProcess = hTIPHandle;
 	return 0;
 }
