@@ -168,7 +168,7 @@ int createSystemContext( void )
 }
 
 
-int getTrustedInstallerProcessId( DWORD* pdwTIProcessId )
+static int getTrustedInstallerProcessId( DWORD* pdwTIProcessId )
 {
 	HANDLE hSCManager, hTIService;
 	SERVICE_STATUS_PROCESS serviceStatusBuffer = {0};
@@ -245,13 +245,11 @@ int getTrustedInstallerProcess( HANDLE* phProcess )
 	int errCode = getTrustedInstallerProcessId( &dwTIProcessId );
 	if (errCode) return errCode;
 
-	HANDLE hTIPHandle = OpenProcess( PROCESS_CREATE_PROCESS, FALSE,
-		dwTIProcessId );
-	if (! hTIPHandle) {
+	*phProcess = OpenProcess( PROCESS_CREATE_PROCESS, FALSE, dwTIProcessId );
+	if (! *phProcess) {
 		fwprintf( stderr, L"[E] Failed to open TrustedInstaller process\n" );
 		return 5;
 	}
 
-	*phProcess = hTIPHandle;
 	return 0;
 }

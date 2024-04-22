@@ -47,8 +47,7 @@ static int nChildExitCode = 0;
 static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 {
 	int errCode = 0;
-	HANDLE hTIProcess = NULL;
-	HANDLE hTIToken = NULL;
+	HANDLE hTIProcess = NULL, hTIToken = NULL;
 
 	if (options.bSeamless) {
 		// Start the TrustedInstaller service and get its process token
