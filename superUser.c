@@ -114,7 +114,7 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 			dwCreationFlags,
 			NULL,
 			NULL,
-			&startupInfo.StartupInfo,
+			(LPSTARTUPINFO) &startupInfo,
 			&processInfo
 		);
 	else
@@ -127,7 +127,7 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 			dwCreationFlags,
 			NULL,
 			NULL,
-			&startupInfo.StartupInfo,
+			(LPSTARTUPINFO) &startupInfo,
 			&processInfo
 		);
 

@@ -7,7 +7,7 @@ To run _superUser_ from a script and wait for the child process to exit, use the
 
 To retrieve the exit code of the completed process, additionally use the `/r`
 option. _superUser_ returns this code, unless it fails itself. In this case, it 
-returns a code from -1000001 to -1000004 instead of the normal code from 1 to 4.
+returns a code from -1000001 to -1000005 instead of the normal code from 1 to 5.
 
 By default, the child process creates a new console (window). If you specify the
 `/s` option, it shares the console of the parent. In other words, it doesn't open
