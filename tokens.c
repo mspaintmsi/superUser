@@ -168,7 +168,7 @@ int createSystemContext( void )
 }
 
 
-static int getTrustedInstallerProcessId( DWORD* pdwTIProcessId )
+int getTrustedInstallerProcess( DWORD* pdwTIProcessId, HANDLE* phProcess )
 {
 	HANDLE hSCManager, hTIService;
 	SERVICE_STATUS_PROCESS serviceStatusBuffer = {0};
@@ -197,23 +197,27 @@ static int getTrustedInstallerProcessId( DWORD* pdwTIProcessId )
 	CloseServiceHandle( hSCManager );
 	CloseServiceHandle( hTIService );
 
-	if (bStopped) {
+	*phProcess = NULL;
+
+	if (! bStopped) {
+		*pdwTIProcessId = serviceStatusBuffer.dwProcessId;
+
+		// Get the TrustedInstaller process handle
+		*phProcess = OpenProcess( PROCESS_CREATE_PROCESS, FALSE, *pdwTIProcessId );
+	}
+
+	if (! *phProcess) {
 		fwprintf( stderr, L"[E] Could not open/start the TrustedInstaller service\n" );
 		return 3;
 	}
 
-	*pdwTIProcessId = serviceStatusBuffer.dwProcessId;
 	return 0;
 }
 
 
-int getTrustedInstallerToken( HANDLE* phToken )
+int getTrustedInstallerToken( DWORD dwTIProcessId, HANDLE* phToken )
 {
 	*phToken = NULL;
-
-	DWORD dwTIProcessId = 0;
-	int errCode = getTrustedInstallerProcessId( &dwTIProcessId );
-	if (errCode) return errCode;
 
 	HANDLE hTIPHandle = OpenProcess( PROCESS_QUERY_INFORMATION, FALSE, dwTIProcessId );
 	if (hTIPHandle) {
@@ -232,22 +236,6 @@ int getTrustedInstallerToken( HANDLE* phToken )
 
 	if (! *phToken) {
 		fwprintf( stderr, L"[E] Failed to create TrustedInstaller token\n" );
-		return 5;
-	}
-
-	return 0;
-}
-
-
-int getTrustedInstallerProcess( HANDLE* phProcess )
-{
-	DWORD dwTIProcessId = 0;
-	int errCode = getTrustedInstallerProcessId( &dwTIProcessId );
-	if (errCode) return errCode;
-
-	*phProcess = OpenProcess( PROCESS_CREATE_PROCESS, FALSE, dwTIProcessId );
-	if (! *phProcess) {
-		fwprintf( stderr, L"[E] Failed to open TrustedInstaller process\n" );
 		return 5;
 	}
 

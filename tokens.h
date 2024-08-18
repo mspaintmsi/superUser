@@ -15,6 +15,6 @@
 
 int acquireSeDebugPrivilege( void );
 int createSystemContext( void );
-int getTrustedInstallerProcess( HANDLE* phProcess );
-int getTrustedInstallerToken( HANDLE* phToken );
+int getTrustedInstallerProcess( DWORD* pdwTIProcessId, HANDLE* phProcess );
+int getTrustedInstallerToken( DWORD dwTIProcessId, HANDLE* phToken );
 void setAllPrivileges( HANDLE hProcessToken, BOOL bVerbose );

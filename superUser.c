@@ -47,11 +47,16 @@ static int nChildExitCode = 0;
 static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 {
 	int errCode = 0;
+	DWORD dwTIProcessId = 0;
 	HANDLE hTIProcess = NULL, hTIToken = NULL;
 
+	// Start the TrustedInstaller service and get the id and handle of its process
+	errCode = getTrustedInstallerProcess( &dwTIProcessId, &hTIProcess );
+	if (errCode) return errCode;
+
 	if (options.bSeamless) {
-		// Start the TrustedInstaller service and get its process token
-		errCode = getTrustedInstallerToken( &hTIToken );
+		// Get the TrustedInstaller process token
+		errCode = getTrustedInstallerToken( dwTIProcessId, &hTIToken );
 		if (errCode) return errCode;
 
 		// Get the console session id and set it in the token
@@ -63,11 +68,6 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 
 		// Set all privileges in the child process token
 		setAllPrivileges( hTIToken, options.bVerbose );
-	}
-	else {
-		// Start the TrustedInstaller service and get its process handle
-		errCode = getTrustedInstallerProcess( &hTIProcess );
-		if (errCode) return errCode;
 	}
 
 	// Initialize startupInfo
@@ -102,34 +102,19 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 
 	wprintfv( L"[D] Creating specified process\n" );
 
-	BOOL bCreateResult = FALSE;
-	if (options.bSeamless)
-		bCreateResult = CreateProcessAsUser(
-			hTIToken,
-			NULL,
-			pwszImageName,
-			NULL,
-			NULL,
-			FALSE,
-			dwCreationFlags,
-			NULL,
-			NULL,
-			(LPSTARTUPINFO) &startupInfo,
-			&processInfo
-		);
-	else
-		bCreateResult = CreateProcess(
-			NULL,
-			pwszImageName,
-			NULL,
-			NULL,
-			FALSE,
-			dwCreationFlags,
-			NULL,
-			NULL,
-			(LPSTARTUPINFO) &startupInfo,
-			&processInfo
-		);
+	BOOL bCreateResult = CreateProcessAsUser(
+		hTIToken,
+		NULL,
+		pwszImageName,
+		NULL,
+		NULL,
+		FALSE,
+		dwCreationFlags,
+		NULL,
+		NULL,
+		(LPSTARTUPINFO) &startupInfo,
+		&processInfo
+	);
 
 	DWORD dwCreateError = bCreateResult ? 0 : GetLastError();
 
@@ -139,6 +124,7 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 		DeleteProcThreadAttributeList( startupInfo.lpAttributeList );
 		HeapFree( GetProcessHeap(), 0, startupInfo.lpAttributeList );
 	}
+	CloseHandle( hTIProcess );
 
 	if (bCreateResult) {
 		if (! options.bSeamless) {
