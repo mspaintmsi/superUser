@@ -168,7 +168,7 @@ int createSystemContext( void )
 }
 
 
-int getTrustedInstallerProcess( DWORD* pdwTIProcessId, HANDLE* phProcess )
+int getTrustedInstallerProcess( HANDLE* phProcess )
 {
 	HANDLE hSCManager, hTIService;
 	SERVICE_STATUS_PROCESS serviceStatusBuffer = {0};
@@ -200,10 +200,9 @@ int getTrustedInstallerProcess( DWORD* pdwTIProcessId, HANDLE* phProcess )
 	*phProcess = NULL;
 
 	if (! bStopped) {
-		*pdwTIProcessId = serviceStatusBuffer.dwProcessId;
-
 		// Get the TrustedInstaller process handle
-		*phProcess = OpenProcess( PROCESS_CREATE_PROCESS, FALSE, *pdwTIProcessId );
+		*phProcess = OpenProcess( PROCESS_CREATE_PROCESS | PROCESS_QUERY_INFORMATION,
+			FALSE, serviceStatusBuffer.dwProcessId );
 	}
 
 	if (! *phProcess) {
@@ -215,23 +214,19 @@ int getTrustedInstallerProcess( DWORD* pdwTIProcessId, HANDLE* phProcess )
 }
 
 
-int getTrustedInstallerToken( DWORD dwTIProcessId, HANDLE* phToken )
+int getTrustedInstallerToken( HANDLE hTIProcess, HANDLE* phToken )
 {
 	*phToken = NULL;
 
-	HANDLE hTIPHandle = OpenProcess( PROCESS_QUERY_INFORMATION, FALSE, dwTIProcessId );
-	if (hTIPHandle) {
-		// Get the TrustedInstaller process token
-		HANDLE hTIToken = NULL;
-		if (OpenProcessToken( hTIPHandle, TOKEN_DUPLICATE, &hTIToken )) {
-			if (! DuplicateTokenEx( hTIToken,
-				TOKEN_ADJUST_DEFAULT | TOKEN_ADJUST_PRIVILEGES | TOKEN_ADJUST_SESSIONID |
-				TOKEN_ASSIGN_PRIMARY | TOKEN_QUERY,
-				NULL,
-				SecurityIdentification, TokenPrimary, phToken )) *phToken = NULL;
-			CloseHandle( hTIToken );
-		}
-		CloseHandle( hTIPHandle );
+	// Get the TrustedInstaller process token
+	HANDLE hTIToken = NULL;
+	if (OpenProcessToken( hTIProcess, TOKEN_DUPLICATE, &hTIToken )) {
+		if (! DuplicateTokenEx( hTIToken,
+			TOKEN_ADJUST_DEFAULT | TOKEN_ADJUST_PRIVILEGES | TOKEN_ADJUST_SESSIONID |
+			TOKEN_ASSIGN_PRIMARY | TOKEN_QUERY,
+			NULL,
+			SecurityIdentification, TokenPrimary, phToken )) *phToken = NULL;
+		CloseHandle( hTIToken );
 	}
 
 	if (! *phToken) {

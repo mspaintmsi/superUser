@@ -47,16 +47,15 @@ static int nChildExitCode = 0;
 static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 {
 	int errCode = 0;
-	DWORD dwTIProcessId = 0;
 	HANDLE hTIProcess = NULL, hTIToken = NULL;
 
-	// Start the TrustedInstaller service and get the id and handle of its process
-	errCode = getTrustedInstallerProcess( &dwTIProcessId, &hTIProcess );
+	// Start the TrustedInstaller service and get its process handle
+	errCode = getTrustedInstallerProcess( &hTIProcess );
 	if (errCode) return errCode;
 
 	if (options.bSeamless) {
 		// Get the TrustedInstaller process token
-		errCode = getTrustedInstallerToken( dwTIProcessId, &hTIToken );
+		errCode = getTrustedInstallerToken( hTIProcess, &hTIToken );
 		if (errCode) return errCode;
 
 		// Get the console session id and set it in the token
