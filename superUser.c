@@ -56,7 +56,10 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 	if (options.bSeamless) {
 		// Get the TrustedInstaller process token
 		errCode = getTrustedInstallerToken( hTIProcess, &hTIToken );
-		if (errCode) return errCode;
+		if (errCode) {
+			CloseHandle( hTIProcess );
+			return errCode;
+		}
 
 		// Get the console session id and set it in the token
 		DWORD dwSessionId = WTSGetActiveConsoleSessionId();
@@ -118,8 +121,7 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 	DWORD dwCreateError = bCreateResult ? 0 : GetLastError();
 
 	if (options.bSeamless) CloseHandle( hTIToken );
-	else
-	{
+	else {
 		DeleteProcThreadAttributeList( startupInfo.lpAttributeList );
 		HeapFree( GetProcessHeap(), 0, startupInfo.lpAttributeList );
 	}
@@ -157,8 +159,7 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 	}
 	else {
 		// Most commonly - 0x2 - The system cannot find the file specified.
-		fwprintf( stderr, L"[E] Process creation failed. Error code: 0x%08X\n",
-			dwCreateError );
+		printError( L"Process creation failed", dwCreateError );
 		return 4;
 	}
 
@@ -274,7 +275,7 @@ int wmain( int argc, wchar_t* argv[] )
 					options.bWait = 1;
 					break;
 				default:
-					fwprintf( stderr, L"[E] Invalid option\n" );
+					printError( L"Invalid option", 0 );
 					errCode = 1;
 					goto done_params;
 				}
@@ -295,7 +296,7 @@ done_params:
 
 	// Check the consistency of the options
 	if ((options.bReturnCode || options.bSeamless) && ! options.bWait) {
-		fwprintf( stderr, L"[E] /r or /s option requires /w\n" );
+		printError( L"/r or /s option requires /w", 0 );
 		return getExitCode( 1 );
 	}
 

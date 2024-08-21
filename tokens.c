@@ -53,16 +53,29 @@ const wchar_t* apcwszTokenPrivileges[ 36 ] = {
 };
 
 
+void printError( wchar_t* pwszMessage, DWORD dwCode )
+{
+	wchar_t pwszFormat[] = L"[E] %ls (error code: 0x%08X)\n";
+	if (dwCode == 0) {
+		// Remove the error code string from the format
+		pwszFormat[ 7 ] = L'\n';
+		pwszFormat[ 8 ] = L'\0';
+	}
+	fwprintf( stderr, pwszFormat, pwszMessage, dwCode );
+}
+
+
 static int enableTokenPrivilege( HANDLE hToken, const wchar_t* pcwszPrivilege )
 {
 	LUID luid;
 	if (! LookupPrivilegeValue( NULL, pcwszPrivilege, &luid ))
 		return 0; // Cannot lookup privilege value
 
-	TOKEN_PRIVILEGES tp;
-	tp.PrivilegeCount = 1;
-	tp.Privileges[ 0 ].Luid = luid;
-	tp.Privileges[ 0 ].Attributes = SE_PRIVILEGE_ENABLED;
+	TOKEN_PRIVILEGES tp = {
+		.PrivilegeCount = 1,
+		.Privileges[ 0 ].Luid = luid,
+		.Privileges[ 0 ].Attributes = SE_PRIVILEGE_ENABLED
+	};
 
 	AdjustTokenPrivileges( hToken, FALSE, &tp, 0, NULL, NULL );
 	if (GetLastError() != ERROR_SUCCESS) return 0;
@@ -85,6 +98,7 @@ void setAllPrivileges( HANDLE hProcessToken, BOOL bVerbose )
 
 int acquireSeDebugPrivilege( void )
 {
+	DWORD dwLastError = 0;
 	HANDLE hThreadToken = NULL;
 
 	int retry = 1;
@@ -99,10 +113,13 @@ int acquireSeDebugPrivilege( void )
 	BOOL bSuccess = FALSE;
 	if (hThreadToken) {
 		bSuccess = enableTokenPrivilege( hThreadToken, SE_DEBUG_NAME );
+		if (! bSuccess) dwLastError = GetLastError();
 		CloseHandle( hThreadToken );
 	}
+	else dwLastError = GetLastError();
+
 	if (! bSuccess) {
-		fwprintf( stderr, L"[E] Acquiring SeDebugPrivilege failed\n" );
+		printError( L"Acquiring SeDebugPrivilege failed", dwLastError );
 		return 2;
 	}
 
@@ -112,6 +129,7 @@ int acquireSeDebugPrivilege( void )
 
 int createSystemContext( void )
 {
+	DWORD dwLastError = 0;
 	DWORD dwSysPid = (DWORD) -1;
 	PWTS_PROCESS_INFOW pProcList = NULL;
 	DWORD dwProcCount = 0;
@@ -133,6 +151,7 @@ int createSystemContext( void )
 		}
 		WTSFreeMemory( pProcList );
 	}
+	else dwLastError = GetLastError();
 
 	HANDLE hToken = NULL;
 
@@ -145,22 +164,29 @@ int createSystemContext( void )
 			if (OpenProcessToken( hSysProcess, TOKEN_DUPLICATE, &hSysToken )) {
 				if (! DuplicateTokenEx( hSysToken,
 					TOKEN_ADJUST_PRIVILEGES | TOKEN_IMPERSONATE, NULL,
-					SecurityImpersonation, TokenImpersonation, &hToken )) hToken = NULL;
+					SecurityImpersonation, TokenImpersonation, &hToken )) {
+					dwLastError = GetLastError();
+					hToken = NULL;
+				}
 				CloseHandle( hSysToken );
 			}
+			else dwLastError = GetLastError();
 			CloseHandle( hSysProcess );
 		}
+		else dwLastError = GetLastError();
 	}
+	else dwLastError = 0xA0001000; // Process not found, custom error code
 
 	BOOL bSuccess = FALSE;
 	if (hToken) {
 		bSuccess =
 			enableTokenPrivilege( hToken, SE_ASSIGNPRIMARYTOKEN_NAME ) &&
 			SetThreadToken( NULL, hToken );
+		if (! bSuccess) dwLastError = GetLastError();
 		CloseHandle( hToken );
 	}
 	if (! bSuccess) {
-		fwprintf( stderr, L"[E] Failed to create system context\n" );
+		printError( L"Failed to create system context", dwLastError );
 		return 5;
 	}
 
@@ -170,6 +196,7 @@ int createSystemContext( void )
 
 int getTrustedInstallerProcess( HANDLE* phProcess )
 {
+	DWORD dwLastError = 0;
 	HANDLE hSCManager, hTIService;
 	SERVICE_STATUS_PROCESS serviceStatusBuffer = {0};
 
@@ -194,6 +221,8 @@ int getTrustedInstallerProcess( HANDLE* phProcess )
 		}
 	}
 
+	if (bStopped) dwLastError = GetLastError();
+
 	CloseServiceHandle( hSCManager );
 	CloseServiceHandle( hTIService );
 
@@ -203,10 +232,11 @@ int getTrustedInstallerProcess( HANDLE* phProcess )
 		// Get the TrustedInstaller process handle
 		*phProcess = OpenProcess( PROCESS_CREATE_PROCESS | PROCESS_QUERY_INFORMATION,
 			FALSE, serviceStatusBuffer.dwProcessId );
+		if (! *phProcess) dwLastError = GetLastError();
 	}
 
 	if (! *phProcess) {
-		fwprintf( stderr, L"[E] Could not open/start the TrustedInstaller service\n" );
+		printError( L"Could not open/start the TrustedInstaller service", dwLastError );
 		return 3;
 	}
 
@@ -216,6 +246,7 @@ int getTrustedInstallerProcess( HANDLE* phProcess )
 
 int getTrustedInstallerToken( HANDLE hTIProcess, HANDLE* phToken )
 {
+	DWORD dwLastError = 0;
 	*phToken = NULL;
 
 	// Get the TrustedInstaller process token
@@ -225,12 +256,16 @@ int getTrustedInstallerToken( HANDLE hTIProcess, HANDLE* phToken )
 			TOKEN_ADJUST_DEFAULT | TOKEN_ADJUST_PRIVILEGES | TOKEN_ADJUST_SESSIONID |
 			TOKEN_ASSIGN_PRIMARY | TOKEN_QUERY,
 			NULL,
-			SecurityIdentification, TokenPrimary, phToken )) *phToken = NULL;
+			SecurityIdentification, TokenPrimary, phToken )) {
+			dwLastError = GetLastError();
+			*phToken = NULL;
+		}
 		CloseHandle( hTIToken );
 	}
+	else dwLastError = GetLastError();
 
 	if (! *phToken) {
-		fwprintf( stderr, L"[E] Failed to create TrustedInstaller token\n" );
+		printError( L"Failed to create TrustedInstaller token", dwLastError );
 		return 5;
 	}
 
