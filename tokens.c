@@ -53,23 +53,29 @@ const wchar_t* apcwszTokenPrivileges[ 36 ] = {
 };
 
 
-void printError( wchar_t* pwszMessage, DWORD dwCode )
+void printError( wchar_t* pwszMessage, DWORD dwCode, int iPosition )
 {
-	wchar_t pwszFormat[] = L"[E] %ls (error code: 0x%08X)\n";
+	wchar_t pwszFormat[] = L"[E] %ls (code: 0x%08X, pos: %d)\n";
 	if (dwCode == 0) {
-		// Remove the error code string from the format
+		// Remove the error code/position string from the format
 		pwszFormat[ 7 ] = L'\n';
 		pwszFormat[ 8 ] = L'\0';
 	}
-	fwprintf( stderr, pwszFormat, pwszMessage, dwCode );
+	else if (iPosition == 0) {
+		// Remove the error position string from the format
+		pwszFormat[ 21 ] = L')';
+		pwszFormat[ 22 ] = L'\n';
+		pwszFormat[ 23 ] = L'\0';
+	}
+	fwprintf( stderr, pwszFormat, pwszMessage, dwCode, iPosition );
 }
 
 
-static int enableTokenPrivilege( HANDLE hToken, const wchar_t* pcwszPrivilege )
+static BOOL enableTokenPrivilege( HANDLE hToken, const wchar_t* pcwszPrivilege )
 {
 	LUID luid;
 	if (! LookupPrivilegeValue( NULL, pcwszPrivilege, &luid ))
-		return 0; // Cannot lookup privilege value
+		return FALSE; // Cannot lookup privilege value
 
 	TOKEN_PRIVILEGES tp = {
 		.PrivilegeCount = 1,
@@ -78,9 +84,9 @@ static int enableTokenPrivilege( HANDLE hToken, const wchar_t* pcwszPrivilege )
 	};
 
 	AdjustTokenPrivileges( hToken, FALSE, &tp, 0, NULL, NULL );
-	if (GetLastError() != ERROR_SUCCESS) return 0;
+	if (GetLastError() != ERROR_SUCCESS) return FALSE;
 
-	return 1;
+	return TRUE;
 }
 
 
@@ -100,6 +106,7 @@ int acquireSeDebugPrivilege( void )
 {
 	DWORD dwLastError = 0;
 	HANDLE hThreadToken = NULL;
+	int iStep = 1;
 
 	int retry = 1;
 	while (! OpenThreadToken( GetCurrentThread(),
@@ -112,6 +119,7 @@ int acquireSeDebugPrivilege( void )
 
 	BOOL bSuccess = FALSE;
 	if (hThreadToken) {
+		iStep++;
 		bSuccess = enableTokenPrivilege( hThreadToken, SE_DEBUG_NAME );
 		if (! bSuccess) dwLastError = GetLastError();
 		CloseHandle( hThreadToken );
@@ -119,7 +127,7 @@ int acquireSeDebugPrivilege( void )
 	else dwLastError = GetLastError();
 
 	if (! bSuccess) {
-		printError( L"Acquiring SeDebugPrivilege failed", dwLastError );
+		printError( L"Failed to acquire SeDebugPrivilege", dwLastError, iStep );
 		return 2;
 	}
 
@@ -133,6 +141,7 @@ int createSystemContext( void )
 	DWORD dwSysPid = (DWORD) -1;
 	PWTS_PROCESS_INFOW pProcList = NULL;
 	DWORD dwProcCount = 0;
+	int iStep = 1;
 
 	// Get the process id
 	if (WTSEnumerateProcessesW( WTS_CURRENT_SERVER_HANDLE, 0, 1,
@@ -156,12 +165,15 @@ int createSystemContext( void )
 	HANDLE hToken = NULL;
 
 	if (dwSysPid != (DWORD) -1) {
+		iStep++;
 		HANDLE hSysProcess = OpenProcess( PROCESS_QUERY_LIMITED_INFORMATION, FALSE,
 			dwSysPid );
 		if (hSysProcess) {
+			iStep++;
 			// Get the process token
 			HANDLE hSysToken = NULL;
 			if (OpenProcessToken( hSysProcess, TOKEN_DUPLICATE, &hSysToken )) {
+				iStep++;
 				if (! DuplicateTokenEx( hSysToken,
 					TOKEN_ADJUST_PRIVILEGES | TOKEN_IMPERSONATE, NULL,
 					SecurityImpersonation, TokenImpersonation, &hToken )) {
@@ -179,14 +191,16 @@ int createSystemContext( void )
 
 	BOOL bSuccess = FALSE;
 	if (hToken) {
-		bSuccess =
-			enableTokenPrivilege( hToken, SE_ASSIGNPRIMARYTOKEN_NAME ) &&
-			SetThreadToken( NULL, hToken );
+		iStep++;
+		if (enableTokenPrivilege( hToken, SE_ASSIGNPRIMARYTOKEN_NAME )) {
+			iStep++;
+			bSuccess = SetThreadToken( NULL, hToken );
+		}
 		if (! bSuccess) dwLastError = GetLastError();
 		CloseHandle( hToken );
 	}
 	if (! bSuccess) {
-		printError( L"Failed to create system context", dwLastError );
+		printError( L"Failed to create system context", dwLastError, iStep );
 		return 5;
 	}
 
@@ -199,6 +213,7 @@ int getTrustedInstallerProcess( HANDLE* phProcess )
 	DWORD dwLastError = 0;
 	HANDLE hSCManager, hTIService;
 	SERVICE_STATUS_PROCESS serviceStatusBuffer = {0};
+	int iStep = 1;
 
 	hSCManager = OpenSCManager( NULL, NULL, SC_MANAGER_CONNECT );
 	hTIService = OpenService( hSCManager, L"TrustedInstaller",
@@ -207,6 +222,7 @@ int getTrustedInstallerProcess( HANDLE* phProcess )
 	// Start the TrustedInstaller service
 	BOOL bStopped = TRUE;
 	if (hTIService) {
+		iStep++;
 		int retry = 1;
 		DWORD dwBytesNeeded;
 		while (
@@ -229,6 +245,7 @@ int getTrustedInstallerProcess( HANDLE* phProcess )
 	*phProcess = NULL;
 
 	if (! bStopped) {
+		iStep++;
 		// Get the TrustedInstaller process handle
 		*phProcess = OpenProcess( PROCESS_CREATE_PROCESS | PROCESS_QUERY_INFORMATION,
 			FALSE, serviceStatusBuffer.dwProcessId );
@@ -236,7 +253,7 @@ int getTrustedInstallerProcess( HANDLE* phProcess )
 	}
 
 	if (! *phProcess) {
-		printError( L"Could not open/start the TrustedInstaller service", dwLastError );
+		printError( L"Failed to open TrustedInstaller process", dwLastError, iStep );
 		return 3;
 	}
 
@@ -248,10 +265,12 @@ int getTrustedInstallerToken( HANDLE hTIProcess, HANDLE* phToken )
 {
 	DWORD dwLastError = 0;
 	*phToken = NULL;
+	int iStep = 1;
 
 	// Get the TrustedInstaller process token
 	HANDLE hTIToken = NULL;
 	if (OpenProcessToken( hTIProcess, TOKEN_DUPLICATE, &hTIToken )) {
+		iStep++;
 		if (! DuplicateTokenEx( hTIToken,
 			TOKEN_ADJUST_DEFAULT | TOKEN_ADJUST_PRIVILEGES | TOKEN_ADJUST_SESSIONID |
 			TOKEN_ASSIGN_PRIMARY | TOKEN_QUERY,
@@ -265,7 +284,7 @@ int getTrustedInstallerToken( HANDLE hTIProcess, HANDLE* phToken )
 	else dwLastError = GetLastError();
 
 	if (! *phToken) {
-		printError( L"Failed to create TrustedInstaller token", dwLastError );
+		printError( L"Failed to get TrustedInstaller token", dwLastError, iStep );
 		return 5;
 	}
 

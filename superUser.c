@@ -30,8 +30,8 @@ if (options.bVerbose) wprintf(__VA_ARGS__); // Only use when bVerbose in scope
 /*
 	Return codes (without /r option):
 		1 - Invalid argument
-		2 - Failed acquiring SeDebugPrivilege
-		3 - Could not open/start the TrustedInstaller service
+		2 - Failed to acquire SeDebugPrivilege
+		3 - Failed to open/start TrustedInstaller process/service
 		4 - Process creation failed
 		5 - Another fatal error occurred
 
@@ -159,7 +159,7 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 	}
 	else {
 		// Most commonly - 0x2 - The system cannot find the file specified.
-		printError( L"Process creation failed", dwCreateError );
+		printError( L"Process creation failed", dwCreateError, 0 );
 		return 4;
 	}
 
@@ -275,7 +275,7 @@ int wmain( int argc, wchar_t* argv[] )
 					options.bWait = 1;
 					break;
 				default:
-					printError( L"Invalid option", 0 );
+					printError( L"Invalid option", 0, 0 );
 					errCode = 1;
 					goto done_params;
 				}
@@ -296,7 +296,7 @@ done_params:
 
 	// Check the consistency of the options
 	if ((options.bReturnCode || options.bSeamless) && ! options.bWait) {
-		printError( L"/r or /s option requires /w", 0 );
+		printError( L"/r or /s option requires /w", 0, 0 );
 		return getExitCode( 1 );
 	}
 

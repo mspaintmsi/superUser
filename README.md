@@ -32,13 +32,13 @@ followed by parameters. If not specified, `cmd.exe` is started.
 
 ## Exit Codes
 
-| Exit Code |                      Meaning                       |
-|:---------:|----------------------------------------------------|
-|     1     | Invalid argument.                                  |
-|     2     | Failed acquiring SeDebugPrivilege.                 |
-|     3     | Could not open/start the TrustedInstaller service. |
-|     4     | Process creation failed (prints error code).       |
-|     5     | Another fatal error occurred.                      |
+| Exit Code |                        Meaning                         |
+|:---------:|--------------------------------------------------------|
+|     1     | Invalid argument.                                      |
+|     2     | Failed to acquire SeDebugPrivilege.                    |
+|     3     | Failed to open/start TrustedInstaller process/service. |
+|     4     | Process creation failed (prints error code).           |
+|     5     | Another fatal error occurred.                          |
 
 If the `/r` option is specified, the exit code of the child process is returned.
 If _superUser_ fails, it returns a code from -1000001 to -1000005 (e.g., -1000002 instead of 2).
