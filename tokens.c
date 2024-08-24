@@ -105,24 +105,15 @@ void setAllPrivileges( HANDLE hProcessToken, BOOL bVerbose )
 int acquireSeDebugPrivilege( void )
 {
 	DWORD dwLastError = 0;
-	HANDLE hThreadToken = NULL;
 	int iStep = 1;
 
-	int retry = 1;
-	while (! OpenThreadToken( GetCurrentThread(),
-		TOKEN_ADJUST_PRIVILEGES, FALSE, &hThreadToken ) &&
-		GetLastError() == ERROR_NO_TOKEN && retry)
-	{
-		ImpersonateSelf( SecurityImpersonation );
-		retry = 0;
-	}
-
 	BOOL bSuccess = FALSE;
-	if (hThreadToken) {
+	HANDLE hToken = NULL;
+	if (OpenProcessToken( GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken )) {
 		iStep++;
-		bSuccess = enableTokenPrivilege( hThreadToken, SE_DEBUG_NAME );
+		bSuccess = enableTokenPrivilege( hToken, SE_DEBUG_NAME );
 		if (! bSuccess) dwLastError = GetLastError();
-		CloseHandle( hThreadToken );
+		CloseHandle( hToken );
 	}
 	else dwLastError = GetLastError();
 
@@ -138,10 +129,10 @@ int acquireSeDebugPrivilege( void )
 int createSystemContext( void )
 {
 	DWORD dwLastError = 0;
+	int iStep = 1;
 	DWORD dwSysPid = (DWORD) -1;
 	PWTS_PROCESS_INFOW pProcList = NULL;
 	DWORD dwProcCount = 0;
-	int iStep = 1;
 
 	// Get the process id
 	if (WTSEnumerateProcessesW( WTS_CURRENT_SERVER_HANDLE, 0, 1,
@@ -211,9 +202,9 @@ int createSystemContext( void )
 int getTrustedInstallerProcess( HANDLE* phProcess )
 {
 	DWORD dwLastError = 0;
+	int iStep = 1;
 	HANDLE hSCManager, hTIService;
 	SERVICE_STATUS_PROCESS serviceStatusBuffer = {0};
-	int iStep = 1;
 
 	hSCManager = OpenSCManager( NULL, NULL, SC_MANAGER_CONNECT );
 	hTIService = OpenService( hSCManager, L"TrustedInstaller",
@@ -264,8 +255,8 @@ int getTrustedInstallerProcess( HANDLE* phProcess )
 int getTrustedInstallerToken( HANDLE hTIProcess, HANDLE* phToken )
 {
 	DWORD dwLastError = 0;
-	*phToken = NULL;
 	int iStep = 1;
+	*phToken = NULL;
 
 	// Get the TrustedInstaller process token
 	HANDLE hTIToken = NULL;
