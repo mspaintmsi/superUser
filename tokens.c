@@ -130,6 +130,7 @@ int createSystemContext( void )
 {
 	DWORD dwLastError = 0;
 	int iStep = 1;
+
 	DWORD dwSysPid = (DWORD) -1;
 	PWTS_PROCESS_INFOW pProcList = NULL;
 	DWORD dwProcCount = 0;
@@ -190,6 +191,7 @@ int createSystemContext( void )
 		if (! bSuccess) dwLastError = GetLastError();
 		CloseHandle( hToken );
 	}
+
 	if (! bSuccess) {
 		printError( L"Failed to create system context", dwLastError, iStep );
 		return 5;
@@ -252,11 +254,11 @@ int getTrustedInstallerProcess( HANDLE* phProcess )
 }
 
 
-int getTrustedInstallerToken( HANDLE hTIProcess, HANDLE* phToken )
+int createChildProcessToken( HANDLE hTIProcess, HANDLE* phNewToken )
 {
 	DWORD dwLastError = 0;
 	int iStep = 1;
-	*phToken = NULL;
+	*phNewToken = NULL;
 
 	// Get the TrustedInstaller process token
 	HANDLE hTIToken = NULL;
@@ -266,16 +268,16 @@ int getTrustedInstallerToken( HANDLE hTIProcess, HANDLE* phToken )
 			TOKEN_ADJUST_DEFAULT | TOKEN_ADJUST_PRIVILEGES | TOKEN_ADJUST_SESSIONID |
 			TOKEN_ASSIGN_PRIMARY | TOKEN_QUERY,
 			NULL,
-			SecurityIdentification, TokenPrimary, phToken )) {
+			SecurityIdentification, TokenPrimary, phNewToken )) {
 			dwLastError = GetLastError();
-			*phToken = NULL;
+			*phNewToken = NULL;
 		}
 		CloseHandle( hTIToken );
 	}
 	else dwLastError = GetLastError();
 
-	if (! *phToken) {
-		printError( L"Failed to get TrustedInstaller token", dwLastError, iStep );
+	if (! *phNewToken) {
+		printError( L"Failed to create child process token", dwLastError, iStep );
 		return 5;
 	}
 

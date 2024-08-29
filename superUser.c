@@ -44,18 +44,18 @@ if (options.bVerbose) wprintf(__VA_ARGS__); // Only use when bVerbose in scope
 static int nChildExitCode = 0;
 
 
-static int createTrustedInstallerProcess( wchar_t* pwszImageName )
+static int createChildProcess( wchar_t* pwszImageName )
 {
 	int errCode = 0;
-	HANDLE hTIProcess = NULL, hTIToken = NULL;
+	HANDLE hTIProcess = NULL, hChildProcessToken = NULL;
 
 	// Start the TrustedInstaller service and get its process handle
 	errCode = getTrustedInstallerProcess( &hTIProcess );
 	if (errCode) return errCode;
 
 	if (options.bSeamless) {
-		// Get the TrustedInstaller process token
-		errCode = getTrustedInstallerToken( hTIProcess, &hTIToken );
+		// Create the child process token
+		errCode = createChildProcessToken( hTIProcess, &hChildProcessToken );
 		if (errCode) {
 			CloseHandle( hTIProcess );
 			return errCode;
@@ -64,12 +64,12 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 		// Get the console session id and set it in the token
 		DWORD dwSessionId = WTSGetActiveConsoleSessionId();
 		if (dwSessionId != (DWORD) -1) {
-			SetTokenInformation( hTIToken, TokenSessionId, (PVOID) &dwSessionId,
+			SetTokenInformation( hChildProcessToken, TokenSessionId, (PVOID) &dwSessionId,
 				sizeof( DWORD ) );
 		}
 
 		// Set all privileges in the child process token
-		setAllPrivileges( hTIToken, options.bVerbose );
+		setAllPrivileges( hChildProcessToken, options.bVerbose );
 	}
 
 	// Initialize startupInfo
@@ -105,7 +105,7 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 	wprintfv( L"[D] Creating specified process\n" );
 
 	BOOL bCreateResult = CreateProcessAsUser(
-		hTIToken,
+		hChildProcessToken,
 		NULL,
 		pwszImageName,
 		NULL,
@@ -120,7 +120,7 @@ static int createTrustedInstallerProcess( wchar_t* pwszImageName )
 
 	DWORD dwCreateError = bCreateResult ? 0 : GetLastError();
 
-	if (options.bSeamless) CloseHandle( hTIToken );
+	if (options.bSeamless) CloseHandle( hChildProcessToken );
 	else {
 		DeleteProcThreadAttributeList( startupInfo.lpAttributeList );
 		HeapFree( GetProcessHeap(), 0, startupInfo.lpAttributeList );
@@ -311,7 +311,7 @@ done_params:
 
 	errCode = acquireSeDebugPrivilege();
 	if (! errCode && options.bSeamless) errCode = createSystemContext();
-	if (! errCode) errCode = createTrustedInstallerProcess( pwszImageName );
+	if (! errCode) errCode = createChildProcess( pwszImageName );
 
 	HeapFree( GetProcessHeap(), 0, pwszImageName );
 
