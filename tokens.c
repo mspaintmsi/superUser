@@ -55,7 +55,7 @@ const wchar_t* apcwszTokenPrivileges[ 36 ] = {
 
 void printError( wchar_t* pwszMessage, DWORD dwCode, int iPosition )
 {
-	wchar_t pwszFormat[] = L"[E] %ls (code: 0x%08X, pos: %d)\n";
+	wchar_t pwszFormat[] = L"[E] %ls (code: 0x%08lX, pos: %d)\n";
 	if (dwCode == 0) {
 		// Remove the error code/position string from the format
 		pwszFormat[ 7 ] = L'\n';
@@ -63,9 +63,9 @@ void printError( wchar_t* pwszMessage, DWORD dwCode, int iPosition )
 	}
 	else if (iPosition == 0) {
 		// Remove the error position string from the format
-		pwszFormat[ 21 ] = L')';
-		pwszFormat[ 22 ] = L'\n';
-		pwszFormat[ 23 ] = L'\0';
+		pwszFormat[ 22 ] = L')';
+		pwszFormat[ 23 ] = L'\n';
+		pwszFormat[ 24 ] = L'\0';
 	}
 	fwprintf( stderr, pwszFormat, pwszMessage, dwCode, iPosition );
 }

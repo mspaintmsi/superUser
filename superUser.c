@@ -139,7 +139,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 			ResumeThread( processInfo.hThread );
 		}
 
-		wprintfv( L"[D] Created process ID: %ld\n", processInfo.dwProcessId );
+		wprintfv( L"[D] Created process ID: %lu\n", processInfo.dwProcessId );
 
 		if (options.bWait) {
 			wprintfv( L"[D] Waiting for process to exit\n" );
