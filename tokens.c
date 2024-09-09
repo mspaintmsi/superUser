@@ -254,17 +254,17 @@ int getTrustedInstallerProcess( HANDLE* phProcess )
 }
 
 
-int createChildProcessToken( HANDLE hTIProcess, HANDLE* phNewToken )
+int createChildProcessToken( HANDLE hBaseProcess, HANDLE* phNewToken )
 {
 	DWORD dwLastError = 0;
 	int iStep = 1;
 	*phNewToken = NULL;
 
-	// Get the TrustedInstaller process token
-	HANDLE hTIToken = NULL;
-	if (OpenProcessToken( hTIProcess, TOKEN_DUPLICATE, &hTIToken )) {
+	// Get the base process token
+	HANDLE hBaseToken = NULL;
+	if (OpenProcessToken( hBaseProcess, TOKEN_DUPLICATE, &hBaseToken )) {
 		iStep++;
-		if (! DuplicateTokenEx( hTIToken,
+		if (! DuplicateTokenEx( hBaseToken,
 			TOKEN_ADJUST_DEFAULT | TOKEN_ADJUST_PRIVILEGES | TOKEN_ADJUST_SESSIONID |
 			TOKEN_ASSIGN_PRIMARY | TOKEN_QUERY,
 			NULL,
@@ -272,7 +272,7 @@ int createChildProcessToken( HANDLE hTIProcess, HANDLE* phNewToken )
 			dwLastError = GetLastError();
 			*phNewToken = NULL;
 		}
-		CloseHandle( hTIToken );
+		CloseHandle( hBaseToken );
 	}
 	else dwLastError = GetLastError();
 

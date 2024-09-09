@@ -47,17 +47,17 @@ static int nChildExitCode = 0;
 static int createChildProcess( wchar_t* pwszImageName )
 {
 	int errCode = 0;
-	HANDLE hTIProcess = NULL, hChildProcessToken = NULL;
+	HANDLE hBaseProcess = NULL, hChildProcessToken = NULL;
 
 	// Start the TrustedInstaller service and get its process handle
-	errCode = getTrustedInstallerProcess( &hTIProcess );
+	errCode = getTrustedInstallerProcess( &hBaseProcess );
 	if (errCode) return errCode;
 
 	if (options.bSeamless) {
 		// Create the child process token
-		errCode = createChildProcessToken( hTIProcess, &hChildProcessToken );
+		errCode = createChildProcessToken( hBaseProcess, &hChildProcessToken );
 		if (errCode) {
-			CloseHandle( hTIProcess );
+			CloseHandle( hBaseProcess );
 			return errCode;
 		}
 
@@ -91,7 +91,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 			(PSIZE_T) &attributeListLength );
 
 		UpdateProcThreadAttribute( startupInfo.lpAttributeList, 0,
-			PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, &hTIProcess, sizeof( HANDLE ), NULL, NULL );
+			PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, &hBaseProcess, sizeof( HANDLE ), NULL, NULL );
 	}
 
 	// Create process
@@ -125,7 +125,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 		DeleteProcThreadAttributeList( startupInfo.lpAttributeList );
 		HeapFree( GetProcessHeap(), 0, startupInfo.lpAttributeList );
 	}
-	CloseHandle( hTIProcess );
+	CloseHandle( hBaseProcess );
 
 	if (bCreateResult) {
 		if (! options.bSeamless) {

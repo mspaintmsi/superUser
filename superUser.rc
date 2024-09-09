@@ -18,7 +18,7 @@ FILETYPE 0x1
 		{
 			VALUE "CompanyName", "Awoo~"
 			VALUE "FileDescription", "Run any process with TrustedInstaller privileges"
-			VALUE "FileVersion", "5.6.4"
+			VALUE "FileVersion", "5.6.4.0"
 			VALUE "InternalName", "superUser"
 			VALUE "LegalCopyright", "Copyright (C) 2024"
 			VALUE "OriginalFilename", FILENAME
