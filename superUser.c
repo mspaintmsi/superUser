@@ -2,7 +2,7 @@
 	superUser
 
 	A simple and lightweight utility to start any process
-	with TrustedInstaller privileges.
+	as the System user with Trusted Installer privileges.
 
 	https://github.com/mspaintmsi/superUser
 
