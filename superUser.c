@@ -24,8 +24,7 @@ static struct {
 } options = {0};
 
 #define wputs _putws
-#define wprintfv(...) \
-if (options.bVerbose) wprintf(__VA_ARGS__); // Only use when bVerbose in scope
+#define wprintfv(...) if (options.bVerbose) wprintf(__VA_ARGS__);
 
 /*
 	Return codes (without /r option):
