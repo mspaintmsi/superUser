@@ -1,9 +1,9 @@
 #ifdef TARGET32
-    #define FILENAME "superUser32.exe"
+	#define FILENAME "superUser32.exe"
 #elif TARGET64
-    #define FILENAME "superUser64.exe"
+	#define FILENAME "superUser64.exe"
 #else
-    #define FILENAME "superUser.exe"
+	#define FILENAME "superUser.exe"
 #endif
 
 1 VERSIONINFO
@@ -17,16 +17,15 @@ FILETYPE 0x1
 		BLOCK "000904b0"
 		{
 			VALUE "CompanyName", "Awoo~"
-			VALUE "FileDescription", "Run any process with TrustedInstaller privileges"
+			VALUE "FileDescription", "Run any process with Trusted Installer privileges"
 			VALUE "FileVersion", "5.6.4.0"
 			VALUE "InternalName", "superUser"
-			VALUE "LegalCopyright", "Copyright (C) 2024"
+			VALUE "LegalCopyright", "Copyright © 2024"
 			VALUE "OriginalFilename", FILENAME
 			VALUE "ProductName", "superUser"
 			VALUE "ProductVersion", "5.6.4"
 		}
 	}
-
 	BLOCK "VarFileInfo"
 	{
 		VALUE "Translation", 0x0009, 0x04B0
