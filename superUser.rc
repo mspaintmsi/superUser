@@ -20,7 +20,7 @@ BEGIN
 			VALUE "FileDescription", "Run any process with Trusted Installer privileges"
 			VALUE "FileVersion", "5.6.4.0"
 			VALUE "InternalName", "superUser"
-			VALUE "LegalCopyright", "Copyright © 2024"
+			VALUE "LegalCopyright", "Copyright © 2019-2024"
 			VALUE "OriginalFilename", FILENAME
 			VALUE "ProductName", "superUser"
 			VALUE "ProductVersion", "5.6.4"
