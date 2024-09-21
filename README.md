@@ -1,7 +1,7 @@
 # About
 _superUser_ is a simple and lightweight utility to start any process as the System user with Trusted Installer privileges.
 
-# How it Works
+# How It Works
 The program acquires the Trusted Installer's process' access token and creates a new (user-specified) process as the System user with Trusted Installer privileges using this token.
 
 # Usage
@@ -15,13 +15,13 @@ Simply run _superUser_ from the command prompt (preferably one with admin privil
 
 #### ```superUser [options] [command_to_run]```
 
-|  Option |                         Meaning                                 |
-|:-------:|-----------------------------------------------------------------|
-|   /h    | Display the help message.                                       |
-|   /r    | Return the exit code of the child process. Requires /w.         |
-|   /s    | Child process shares parent's console. Requires /w.             |
-|   /v    | Verbose. Display progress info.                                 |
-|   /w    | Wait for the created process to exit. Used for scripts.         |
+| Option |                           Meaning                           |
+|:------:|-------------------------------------------------------------|
+|   /h   | Display the help message.                                   |
+|   /r   | Return the exit code of the child process. Requires /w.     |
+|   /s   | The child process shares the parent's console. Requires /w. |
+|   /v   | Display verbose messages with progress information.         |
+|   /w   | Wait for the child process to finish. Used for scripts.     |
 
 Notes:
 - You can also use a dash (-) in place of a slash (/) in front of an option.

@@ -17,10 +17,10 @@
 
 // Program options
 static struct {
-	unsigned int bReturnCode : 1;  // Whether to return process exit code
+	unsigned int bReturnCode : 1;  // Whether to return child process exit code
 	unsigned int bSeamless : 1;    // Whether child process shares parent's console
 	unsigned int bVerbose : 1;     // Whether to print debug messages or not
-	unsigned int bWait : 1;        // Whether to wait to finish created process
+	unsigned int bWait : 1;        // Whether to wait for child process to finish
 } options = {0};
 
 #define wputs _putws
@@ -226,13 +226,13 @@ static int getExitCode( int code )
 static void printHelp( void )
 {
 	wputs(
-		L"superUser.exe [options] [command_to_run]\n\
-Options: (You can use either '-' or '/')\n\
-  /h - Display this help message.\n\
-  /r - Return exit code of child process. Requires /w.\n\
-  /s - Child process shares parent's console. Requires /w.\n\
-  /v - Display verbose messages.\n\
-  /w - Wait for the created process to finish before exiting." );
+		L"\nsuperUser [options] [command_to_run]\n\n\
+Options (you can use either \"-\" or \"/\"):\n\
+  /h  Display this help message.\n\
+  /r  Return the exit code of the child process. Requires /w.\n\
+  /s  The child process shares the parent's console. Requires /w.\n\
+  /v  Display verbose messages.\n\
+  /w  Wait for the child process to finish before exiting." );
 }
 
 
