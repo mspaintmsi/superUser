@@ -177,7 +177,6 @@
       <SubSystem>Console</SubSystem>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
-      <MergeSections>.pdata=.text</MergeSections>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET64;%(PreprocessorDefinitions)</PreprocessorDefinitions>

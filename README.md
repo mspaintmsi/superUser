@@ -8,10 +8,10 @@ The program acquires the Trusted Installer's process' access token and creates a
 There are two ways to run the program:
 
 ## From the File Explorer
-Double click the executable, grant admin privileges and wait for a command prompt to appear.
+Double-click the executable, grant administrator privileges and wait for a command prompt to appear.
 
 ## From the Command Prompt
-Simply run _superUser_ from the command prompt (preferably one with admin privileges) using the following arguments:
+Simply run _superUser_ from the command prompt (preferably one with administrator privileges) using the following arguments:
 
 #### ```superUser [options] [command_to_run]```
 

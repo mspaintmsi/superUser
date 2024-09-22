@@ -53,16 +53,16 @@ const wchar_t* apcwszTokenPrivileges[ 36 ] = {
 };
 
 
-void printError( wchar_t* pwszMessage, DWORD dwCode, int iPosition )
+void printError( const wchar_t* pwszMessage, DWORD dwCode, int iPosition )
 {
 	wchar_t pwszFormat[] = L"[E] %ls (code: 0x%08lX, pos: %d)\n";
 	wchar_t* pEnd = NULL;
 	if (dwCode == 0) {
-		// Remove the error code/position string from the format
+		// Remove the error code/position part from the format
 		pEnd = pwszFormat + 7;
 	}
 	else if (iPosition == 0) {
-		// Remove the error position string from the format
+		// Remove the error position part from the format
 		pEnd = pwszFormat + 22;
 		*pEnd++ = L')';
 	}
@@ -87,19 +87,16 @@ static BOOL enableTokenPrivilege( HANDLE hToken, const wchar_t* pcwszPrivilege )
 	};
 
 	AdjustTokenPrivileges( hToken, FALSE, &tp, 0, NULL, NULL );
-	if (GetLastError() != ERROR_SUCCESS) return FALSE;
-
-	return TRUE;
+	return (GetLastError() == ERROR_SUCCESS);
 }
 
 
-void setAllPrivileges( HANDLE hProcessToken, BOOL bVerbose )
+void setAllPrivileges( HANDLE hToken, BOOL bVerbose )
 {
 	// Iterate over apcwszTokenPrivileges to add all privileges to a token
 	for (int i = 0; i < (sizeof( apcwszTokenPrivileges ) /
 		sizeof( *apcwszTokenPrivileges )); i++)
-		if (! enableTokenPrivilege( hProcessToken, apcwszTokenPrivileges[ i ] ) &&
-			bVerbose)
+		if (! enableTokenPrivilege( hToken, apcwszTokenPrivileges[ i ] ) && bVerbose)
 			wprintf( L"[D] Could not set privilege [%ls], you most likely don't have it.\n",
 				apcwszTokenPrivileges[ i ] );
 }
@@ -204,7 +201,7 @@ int createSystemContext( void )
 }
 
 
-int getTrustedInstallerProcess( HANDLE* phProcess )
+int getTrustedInstallerProcess( HANDLE* phTIProcess )
 {
 	DWORD dwLastError = 0;
 	int iStep = 1;
@@ -238,17 +235,17 @@ int getTrustedInstallerProcess( HANDLE* phProcess )
 	CloseServiceHandle( hSCManager );
 	CloseServiceHandle( hTIService );
 
-	*phProcess = NULL;
+	*phTIProcess = NULL;
 
 	if (! bStopped) {
 		iStep++;
 		// Get the TrustedInstaller process handle
-		*phProcess = OpenProcess( PROCESS_CREATE_PROCESS | PROCESS_QUERY_INFORMATION,
+		*phTIProcess = OpenProcess( PROCESS_CREATE_PROCESS | PROCESS_QUERY_INFORMATION,
 			FALSE, serviceStatusBuffer.dwProcessId );
-		if (! *phProcess) dwLastError = GetLastError();
+		if (! *phTIProcess) dwLastError = GetLastError();
 	}
 
-	if (! *phProcess) {
+	if (! *phTIProcess) {
 		printError( L"Failed to open TrustedInstaller process", dwLastError, iStep );
 		return 3;
 	}
