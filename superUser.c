@@ -240,8 +240,8 @@ int wmain( int argc, wchar_t* argv[] )
 {
 	int errCode = 0;  // superUser error code
 
-	// Command to run (executable file name of process to create, followed by
-	// parameters) - basically the first non-option argument or "cmd.exe".
+	// Command to run (executable filename of process to create, followed by
+	// arguments) - basically the first non-option argument or "cmd.exe".
 	wchar_t* pwszCommandLine = NULL;
 
 	wchar_t* pwszArgument = NULL;  // Command line argument
