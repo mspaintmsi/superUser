@@ -47,6 +47,8 @@ The `/wrs` options allow you to run a process in a completely transparent way:
 
 ### Examples
 
+Open a command prompt __as administrator__ to run these commands.
+
 	superUser64 /ws whoami /user
 	superUser64 /ws whoami /groups | find "TrustedInstaller"
 	superUser64 /wr my_script.cmd arg1 arg2
