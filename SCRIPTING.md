@@ -13,6 +13,10 @@ By default, the child process creates a new console (window). If you specify the
 `/s` option, it shares the console of the parent. In other words, it doesn't open
 another window. This is useful for running commands or small scripts.
 
+The `/wrs` options allow you to run a process in a completely transparent way:
+
+- The new process runs in the same window and performs its inputs and outputs there.
+- The exit code of the new process is returned and you can retrieve it with the errorlevel variable.
 
 Examples
 --------

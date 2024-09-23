@@ -2,7 +2,7 @@
 _superUser_ is a simple and lightweight utility to start any process as the System user with Trusted Installer privileges.
 
 # How It Works
-The program acquires the Trusted Installer's process' access token and creates a new (user-specified) process as the System user with Trusted Installer privileges using this token.
+The program acquires the TrustedInstaller process' access token and creates a new (user-specified) process as the System user with Trusted Installer privileges using this token.
 
 # Usage
 There are two ways to run the program:
@@ -13,7 +13,17 @@ Double-click the executable, grant administrator privileges and wait for a comma
 ## From the Command Prompt
 Simply run _superUser_ from the command prompt (preferably one with administrator privileges) using the following arguments:
 
-#### ```superUser [options] [command_to_run]```
+__`superUser [options] [command_to_run]`__
+
+
+`command_to_run` is the command line used to create the new process. It is a filename followed by arguments. If not specified, `cmd.exe` is started.
+
+This filename can be:
+- An executable name (the _.exe_ extension can be omitted).
+- A batch name (_.cmd_ or _.bat_).
+
+
+### Options
 
 | Option |                           Meaning                           |
 |:------:|-------------------------------------------------------------|
@@ -23,11 +33,23 @@ Simply run _superUser_ from the command prompt (preferably one with administrato
 |   /v   | Display verbose messages with progress information.         |
 |   /w   | Wait for the child process to finish. Used for scripts.     |
 
-Notes:
 - You can also use a dash (-) in place of a slash (/) in front of an option.
 - Multiple options can be grouped together (e.g., `/wrs`).
-- `command_to_run` is the filename of an executable (.exe) or script (.cmd),
-followed by parameters. If not specified, `cmd.exe` is started.
+
+
+### Notes
+
+The `/wrs` options allow you to run a process in a completely transparent way:
+
+- The new process runs in the same window and performs its inputs and outputs there.
+- The exit code of the new process is returned and you can retrieve it with the errorlevel variable.
+
+
+### Examples
+
+	superUser64 /ws whoami /user
+	superUser64 /ws whoami /groups | find "TrustedInstaller"
+	superUser64 /wr my_script.cmd arg1 arg2
 
 
 ## Exit Codes
