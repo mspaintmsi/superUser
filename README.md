@@ -11,7 +11,7 @@ There are two ways to run the program:
 Double-click the executable, grant administrator privileges and wait for a command prompt to appear.
 
 ## From the Command Prompt
-Simply run _superUser_ from the command prompt (preferably one with administrator privileges) using the following arguments:
+Run _superUser_ from the command prompt opened __as administrator__, using the following arguments:
 
 __`superUser [options] [command_to_run]`__
 
