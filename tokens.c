@@ -68,7 +68,7 @@ void printError( const wchar_t* pwszMessage, DWORD dwCode, int iPosition )
 	}
 	if (pEnd) {
 		*pEnd++ = L'\n';
-		*pEnd++ = L'\0';
+		*pEnd = L'\0';
 	}
 	fwprintf( stderr, pwszFormat, pwszMessage, dwCode, iPosition );
 }
