@@ -13,7 +13,7 @@ VC++ runtime (smallest), and to dynamically link against the UCRT (biggest).
 The generated executables require the UCRT dlls to run (included in Windows 10
 or installed by the cumulative updates in older versions).
 
-The executable size is around 25-30 KB.
+The executable size is around 25-31 KB.
 
 - Open the `msvc\ucrt\superUser` project with Visual Studio.
 - In the toolbar, choose the _Release_ configuration.
