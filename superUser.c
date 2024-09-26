@@ -42,6 +42,9 @@ static struct {
 #define EXIT_CODE_BASE 1000000
 static int nChildExitCode = 0;
 
+// Previous console output code page
+static UINT nOldConsoleOutputCodePage = 0;
+
 
 static int createChildProcess( wchar_t* pwszImageName )
 {
@@ -214,6 +217,9 @@ static BOOL getArgument( wchar_t** ppArgument, wchar_t** ppArgumentIndex )
 
 static int getExitCode( int code )
 {
+	// Restore the previous console output code page before exiting
+	SetConsoleOutputCP( nOldConsoleOutputCodePage );
+
 	if (code == -1) code = 0;  // Print help, exit with code 0
 	if (options.bReturnCode) {
 		if (code) code = -(EXIT_CODE_BASE + code);
@@ -239,6 +245,10 @@ Options (you can use either \"-\" or \"/\"):\n\
 int wmain( int argc, wchar_t* argv[] )
 {
 	int errCode = 0;  // superUser error code
+
+	// Set the console output code page to the system code page
+	nOldConsoleOutputCodePage = GetConsoleOutputCP();
+	SetConsoleOutputCP( GetACP() );
 
 	// Command to run (executable filename of process to create, followed by
 	// arguments) - basically the first non-option argument or "cmd.exe".
@@ -301,7 +311,7 @@ done_params:
 
 	if (! pwszCommandLine) pwszCommandLine = L"cmd.exe";
 
-	wprintfv( L"[D] Your commandline is \"%ls\"\n", pwszCommandLine );
+	wprintfv( L"[D] Your command line is \"%ls\"\n", pwszCommandLine );
 
 	// pwszCommandLine may be read-only. It must be copied to a writable area.
 	size_t nCommandLineBufSize = (wcslen( pwszCommandLine ) + 1) * sizeof( wchar_t );
