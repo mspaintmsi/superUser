@@ -24,7 +24,7 @@ static struct {
 } options = {0};
 
 #define wputs _putws
-#define wprintfv(...) if (options.bVerbose) wprintf(__VA_ARGS__);
+#define printConsoleVerbose(...) if (options.bVerbose) printConsole(__VA_ARGS__);
 
 /*
 	Return codes (without /r option):
@@ -41,9 +41,6 @@ static struct {
 
 #define EXIT_CODE_BASE 1000000
 static int nChildExitCode = 0;
-
-// Previous console output code page
-static UINT nOldConsoleOutputCodePage = 0;
 
 
 static int createChildProcess( wchar_t* pwszImageName )
@@ -87,8 +84,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 
 		SIZE_T attributeListLength = 0;
 		InitializeProcThreadAttributeList( NULL, 1, 0, (PSIZE_T) &attributeListLength );
-		startupInfo.lpAttributeList = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY,
-			attributeListLength );
+		startupInfo.lpAttributeList = allocHeap( HEAP_ZERO_MEMORY, attributeListLength );
 		InitializeProcThreadAttributeList( startupInfo.lpAttributeList, 1, 0,
 			(PSIZE_T) &attributeListLength );
 
@@ -104,7 +100,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 		dwCreationFlags = CREATE_SUSPENDED | EXTENDED_STARTUPINFO_PRESENT |
 		CREATE_NEW_CONSOLE;
 
-	wprintfv( L"[D] Creating specified process\n" );
+	printConsoleVerbose( L"[D] Creating specified process\n" );
 
 	BOOL bCreateResult = CreateProcessAsUser(
 		hChildProcessToken,
@@ -125,7 +121,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 	if (options.bSeamless) CloseHandle( hChildProcessToken );
 	else {
 		DeleteProcThreadAttributeList( startupInfo.lpAttributeList );
-		HeapFree( GetProcessHeap(), 0, startupInfo.lpAttributeList );
+		freeHeap( startupInfo.lpAttributeList );
 	}
 	CloseHandle( hBaseProcess );
 
@@ -141,18 +137,18 @@ static int createChildProcess( wchar_t* pwszImageName )
 			ResumeThread( processInfo.hThread );
 		}
 
-		wprintfv( L"[D] Created process ID: %lu\n", processInfo.dwProcessId );
+		printConsoleVerbose( L"[D] Created process ID: %lu\n", processInfo.dwProcessId );
 
 		if (options.bWait) {
-			wprintfv( L"[D] Waiting for process to exit\n" );
+			printConsoleVerbose( L"[D] Waiting for process to exit\n" );
 			WaitForSingleObject( processInfo.hProcess, INFINITE );
-			wprintfv( L"[D] Process exited\n" );
+			printConsoleVerbose( L"[D] Process exited\n" );
 
 			// Get the child's exit code
 			DWORD dwExitCode;
 			if (GetExitCodeProcess( processInfo.hProcess, &dwExitCode )) {
 				nChildExitCode = dwExitCode;
-				wprintfv( L"[D] Process exit code: %ld\n", dwExitCode );
+				printConsoleVerbose( L"[D] Process exit code: %ld\n", dwExitCode );
 			}
 		}
 
@@ -187,7 +183,7 @@ static BOOL getArgument( wchar_t** ppArgument, wchar_t** ppArgumentIndex )
 	}
 
 	// Free the previous argument (if it exists)
-	if (*ppArgument) HeapFree( GetProcessHeap(), 0, *ppArgument );
+	if (*ppArgument) freeHeap( *ppArgument );
 	*ppArgument = NULL;
 
 	// Search argument
@@ -203,8 +199,7 @@ static BOOL getArgument( wchar_t** ppArgument, wchar_t** ppArgumentIndex )
 		while (*p && *p != L' ' && *p != L'\t') p++;
 
 		size_t nArgSize = (p - pBegin) * sizeof( wchar_t );
-		*ppArgument = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY,
-			nArgSize + sizeof( wchar_t ) );
+		*ppArgument = allocHeap( HEAP_ZERO_MEMORY, nArgSize + sizeof( wchar_t ) );
 		memcpy( *ppArgument, pBegin, nArgSize );
 		*ppArgumentIndex = pBegin;
 		return TRUE;
@@ -217,9 +212,6 @@ static BOOL getArgument( wchar_t** ppArgument, wchar_t** ppArgumentIndex )
 
 static int getExitCode( int code )
 {
-	// Restore the previous console output code page before exiting
-	SetConsoleOutputCP( nOldConsoleOutputCodePage );
-
 	if (code == -1) code = 0;  // Print help, exit with code 0
 	if (options.bReturnCode) {
 		if (code) code = -(EXIT_CODE_BASE + code);
@@ -231,24 +223,20 @@ static int getExitCode( int code )
 
 static void printHelp( void )
 {
-	wputs(
+	printConsole( L"%ls",
 		L"\nsuperUser [options] [command_to_run]\n\n\
 Options (you can use either \"-\" or \"/\"):\n\
   /h  Display this help message.\n\
   /r  Return the exit code of the child process. Requires /w.\n\
   /s  The child process shares the parent's console. Requires /w.\n\
   /v  Display verbose messages.\n\
-  /w  Wait for the child process to finish before exiting." );
+  /w  Wait for the child process to finish before exiting.\n" );
 }
 
 
 int wmain( int argc, wchar_t* argv[] )
 {
 	int errCode = 0;  // superUser error code
-
-	// Set the console output code page to the system code page
-	nOldConsoleOutputCodePage = GetConsoleOutputCP();
-	SetConsoleOutputCP( GetACP() );
 
 	// Command to run (executable filename of process to create, followed by
 	// arguments) - basically the first non-option argument or "cmd.exe".
@@ -299,7 +287,7 @@ int wmain( int argc, wchar_t* argv[] )
 	}
 done_params:
 	// Free the last argument (if it exists)
-	if (pwszArgument) HeapFree( GetProcessHeap(), 0, pwszArgument );
+	if (pwszArgument) freeHeap( pwszArgument );
 
 	if (errCode) return getExitCode( errCode );
 
@@ -311,18 +299,18 @@ done_params:
 
 	if (! pwszCommandLine) pwszCommandLine = L"cmd.exe";
 
-	wprintfv( L"[D] Your command line is \"%ls\"\n", pwszCommandLine );
+	printConsoleVerbose( L"[D] Your command line is \"%ls\"\n", pwszCommandLine );
 
 	// pwszCommandLine may be read-only. It must be copied to a writable area.
 	size_t nCommandLineBufSize = (wcslen( pwszCommandLine ) + 1) * sizeof( wchar_t );
-	wchar_t* pwszImageName = HeapAlloc( GetProcessHeap(), 0, nCommandLineBufSize );
+	wchar_t* pwszImageName = allocHeap( 0, nCommandLineBufSize );
 	memcpy( pwszImageName, pwszCommandLine, nCommandLineBufSize );
 
 	errCode = acquireSeDebugPrivilege();
 	if (! errCode && options.bSeamless) errCode = createSystemContext();
 	if (! errCode) errCode = createChildProcess( pwszImageName );
 
-	HeapFree( GetProcessHeap(), 0, pwszImageName );
+	freeHeap( pwszImageName );
 
 	return getExitCode( errCode );
 }

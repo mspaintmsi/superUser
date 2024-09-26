@@ -53,6 +53,59 @@ const wchar_t* apcwszTokenPrivileges[ 36 ] = {
 };
 
 
+LPVOID allocHeap( DWORD dwFlags, SIZE_T dwBytes )
+{
+	return HeapAlloc( GetProcessHeap(), dwFlags, dwBytes );
+}
+
+
+VOID freeHeap( LPVOID lpMem )
+{
+	HeapFree( GetProcessHeap(), 0, lpMem );
+}
+
+
+static void v_printConsoleStream( FILE* stream, const wchar_t* pwszFormat,
+	va_list arg_list )
+{
+	// Write the formatted string to a buffer (wide chars)
+	SIZE_T size1 = _vscwprintf( pwszFormat, arg_list );
+	wchar_t* buff1 = allocHeap( 0, (size1 + 1) * sizeof( wchar_t ) );
+	_vsnwprintf_s( buff1, size1 + 1, size1, pwszFormat, arg_list );
+
+	// Convert buffer to console code page (bytes)
+	int size2 = WideCharToMultiByte( GetConsoleOutputCP(), 0, buff1, -1,
+		NULL, 0, NULL, NULL );
+	char* buff2 = allocHeap( 0, size2 );
+	WideCharToMultiByte( GetConsoleOutputCP(), 0, buff1, -1,
+		buff2, size2, NULL, NULL );
+
+	// Write to the console stream
+	fputs( buff2, stream );
+
+	freeHeap( buff1 );
+	freeHeap( buff2 );
+}
+
+
+static void printConsoleStream( FILE* stream, const wchar_t* pwszFormat, ... )
+{
+	va_list args;
+	va_start( args, pwszFormat );
+	v_printConsoleStream( stream, pwszFormat, args );
+	va_end( args );
+}
+
+
+void printConsole( const wchar_t* pwszFormat, ... )
+{
+	va_list args;
+	va_start( args, pwszFormat );
+	v_printConsoleStream( stdout, pwszFormat, args );
+	va_end( args );
+}
+
+
 void printError( const wchar_t* pwszMessage, DWORD dwCode, int iPosition )
 {
 	wchar_t pwszFormat[] = L"[E] %ls (code: 0x%08lX, pos: %d)\n";
@@ -70,7 +123,7 @@ void printError( const wchar_t* pwszMessage, DWORD dwCode, int iPosition )
 		*pEnd++ = L'\n';
 		*pEnd = L'\0';
 	}
-	fwprintf( stderr, pwszFormat, pwszMessage, dwCode, iPosition );
+	printConsoleStream( stderr, pwszFormat, pwszMessage, dwCode, iPosition );
 }
 
 
@@ -97,7 +150,8 @@ void setAllPrivileges( HANDLE hToken, BOOL bVerbose )
 	for (int i = 0; i < (sizeof( apcwszTokenPrivileges ) /
 		sizeof( *apcwszTokenPrivileges )); i++)
 		if (! enableTokenPrivilege( hToken, apcwszTokenPrivileges[ i ] ) && bVerbose)
-			wprintf( L"[D] Could not set privilege [%ls], you most likely don't have it.\n",
+			printConsole(
+				L"[D] Could not set privilege [%ls], you most likely don't have it.\n",
 				apcwszTokenPrivileges[ i ] );
 }
 
