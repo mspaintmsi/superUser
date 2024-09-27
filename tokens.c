@@ -53,41 +53,58 @@ const wchar_t* apcwszTokenPrivileges[ 36 ] = {
 };
 
 
-LPVOID allocHeap( DWORD dwFlags, SIZE_T dwBytes )
+//
+// Allocate a block of memory from the process heap.
+//
+__declspec(noinline) LPVOID allocHeap( DWORD dwFlags, SIZE_T dwBytes )
 {
 	return HeapAlloc( GetProcessHeap(), dwFlags, dwBytes );
 }
 
 
-VOID freeHeap( LPVOID lpMem )
+//
+// Free a block of memory allocated from the process heap.
+//
+__declspec(noinline) BOOL freeHeap( LPVOID lpMem )
 {
-	HeapFree( GetProcessHeap(), 0, lpMem );
+	return HeapFree( GetProcessHeap(), 0, lpMem );
 }
 
 
+//
+// Print a formatted string with a list of variable arguments to a stream
+// using the current console output code page.
+//
 static void v_printConsoleStream( FILE* stream, const wchar_t* pwszFormat,
 	va_list arg_list )
 {
 	// Write the formatted string to a buffer (wide chars)
-	SIZE_T size1 = _vscwprintf( pwszFormat, arg_list );
-	wchar_t* buff1 = allocHeap( 0, (size1 + 1) * sizeof( wchar_t ) );
-	_vsnwprintf_s( buff1, size1 + 1, size1, pwszFormat, arg_list );
+	SIZE_T nSize1 = _vscwprintf( pwszFormat, arg_list ) + 1;
+	if (nSize1 == 0) return;
+	wchar_t* pBuffer1 = allocHeap( 0, nSize1 * sizeof( wchar_t ) );
+	_vsnwprintf_s( pBuffer1, nSize1, _TRUNCATE, pwszFormat, arg_list );
 
-	// Convert buffer to console code page (bytes)
-	int size2 = WideCharToMultiByte( GetConsoleOutputCP(), 0, buff1, -1,
-		NULL, 0, NULL, NULL );
-	char* buff2 = allocHeap( 0, size2 );
-	WideCharToMultiByte( GetConsoleOutputCP(), 0, buff1, -1,
-		buff2, size2, NULL, NULL );
+	// Convert buffer to console output code page (bytes)
+	UINT nCodePage = GetConsoleOutputCP();
+	int nSize2 = WideCharToMultiByte( nCodePage, 0, pBuffer1, -1, NULL, 0, NULL, NULL );
+	if (nSize2 > 0) {
+		char* pBuffer2 = allocHeap( 0, nSize2 );
+		if (WideCharToMultiByte( nCodePage, 0, pBuffer1, -1, pBuffer2, nSize2, NULL, NULL ))
+		{
+			// Write to the console stream
+			fputs( pBuffer2, stream );
+		}
+		freeHeap( pBuffer2 );
+	}
 
-	// Write to the console stream
-	fputs( buff2, stream );
-
-	freeHeap( buff1 );
-	freeHeap( buff2 );
+	freeHeap( pBuffer1 );
 }
 
 
+//
+// Print a formatted string with variable arguments to a stream
+// using the current console output code page.
+//
 static void printConsoleStream( FILE* stream, const wchar_t* pwszFormat, ... )
 {
 	va_list args;
@@ -97,6 +114,9 @@ static void printConsoleStream( FILE* stream, const wchar_t* pwszFormat, ... )
 }
 
 
+//
+// Print a formatted string with variable arguments to standard output.
+//
 void printConsole( const wchar_t* pwszFormat, ... )
 {
 	va_list args;
@@ -106,6 +126,9 @@ void printConsole( const wchar_t* pwszFormat, ... )
 }
 
 
+//
+// Print an error message to standard error output
+//
 void printError( const wchar_t* pwszMessage, DWORD dwCode, int iPosition )
 {
 	wchar_t pwszFormat[] = L"[E] %ls (code: 0x%08lX, pos: %d)\n";

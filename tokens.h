@@ -22,5 +22,5 @@ void setAllPrivileges( HANDLE hToken, BOOL bVerbose );
 void printConsole( const wchar_t* pwszFormat, ... );
 void printError( const wchar_t* pwszMessage, DWORD dwCode, int iPosition );
 
-__declspec(noinline) LPVOID allocHeap( DWORD dwFlags, SIZE_T dwBytes );
-__declspec(noinline) VOID freeHeap( LPVOID lpMem );
+LPVOID allocHeap( DWORD dwFlags, SIZE_T dwBytes );
+BOOL freeHeap( LPVOID lpMem );
