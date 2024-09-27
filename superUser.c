@@ -23,7 +23,6 @@ static struct {
 	unsigned int bWait : 1;        // Whether to wait for child process to finish
 } options = {0};
 
-#define wputs _putws
 #define printConsoleVerbose(...) if (options.bVerbose) printConsole(__VA_ARGS__);
 
 /*
