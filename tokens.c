@@ -9,9 +9,12 @@
 
 #include <windows.h>
 #include <wtsapi32.h>
-#include <stdio.h>
+#include <winnt.h>
+#ifdef __GNUC__
+#include "winnt2.h"
+#endif
 
-#include "tokens.h"
+#include "utils.h" // Utility functions
 
 const wchar_t* apcwszTokenPrivileges[ 36 ] = {
 	SE_ASSIGNPRIMARYTOKEN_NAME,
@@ -53,103 +56,6 @@ const wchar_t* apcwszTokenPrivileges[ 36 ] = {
 };
 
 
-//
-// Allocate a block of memory from the process heap.
-//
-__declspec(noinline) LPVOID allocHeap( DWORD dwFlags, SIZE_T dwBytes )
-{
-	return HeapAlloc( GetProcessHeap(), dwFlags, dwBytes );
-}
-
-
-//
-// Free a block of memory allocated from the process heap.
-//
-__declspec(noinline) BOOL freeHeap( LPVOID lpMem )
-{
-	return HeapFree( GetProcessHeap(), 0, lpMem );
-}
-
-
-//
-// Print a formatted string with a list of variable arguments to a stream
-// using the current console output code page.
-//
-static void v_printConsoleStream( FILE* stream, const wchar_t* pwszFormat,
-	va_list arg_list )
-{
-	// Write the formatted string to a buffer (wide chars)
-	SIZE_T nSize1 = _vscwprintf( pwszFormat, arg_list ) + 1;
-	if (nSize1 == 0) return;
-	wchar_t* pBuffer1 = allocHeap( 0, nSize1 * sizeof( wchar_t ) );
-	_vsnwprintf_s( pBuffer1, nSize1, _TRUNCATE, pwszFormat, arg_list );
-
-	// Convert buffer to console output code page (bytes)
-	UINT nCodePage = GetConsoleOutputCP();
-	int nSize2 = WideCharToMultiByte( nCodePage, 0, pBuffer1, -1, NULL, 0, NULL, NULL );
-	if (nSize2 > 0) {
-		char* pBuffer2 = allocHeap( 0, nSize2 );
-		if (WideCharToMultiByte( nCodePage, 0, pBuffer1, -1, pBuffer2, nSize2, NULL, NULL ))
-		{
-			// Write to the console stream
-			fputs( pBuffer2, stream );
-		}
-		freeHeap( pBuffer2 );
-	}
-
-	freeHeap( pBuffer1 );
-}
-
-
-//
-// Print a formatted string with variable arguments to a stream
-// using the current console output code page.
-//
-static void printConsoleStream( FILE* stream, const wchar_t* pwszFormat, ... )
-{
-	va_list args;
-	va_start( args, pwszFormat );
-	v_printConsoleStream( stream, pwszFormat, args );
-	va_end( args );
-}
-
-
-//
-// Print a formatted string with variable arguments to standard output.
-//
-void printConsole( const wchar_t* pwszFormat, ... )
-{
-	va_list args;
-	va_start( args, pwszFormat );
-	v_printConsoleStream( stdout, pwszFormat, args );
-	va_end( args );
-}
-
-
-//
-// Print an error message to standard error output
-//
-void printError( const wchar_t* pwszMessage, DWORD dwCode, int iPosition )
-{
-	wchar_t pwszFormat[] = L"[E] %ls (code: 0x%08lX, pos: %d)\n";
-	wchar_t* pEnd = NULL;
-	if (dwCode == 0) {
-		// Remove the error code/position part from the format
-		pEnd = pwszFormat + 7;
-	}
-	else if (iPosition == 0) {
-		// Remove the error position part from the format
-		pEnd = pwszFormat + 22;
-		*pEnd++ = L')';
-	}
-	if (pEnd) {
-		*pEnd++ = L'\n';
-		*pEnd = L'\0';
-	}
-	printConsoleStream( stderr, pwszFormat, pwszMessage, dwCode, iPosition );
-}
-
-
 static BOOL enableTokenPrivilege( HANDLE hToken, const wchar_t* pcwszPrivilege )
 {
 	LUID luid;
@@ -173,7 +79,7 @@ void setAllPrivileges( HANDLE hToken, BOOL bVerbose )
 	for (int i = 0; i < (sizeof( apcwszTokenPrivileges ) /
 		sizeof( *apcwszTokenPrivileges )); i++)
 		if (! enableTokenPrivilege( hToken, apcwszTokenPrivileges[ i ] ) && bVerbose)
-			printConsole(
+			printFmtConsole(
 				L"[D] Could not set privilege [%ls], you most likely don't have it.\n",
 				apcwszTokenPrivileges[ i ] );
 }

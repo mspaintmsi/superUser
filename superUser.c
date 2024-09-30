@@ -11,9 +11,9 @@
 */
 
 #include <windows.h>
-#include <stdio.h>
 
-#include "tokens.h" // Defines tokens and privileges management functions
+#include "utils.h"  // Utility functions
+#include "tokens.h" // Tokens and privileges management functions
 
 // Program options
 static struct {
@@ -23,7 +23,8 @@ static struct {
 	unsigned int bWait : 1;        // Whether to wait for child process to finish
 } options = {0};
 
-#define printConsoleVerbose(...) if (options.bVerbose) printConsole(__VA_ARGS__);
+#define printFmtVerbose(...) \
+	if (options.bVerbose) printFmtConsole(__VA_ARGS__);
 
 /*
 	Return codes (without /r option):
@@ -99,7 +100,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 		dwCreationFlags = CREATE_SUSPENDED | EXTENDED_STARTUPINFO_PRESENT |
 		CREATE_NEW_CONSOLE;
 
-	printConsoleVerbose( L"[D] Creating specified process\n" );
+	printFmtVerbose( L"[D] Creating specified process\n" );
 
 	BOOL bCreateResult = CreateProcessAsUser(
 		hChildProcessToken,
@@ -136,18 +137,18 @@ static int createChildProcess( wchar_t* pwszImageName )
 			ResumeThread( processInfo.hThread );
 		}
 
-		printConsoleVerbose( L"[D] Created process ID: %lu\n", processInfo.dwProcessId );
+		printFmtVerbose( L"[D] Created process ID: %lu\n", processInfo.dwProcessId );
 
 		if (options.bWait) {
-			printConsoleVerbose( L"[D] Waiting for process to exit\n" );
+			printFmtVerbose( L"[D] Waiting for process to exit\n" );
 			WaitForSingleObject( processInfo.hProcess, INFINITE );
-			printConsoleVerbose( L"[D] Process exited\n" );
+			printFmtVerbose( L"[D] Process exited\n" );
 
 			// Get the child's exit code
 			DWORD dwExitCode;
 			if (GetExitCodeProcess( processInfo.hProcess, &dwExitCode )) {
 				nChildExitCode = dwExitCode;
-				printConsoleVerbose( L"[D] Process exit code: %ld\n", dwExitCode );
+				printFmtVerbose( L"[D] Process exit code: %ld\n", dwExitCode );
 			}
 		}
 
@@ -222,14 +223,15 @@ static int getExitCode( int code )
 
 static void printHelp( void )
 {
-	printConsole( L"%ls",
-		L"\nsuperUser [options] [command_to_run]\n\n\
+	printConsole( L"\n\
+superUser [options] [command_to_run]\n\n\
 Options (you can use either \"-\" or \"/\"):\n\
   /h  Display this help message.\n\
   /r  Return the exit code of the child process. Requires /w.\n\
   /s  The child process shares the parent's console. Requires /w.\n\
   /v  Display verbose messages.\n\
-  /w  Wait for the child process to finish before exiting.\n" );
+  /w  Wait for the child process to finish before exiting.\n\
+" );
 }
 
 
@@ -298,7 +300,7 @@ done_params:
 
 	if (! pwszCommandLine) pwszCommandLine = L"cmd.exe";
 
-	printConsoleVerbose( L"[D] Your command line is \"%ls\"\n", pwszCommandLine );
+	printFmtVerbose( L"[D] Your command line is \"%ls\"\n", pwszCommandLine );
 
 	// pwszCommandLine may be read-only. It must be copied to a writable area.
 	size_t nCommandLineBufSize = (wcslen( pwszCommandLine ) + 1) * sizeof( wchar_t );

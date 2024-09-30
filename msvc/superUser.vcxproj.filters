@@ -21,12 +21,18 @@
     <ClCompile Include="..\tokens.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\utils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="msvcrt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\tokens.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
