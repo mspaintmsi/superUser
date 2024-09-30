@@ -48,8 +48,8 @@ static BOOL printConsoleStream( FILE* stream, const wchar_t* pwszString )
 	int nSize = WideCharToMultiByte( nCodePage, 0, pwszString, -1, NULL, 0, NULL, NULL );
 	if (nSize > 0) {
 		char* pBuffer = allocHeap( 0, nSize );
-		if (WideCharToMultiByte( nCodePage, 0, pwszString, -1, pBuffer, nSize, NULL, NULL ))
-		{
+		if (WideCharToMultiByte( nCodePage, 0, pwszString, -1, pBuffer, nSize,
+			NULL, NULL ) > 0) {
 			// Write to the console stream
 			bSuccess = fputs( pBuffer, stream ) >= 0;
 		}
