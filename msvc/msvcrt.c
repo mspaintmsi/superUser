@@ -31,7 +31,7 @@
 // Access stdin/stdout/stderr
 // --------------------------
 //
-// Now, these streams are defined in corecrt-wstdio.h
+// Now, these streams are defined in corecrt-wstdio.h :
 //
 // #define stdin  (__acrt_iob_func(0))
 // #define stdout (__acrt_iob_func(1))

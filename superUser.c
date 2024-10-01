@@ -300,7 +300,7 @@ done_params:
 
 	if (! pwszCommandLine) pwszCommandLine = L"cmd.exe";
 
-	printFmtVerbose( L"[D] Your command line is \"%ls\"\n", pwszCommandLine );
+	printFmtVerbose( L"[D] Your command line is '%ls'\n", pwszCommandLine );
 
 	// pwszCommandLine may be read-only. It must be copied to a writable area.
 	size_t nCommandLineBufSize = (wcslen( pwszCommandLine ) + 1) * sizeof( wchar_t );
