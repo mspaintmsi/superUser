@@ -17,7 +17,6 @@
 
 // Program options
 static struct {
-	unsigned int bReturnCode : 1;  // Whether to return child process exit code
 	unsigned int bSeamless : 1;    // Whether child process shares parent's console
 	unsigned int bVerbose : 1;     // Whether to print debug messages or not
 	unsigned int bWait : 1;        // Whether to wait for child process to finish
@@ -27,14 +26,14 @@ static struct {
 	if (options.bVerbose) printFmtConsole(__VA_ARGS__);
 
 /*
-	Return codes (without /r option):
+	Return codes (without /w option):
 		1 - Invalid argument
 		2 - Failed to acquire SeDebugPrivilege
 		3 - Failed to open/start TrustedInstaller process/service
 		4 - Process creation failed
 		5 - Another fatal error occurred
 
-	If /r option is specified, exit code of the child process is returned.
+	If /w option is specified, exit code of the child process is returned.
 	If superUser fails, it returns the code -(EXIT_CODE_BASE + errCode),
 	where errCode is one of the codes listed above.
 */
@@ -213,7 +212,7 @@ static BOOL getArgument( wchar_t** ppArgument, wchar_t** ppArgumentIndex )
 static int getExitCode( int code )
 {
 	if (code == -1) code = 0;  // Print help, exit with code 0
-	if (options.bReturnCode) {
+	if (options.bWait) {
 		if (code) code = -(EXIT_CODE_BASE + code);
 		else code = nChildExitCode;
 	}
@@ -227,7 +226,6 @@ static void printHelp( void )
 superUser [options] [command_to_run]\n\n\
 Options (you can use either \"-\" or \"/\"):\n\
   /h  Display this help message.\n\
-  /r  Return the exit code of the child process. Requires /w.\n\
   /s  The child process shares the parent's console. Requires /w.\n\
   /v  Display verbose messages.\n\
   /w  Wait for the child process to finish before exiting.\n\
@@ -261,7 +259,6 @@ int wmain( int argc, wchar_t* argv[] )
 					errCode = -1;
 					goto done_params;
 				case 'r':
-					options.bReturnCode = 1;
 					break;
 				case 's':
 					options.bSeamless = 1;
@@ -293,8 +290,8 @@ done_params:
 	if (errCode) return getExitCode( errCode );
 
 	// Check the consistency of the options
-	if ((options.bReturnCode || options.bSeamless) && ! options.bWait) {
-		printError( L"/r or /s option requires /w", 0, 0 );
+	if (options.bSeamless && ! options.bWait) {
+		printError( L"/s option requires /w", 0, 0 );
 		return getExitCode( 1 );
 	}
 
