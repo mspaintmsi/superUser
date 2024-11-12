@@ -17,6 +17,7 @@
 
 // Program options
 static struct {
+	unsigned int bMinimize : 1;    // Whether to minimize created window
 	unsigned int bSeamless : 1;    // Whether child process shares parent's console
 	unsigned int bVerbose : 1;     // Whether to print debug messages or not
 	unsigned int bWait : 1;        // Whether to wait for child process to finish
@@ -76,7 +77,10 @@ static int createChildProcess( wchar_t* pwszImageName )
 
 	startupInfo.StartupInfo.cb = sizeof( STARTUPINFOEX );
 	startupInfo.StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
-	startupInfo.StartupInfo.wShowWindow = SW_SHOWNORMAL;
+	if (options.bMinimize)
+		startupInfo.StartupInfo.wShowWindow = SW_SHOWMINNOACTIVE;
+	else
+		startupInfo.StartupInfo.wShowWindow = SW_SHOWNORMAL;
 
 	if (! options.bSeamless) {
 		// Initialize attribute lists for "parent assignment"
@@ -226,6 +230,7 @@ static void printHelp( void )
 superUser [options] [command_to_run]\n\n\
 Options (you can use either \"-\" or \"/\"):\n\
   /h  Display this help message.\n\
+  /m  Minimize the created window.\n\
   /s  The child process shares the parent's console. Requires /w.\n\
   /v  Display verbose messages.\n\
   /w  Wait for the child process to finish before exiting.\n\
@@ -258,6 +263,9 @@ int wmain( int argc, wchar_t* argv[] )
 					printHelp();
 					errCode = -1;
 					goto done_params;
+				case 'm':
+					options.bMinimize = 1;
+					break;
 				case 'r':
 					break;
 				case 's':
