@@ -1,7 +1,6 @@
 # About
 _superUser_ is a simple and lightweight utility to start any process as the System user with Trusted Installer privileges.
 
-# Compatibility
 Supported operating systems: Windows 11, 10, 8, 8.1, 7, Vista.
 
 # How It Works
