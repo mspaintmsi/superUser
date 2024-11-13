@@ -1,6 +1,8 @@
 # About
 _superUser_ is a simple and lightweight utility to start any process as the System user with Trusted Installer privileges.
 
+Supported operating systems: Windows 11, 10, 8, 8.1, 7, Vista.
+
 # How It Works
 The program acquires the TrustedInstaller process' access token and creates a new (user-specified) process as the System user with Trusted Installer privileges using this token.
 
