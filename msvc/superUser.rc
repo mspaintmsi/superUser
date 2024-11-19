@@ -34,8 +34,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
 #endif
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION 5,7,0,0
-PRODUCTVERSION 5,7,0,0
+FILEVERSION 6,0,0,0
+PRODUCTVERSION 6,0,0,0
 FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
 FILEFLAGS 0x1L
@@ -52,12 +52,12 @@ BEGIN
 		BEGIN
 			VALUE "CompanyName", "Awoo~"
 			VALUE "FileDescription", "Run any process with Trusted Installer privileges"
-			VALUE "FileVersion", "5.7.0.0"
+			VALUE "FileVersion", "6.0.0.0"
 			VALUE "InternalName", "superUser"
-			VALUE "LegalCopyright", "Copyright © 2019-2024"
+			VALUE "LegalCopyright", "Copyright © 2019-2025 github.com/mspaintmsi/superUser"
 			VALUE "OriginalFilename", FILENAME
 			VALUE "ProductName", "superUser"
-			VALUE "ProductVersion", "5.7.0"
+			VALUE "ProductVersion", "6.0"
 		END
 	END
 
