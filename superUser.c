@@ -34,13 +34,25 @@ static struct {
 		4 - Process creation failed
 		5 - Another fatal error occurred
 
-	If /w option is specified, exit code of the child process is returned.
+	If the /w option is specified, the exit code of the child process is returned.
 	If superUser fails, it returns the code -(EXIT_CODE_BASE + errCode),
 	where errCode is one of the codes listed above.
+	If the exit code could not be got (very unlikely), it returns -(EXIT_CODE_BASE + 6).
 */
 
 #define EXIT_CODE_BASE 1000000
 static int nChildExitCode = 0;
+
+
+static int getExitCode( int code )
+{
+	if (code == -1) code = 0;  // Print help, exit with code 0
+	if (options.bWait) {
+		if (code) code = -(EXIT_CODE_BASE + code);
+		else code = nChildExitCode;
+	}
+	return code;
+}
 
 
 static int createChildProcess( wchar_t* pwszImageName )
@@ -145,14 +157,14 @@ static int createChildProcess( wchar_t* pwszImageName )
 		if (options.bWait) {
 			printFmtVerbose( L"[D] Waiting for process to exit\n" );
 			WaitForSingleObject( processInfo.hProcess, INFINITE );
-			printFmtVerbose( L"[D] Process exited\n" );
 
-			// Get the child's exit code
+			// Get exit code of child process
 			DWORD dwExitCode;
-			if (GetExitCodeProcess( processInfo.hProcess, &dwExitCode )) {
-				nChildExitCode = dwExitCode;
-				printFmtVerbose( L"[D] Process exit code: %ld\n", dwExitCode );
-			}
+			if (! GetExitCodeProcess( processInfo.hProcess, &dwExitCode ))
+				dwExitCode = getExitCode( 6 );
+
+			printFmtVerbose( L"[D] Process exited with code %ld\n", dwExitCode );
+			nChildExitCode = dwExitCode;
 		}
 
 		CloseHandle( processInfo.hProcess );
@@ -213,17 +225,6 @@ static BOOL getArgument( wchar_t** ppArgument, wchar_t** ppArgumentIndex )
 }
 
 
-static int getExitCode( int code )
-{
-	if (code == -1) code = 0;  // Print help, exit with code 0
-	if (options.bWait) {
-		if (code) code = -(EXIT_CODE_BASE + code);
-		else code = nChildExitCode;
-	}
-	return code;
-}
-
-
 static void printHelp( void )
 {
 	printConsole( L"\n\
@@ -265,8 +266,6 @@ int wmain( int argc, wchar_t* argv[] )
 					goto done_params;
 				case 'm':
 					options.bMinimize = 1;
-					break;
-				case 'r':
 					break;
 				case 's':
 					options.bSeamless = 1;
