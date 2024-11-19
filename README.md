@@ -1,7 +1,7 @@
 # About
 _superUser_ is a simple and lightweight utility to start any process as the System user with Trusted Installer privileges.
 
-Supported operating systems: Windows 11, 10, 8, 8.1, 7, Vista.
+Supported operating systems: Windows 11, 10, 8.1, 8, 7, Vista.
 
 # How It Works
 The program acquires the TrustedInstaller process' access token and creates a new (user-specified) process as the System user with Trusted Installer privileges using this token.
@@ -30,18 +30,18 @@ This filename can be:
 | Option |                           Meaning                           |
 |:------:|-------------------------------------------------------------|
 |   /h   | Display the help message.                                   |
-|   /r   | Return the exit code of the child process. Requires /w.     |
+|   /m   | Minimize the created window.                                |
 |   /s   | The child process shares the parent's console. Requires /w. |
 |   /v   | Display verbose messages with progress information.         |
-|   /w   | Wait for the child process to finish. Used for scripts.     |
+|   /w   | Wait for the child process to finish. Used for scripts.<br />Returns the exit code of the child process. |
 
 - You can also use a dash (-) in place of a slash (/) in front of an option.
-- Multiple options can be grouped together (e.g., `/wrs`).
+- Multiple options can be grouped together (e.g., `/ws`).
 
 
 ### Notes
 
-The `/wrs` options allow you to run a process in a completely transparent way:
+The `/ws` options allow you to run a process in a completely transparent way:
 
 - The new process runs in the same window and performs its inputs and outputs there.
 - The exit code of the new process is returned and you can retrieve it with the errorlevel variable.
@@ -53,7 +53,7 @@ Open a command prompt __as administrator__ to run these commands.
 
 	superUser64 /ws whoami /user
 	superUser64 /ws whoami /groups | find "TrustedInstaller"
-	superUser64 /wr my_script.cmd arg1 arg2
+	superUser64 /w my_script.cmd arg1 arg2
 
 
 ## Exit Codes
@@ -66,5 +66,5 @@ Open a command prompt __as administrator__ to run these commands.
 |     4     | Process creation failed (prints error code).           |
 |     5     | Another fatal error occurred.                          |
 
-If the `/r` option is specified, the exit code of the child process is returned.
+If the `/w` option is specified, the exit code of the child process is returned.
 If _superUser_ fails, it returns a code from -1000001 to -1000005 (e.g., -1000002 instead of 2).
