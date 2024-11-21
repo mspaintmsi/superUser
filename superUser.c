@@ -258,7 +258,7 @@ int wmain( int argc, wchar_t* argv[] )
 			int j = 1;
 			wchar_t opt;
 			while ((opt = pwszArgument[ j ])) {
-				// Multiple options can be grouped together (eg: /wrs)
+				// Multiple options can be grouped together (eg: /ws)
 				switch (opt) {
 				case 'h':
 					printHelp();
