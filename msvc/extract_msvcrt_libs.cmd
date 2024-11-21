@@ -1,5 +1,11 @@
 @echo off
 ::
+:: superUser 6.0
+::
+:: Copyright 2019-2025 https://github.com/mspaintmsi/superUser
+::
+:: extract_msvcrt_libs.cmd
+::
 :: Extract msvcrt*.lib files from WDK 7.1 iso file.
 ::
 :: - Requires 7-Zip to be installed (from https://7-zip.org ), or just the

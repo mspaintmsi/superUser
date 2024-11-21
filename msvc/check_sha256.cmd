@@ -1,5 +1,11 @@
 @echo off
 ::
+:: superUser 6.0
+::
+:: Copyright 2019-2025 https://github.com/mspaintmsi/superUser
+::
+:: check_sha256.cmd
+::
 :: Check the SHA256 hash for the files listed in the SHA256SUMS or
 :: SHA256SUMS.txt file.
 ::
