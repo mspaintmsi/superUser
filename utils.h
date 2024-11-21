@@ -1,6 +1,8 @@
 #pragma once
 /*
-	https://github.com/mspaintmsi/superUser
+	superUser 6.0
+
+	Copyright 2019-2025 https://github.com/mspaintmsi/superUser
 
 	utils.h
 
