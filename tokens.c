@@ -18,6 +18,9 @@
 
 #include "utils.h" // Utility functions
 
+#define CUSTOM_ERROR_PROCESS_NOT_FOUND 0xA0001000
+#define CUSTOM_ERROR_SERVICE_START_FAILED 0xA0001001
+
 const wchar_t* apcwszTokenPrivileges[ 36 ] = {
 	SE_ASSIGNPRIMARYTOKEN_NAME,
 	SE_AUDIT_NAME,
@@ -164,7 +167,7 @@ int createSystemContext( void )
 		}
 		else dwLastError = GetLastError();
 	}
-	else dwLastError = 0xA0001000; // Process not found, custom error code
+	else dwLastError = CUSTOM_ERROR_PROCESS_NOT_FOUND; // Process not found
 
 	BOOL bSuccess = FALSE;
 	if (hToken) {
@@ -193,6 +196,8 @@ int getTrustedInstallerProcess( HANDLE* phTIProcess )
 	HANDLE hSCManager, hTIService;
 	SERVICE_STATUS_PROCESS serviceStatusBuffer = {0};
 
+	SetLastError( 0 );
+
 	hSCManager = OpenSCManager( NULL, NULL, SC_MANAGER_CONNECT );
 	hTIService = OpenService( hSCManager, L"TrustedInstaller",
 		SERVICE_QUERY_STATUS | SERVICE_START );
@@ -215,7 +220,10 @@ int getTrustedInstallerProcess( HANDLE* phTIProcess )
 		}
 	}
 
-	if (bStopped) dwLastError = GetLastError();
+	if (bStopped) {
+		dwLastError = GetLastError();
+		if (dwLastError == 0) dwLastError = CUSTOM_ERROR_SERVICE_START_FAILED;
+	}
 
 	CloseServiceHandle( hSCManager );
 	CloseServiceHandle( hTIService );
