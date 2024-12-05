@@ -14,7 +14,7 @@ FILETYPE 0x1
 BEGIN
 	BLOCK "StringFileInfo"
 	BEGIN
-		BLOCK "000904b0"
+		BLOCK "000904B0"
 		BEGIN
 			VALUE "CompanyName", "github.com/mspaintmsi/superUser"
 			VALUE "FileDescription", "Run any process with Trusted Installer privileges"
