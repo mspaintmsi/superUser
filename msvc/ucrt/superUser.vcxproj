@@ -125,6 +125,7 @@
       <SubSystem>Console</SubSystem>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <IgnoreSpecificDefaultLibraries>libucrt.lib</IgnoreSpecificDefaultLibraries>
+      <SetChecksum>true</SetChecksum>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -173,6 +174,7 @@
       <SubSystem>Console</SubSystem>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <IgnoreSpecificDefaultLibraries>libucrt.lib</IgnoreSpecificDefaultLibraries>
+      <SetChecksum>true</SetChecksum>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET64;%(PreprocessorDefinitions)</PreprocessorDefinitions>

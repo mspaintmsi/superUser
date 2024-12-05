@@ -127,6 +127,7 @@
       <SubSystem>Console</SubSystem>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
+      <SetChecksum>true</SetChecksum>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -178,6 +179,7 @@
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
       <MergeSections>.pdata=.rdata</MergeSections>
+      <SetChecksum>true</SetChecksum>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
