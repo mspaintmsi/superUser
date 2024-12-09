@@ -44,7 +44,7 @@ CFLAGS32 = -m32 $(CFLAGS)
 CFLAGS64 = -m64 $(CFLAGS)
 LDFLAGS = -Wl,--exclude-all-symbols,--dynamicbase,--nxcompat,--subsystem,console
 LDLIBS = -lwtsapi32
-WRFLAGS = --codepage 65001 --language 0009 -O coff
+WRFLAGS = --codepage 65001 -O coff
 
 SRCS = superUser.c tokens.c utils.c
 DEPS = tokens.h utils.h winnt2.h

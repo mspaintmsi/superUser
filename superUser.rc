@@ -6,6 +6,8 @@
 	#define FILENAME "superUser.exe"
 #endif
 
+LANGUAGE 9, 0
+
 1 VERSIONINFO
 FILEVERSION 6,0,0,0
 PRODUCTVERSION 6,0,0,0
