@@ -239,7 +239,7 @@ Options (you can use either \"-\" or \"/\"):\n\
 }
 
 
-int wmain( int argc, wchar_t* argv[] )
+int wmain( void )
 {
 	int errCode = 0;  // superUser error code
 

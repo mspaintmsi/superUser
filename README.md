@@ -36,7 +36,7 @@ This filename can be:
 |   /w   | Wait for the child process to finish. Used for scripts.<br />Returns the exit code of the child process. |
 
 - You can also use a dash (-) in place of a slash (/) in front of an option.
-- Multiple options can be grouped together (e.g., `/ws` which is equivalent to `/w /s`).
+- Multiple options can be grouped together (e.g., `/ws` is equivalent to `/w /s`).
 
 
 ### Notes
