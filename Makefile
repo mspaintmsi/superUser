@@ -6,6 +6,7 @@
 #	* Windows 
 #		- Cygwin / MinGW-w64
 #		- MSYS2 / MINGW32, MINGW64, CLANG32, CLANG64, UCRT64
+#		- LLVM-MinGW
 #
 #	* Linux
 #		- with mingw-w64 package
@@ -22,12 +23,19 @@ ifeq (32,$(findstring 32,$(MSYSTEM)))	# MSYS2 32-bit
 TARGETS = x86
 else ifeq (64,$(findstring 64,$(MSYSTEM)))	# MSYS2 64-bit
 TARGETS = x64
-else	# Cygwin or Linux
+else	# Cygwin, LLVM-MinGW or Linux
 HOST32 = i686-w64-mingw32-
 HOST64 = x86_64-w64-mingw32-
 endif
 ifneq ($(OS),Windows_NT)
 INCLUDE += -I/usr/share/mingw-w64/include	# Linux mingw-w64 package
+endif
+
+NATIVEWIN =
+ifeq ($(OS),Windows_NT)
+ifeq '$(findstring ;,$(PATH))' ';'
+NATIVEWIN = 1
+endif
 endif
 
 CC32 = $(HOST32)gcc
@@ -54,7 +62,11 @@ DEPS = tokens.h utils.h winnt2.h
 all: $(TARGETS)
 
 clean:
+ifdef NATIVEWIN
+	del *.exe *.res 2>nul
+else
 	rm -f *.exe *.res
+endif
 
 x86: superUser32.exe
 x64: superUser64.exe

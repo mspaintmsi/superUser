@@ -14,6 +14,27 @@ don't want to do this, see the alternative in [msvc/ucrt](msvc/ucrt).
 
 
 
+LLVM-MinGW
+----------
+
+Download the toolchain from <https://github.com/mstorsjo/llvm-mingw/releases>.
+
+Choose the file `llvm-mingw-<version>-ucrt-x86_64.zip` and extract its content to a 
+folder, for example `C:\llvm-mingw`.
+
+Open a command prompt and run the following commands:
+
+	path=C:\llvm-mingw\bin;%path%
+	cd /d %USERPROFILE%\Desktop\superUser 	&rem (or wherever you put the source to)
+	mingw32-make
+
+If successful, the files `superUser32.exe` and `superUser64.exe` are created.
+
+Generated executables require the UCRT dll to run (included in Windows 10 or
+installed by the cumulative updates in older versions).
+
+
+
 Cygwin
 ------
 
@@ -76,10 +97,10 @@ To build the 32-bit executable, open the __MSYS2 MINGW32__ terminal and run:
 If successful, the file `superUser32.exe` is created.
 
 
-It is also possible to use the __CLANG32/CLANG64__ environments, which have a newer
-compiler that builds smaller executables (20-24 KB instead of 27 KB).
-To do this, you will need to install the appropriate packages as above
-(`mingw-w64-clang-i686-gcc-compat` and `mingw-w64-clang-x86_64-gcc-compat`).
+It is also possible to use the __CLANG64__ environment, which have a newer
+compiler that builds smaller executables (24 KB instead of 27 KB).
+To do this, you will need to install the appropriate package as above
+(`mingw-w64-clang-x86_64-gcc-compat`).
 Generated executables require the UCRT dll to run (included in Windows 10 or
 installed by the cumulative updates in older versions).
 
