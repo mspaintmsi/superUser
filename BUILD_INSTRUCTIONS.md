@@ -17,9 +17,12 @@ don't want to do this, see the alternative in [msvc/ucrt](msvc/ucrt).
 LLVM-MinGW
 ----------
 
+LLVM-MinGW is a simple toolchain based on the modern CLANG compiler.
+It produces smaller executables than GCC and does not need to be installed.
+
 Download the toolchain from <https://github.com/mstorsjo/llvm-mingw/releases>.
 
-Choose the file `llvm-mingw-<version>-ucrt-x86_64.zip` and extract its content to a 
+Choose the file `llvm-mingw-<version>-ucrt-x86_64.zip` and extract its contents to a 
 folder, for example `C:\llvm-mingw`.
 
 Open a command prompt and run the following commands:
@@ -30,41 +33,18 @@ Open a command prompt and run the following commands:
 
 If successful, the files `superUser32.exe` and `superUser64.exe` are created.
 
-Generated executables require the UCRT dll to run (included in Windows 10 or
+The generated executables require the UCRT dll to run (included in Windows 10 or
 installed by the cumulative updates in older versions).
-
-
-
-Cygwin
-------
-
-Run the Cygwin installer, available from <https://www.cygwin.com/setup-x86_64.exe>.
-When you get to the package selection page, select "_Category_" in the list "_View_"
-at the top left, and expand the tree by clicking on "_All_" and "_Devel_".
-
-Then choose the following packages (you can use the search box to reduce the
-list), by selecting the version to install in the column "_New_":
-
-- make
-- mingw64-i686-binutils
-- mingw64-i686-gcc-core
-- mingw64-x86_64-binutils
-- mingw64-x86_64-gcc-core
-
-Open a Cygwin terminal and run the following commands:
-
-	cd /cygdrive/c/Users/$USER/Desktop/superUser 	# (or wherever you put the source to)
-	make
-
-If successful, the files `superUser32.exe` and `superUser64.exe` are created.
 
 
 
 MSYS2
 -----
 
-If you prefer to use the MSYS2 platform, run the installer following these
-instructions: <https://www.msys2.org>  
+MSYS2 is a complete environment for building, installing and running native 
+Windows software. It uses a Linux-like shell and tools.
+
+Run the installer following these instructions: <https://www.msys2.org>  
 Do NOT install the packages `*ucrt*` indicated in the "_Installation_" procedure.
 
 In the __MSYS2 UCRT64__ terminal, run:
@@ -101,8 +81,33 @@ It is also possible to use the __CLANG64__ environment, which have a newer
 compiler that builds smaller executables (24 KB instead of 27 KB).
 To do this, you will need to install the appropriate package as above
 (`mingw-w64-clang-x86_64-gcc-compat`).
-Generated executables require the UCRT dll to run (included in Windows 10 or
+The generated executables require the UCRT dll to run (included in Windows 10 or
 installed by the cumulative updates in older versions).
+
+
+
+Cygwin
+------
+
+Run the Cygwin installer, available from <https://www.cygwin.com/setup-x86_64.exe>.
+When you get to the package selection page, select "_Category_" in the list "_View_"
+at the top left, and expand the tree by clicking on "_All_" and "_Devel_".
+
+Then choose the following packages (you can use the search box to reduce the
+list), by selecting the version to install in the column "_New_":
+
+- make
+- mingw64-i686-binutils
+- mingw64-i686-gcc-core
+- mingw64-x86_64-binutils
+- mingw64-x86_64-gcc-core
+
+Open a Cygwin terminal and run the following commands:
+
+	cd /cygdrive/c/Users/$USER/Desktop/superUser 	# (or wherever you put the source to)
+	make
+
+If successful, the files `superUser32.exe` and `superUser64.exe` are created.
 
 
 
