@@ -22,7 +22,7 @@ It produces smaller executables than GCC and does not need to be installed.
 
 Download the toolchain from <https://github.com/mstorsjo/llvm-mingw/releases>.
 
-Choose the file `llvm-mingw-<version>-ucrt-x86_64.zip` and extract its contents to a 
+Choose the file `llvm-mingw-<version>-msvcrt-x86_64.zip` and extract its contents to a 
 folder, for example `C:\llvm-mingw`.
 
 Open a command prompt and run the following commands:
@@ -32,9 +32,6 @@ Open a command prompt and run the following commands:
 	mingw32-make
 
 If successful, the files `superUser32.exe` and `superUser64.exe` are created.
-
-The generated executables require the UCRT dll to run (included in Windows 10 or
-installed by the cumulative updates in older versions).
 
 
 
