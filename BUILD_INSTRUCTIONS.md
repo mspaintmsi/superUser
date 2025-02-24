@@ -20,10 +20,9 @@ LLVM-MinGW
 LLVM-MinGW is a simple toolchain based on the modern CLANG compiler.
 It produces smaller executables than GCC and does not need to be installed.
 
-Download the toolchain from <https://github.com/mstorsjo/llvm-mingw/releases>.
-
-Choose the file `llvm-mingw-<version>-msvcrt-x86_64.zip` and extract its contents to a 
-folder, for example `C:\llvm-mingw`.
+Go to <https://github.com/mstorsjo/llvm-mingw/releases> and download the latest
+`llvm-mingw-<version>-msvcrt-x86_64.zip` file.  
+Extract its contents to a folder, for example `C:\llvm-mingw`.
 
 Open a command prompt and run the following commands:
 
@@ -41,7 +40,7 @@ MSYS2
 MSYS2 is a complete environment for building, installing and running native 
 Windows software. It uses a Linux-like shell and tools.
 
-Run the installer following these instructions: <https://www.msys2.org>  
+Run the installer following these instructions: <https://www.msys2.org> .  
 Do NOT install the packages `*ucrt*` indicated in the "_Installation_" procedure.
 
 In the __MSYS2 UCRT64__ terminal, run:
@@ -86,7 +85,7 @@ installed by the cumulative updates in older versions).
 Cygwin
 ------
 
-Run the Cygwin installer, available from <https://www.cygwin.com/setup-x86_64.exe>.
+Run the Cygwin installer, available from <https://www.cygwin.com/setup-x86_64.exe> .
 When you get to the package selection page, select "_Category_" in the list "_View_"
 at the top left, and expand the tree by clicking on "_All_" and "_Devel_".
 
