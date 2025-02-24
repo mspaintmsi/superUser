@@ -5,7 +5,7 @@
 #
 #	* Windows 
 #		- Cygwin / MinGW-w64
-#		- MSYS2 / MINGW32, MINGW64, CLANG32, CLANG64, UCRT64
+#		- MSYS2 / MINGW32, MINGW64, CLANG64, UCRT64
 #		- LLVM-MinGW
 #
 #	* Linux
@@ -63,7 +63,8 @@ all: $(TARGETS)
 
 clean:
 ifdef NATIVEWIN
-	del *.exe *.res 2>nul
+	if exist *.exe del *.exe
+	if exist *.res del *.res
 else
 	rm -f *.exe *.res
 endif
