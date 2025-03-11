@@ -180,7 +180,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Console</SubSystem>
       <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
-      <MergeSections>.pdata=.rdata</MergeSections>
+      <MergeSections>.pdata=.text</MergeSections>
       <SetChecksum>true</SetChecksum>
     </Link>
     <ResourceCompile>
