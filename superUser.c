@@ -277,7 +277,7 @@ int wmain( void )
 					options.bWait = 1;
 					break;
 				default:
-					printError( L"Invalid option", 0, 0 );
+					printFmtError( 0, 0, L"Invalid option '%lc'", opt );
 					errCode = 1;
 					goto done_params;
 				}
