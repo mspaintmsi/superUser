@@ -24,7 +24,7 @@ static struct {
 } options = {0};
 
 #define printFmtVerbose(...) \
-	if (options.bVerbose) printFmtConsole(__VA_ARGS__);
+	if (options.bVerbose) printFmtDebug(__VA_ARGS__);
 
 /*
 	Return codes (without /w option):
@@ -115,7 +115,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 		dwCreationFlags = CREATE_SUSPENDED | EXTENDED_STARTUPINFO_PRESENT |
 		CREATE_NEW_CONSOLE;
 
-	printFmtVerbose( L"[D] Creating specified process\n" );
+	printFmtVerbose( L"Creating specified process" );
 
 	BOOL bCreateResult = CreateProcessAsUser(
 		hChildProcessToken,
@@ -152,10 +152,10 @@ static int createChildProcess( wchar_t* pwszImageName )
 			ResumeThread( processInfo.hThread );
 		}
 
-		printFmtVerbose( L"[D] Created process ID: %lu\n", processInfo.dwProcessId );
+		printFmtVerbose( L"Created process ID: %lu", processInfo.dwProcessId );
 
 		if (options.bWait) {
-			printFmtVerbose( L"[D] Waiting for process to exit\n" );
+			printFmtVerbose( L"Waiting for process to exit" );
 			WaitForSingleObject( processInfo.hProcess, INFINITE );
 
 			// Get exit code of child process
@@ -163,7 +163,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 			if (! GetExitCodeProcess( processInfo.hProcess, &dwExitCode ))
 				dwExitCode = getExitCode( 6 );
 
-			printFmtVerbose( L"[D] Process exited with code %ld\n", dwExitCode );
+			printFmtVerbose( L"Process exited with code %ld", dwExitCode );
 			nChildExitCode = dwExitCode;
 		}
 
@@ -304,7 +304,7 @@ done_params:
 
 	if (! pwszCommandLine) pwszCommandLine = L"cmd.exe";
 
-	printFmtVerbose( L"[D] Your command line is '%ls'\n", pwszCommandLine );
+	printFmtVerbose( L"Your command line is '%ls'", pwszCommandLine );
 
 	// pwszCommandLine may be read-only. It must be copied to a writable area.
 	size_t nCommandLineBufSize = (wcslen( pwszCommandLine ) + 1) * sizeof( wchar_t );

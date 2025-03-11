@@ -72,23 +72,42 @@ BOOL printConsole( const wchar_t* pwszString )
 
 
 //
+// Print a formatted string with a list of variable arguments to a new string. 
+// 
+// The caller must use freeHeap to free the returned string.
+// Returns NULL if an error occurs.
+//
+static wchar_t* v_printFmtString( const wchar_t* pwszFormat, va_list arg_list )
+{
+	// Calculate the length of the formatted string (wide chars) and allocate a buffer
+	int nLen = _vscwprintf( pwszFormat, arg_list );
+	if (nLen < 0) return NULL;
+	SIZE_T nSize = (SIZE_T) nLen + 1;
+	wchar_t* pBuffer = allocHeap( 0, nSize * sizeof( wchar_t ) );
+
+	// Write the formatted string to the buffer
+	if (_vsnwprintf_s( pBuffer, nSize, _TRUNCATE, pwszFormat, arg_list ) < 0) {
+		freeHeap( pBuffer );
+		return NULL;
+	}
+
+	return pBuffer;
+}
+
+
+//
 // Print a formatted string with a list of variable arguments to a stream
 // using the current console output code page.
 //
 static BOOL v_printFmtConsoleStream( FILE* stream, const wchar_t* pwszFormat,
 	va_list arg_list )
 {
-	// Calculate the length of the formatted string (wide chars) and allocate a buffer
-	int nLen = _vscwprintf( pwszFormat, arg_list );
-	if (nLen < 0) return FALSE;
-	SIZE_T nSize = (SIZE_T) nLen + 1;
-	wchar_t* pBuffer = allocHeap( 0, nSize * sizeof( wchar_t ) );
+	// Allocate a buffer and write the formatted string to it
+	wchar_t* pBuffer = v_printFmtString( pwszFormat, arg_list );
+	if (! pBuffer) return FALSE;
 
-	// Write the formatted string to the buffer and
-	// print the buffer to the stream using the current console output code page
-	BOOL bSuccess =
-		_vsnwprintf_s( pBuffer, nSize, _TRUNCATE, pwszFormat, arg_list ) >= 0 &&
-		printConsoleStream( stream, pBuffer );
+	// Print the buffer to the stream using the current console output code page
+	BOOL bSuccess = printConsoleStream( stream, pBuffer );
 
 	freeHeap( pBuffer );
 
@@ -111,21 +130,28 @@ static BOOL printFmtConsoleStream( FILE* stream, const wchar_t* pwszFormat, ... 
 
 
 //
-// Print a formatted string with variable arguments to standard output
-// using the current console output code page.
+// Print a formatted debug message with variable arguments to standard output.
 //
-BOOL printFmtConsole( const wchar_t* pwszFormat, ... )
+void printFmtDebug( const wchar_t* pwszFormat, ... )
 {
 	va_list args;
 	va_start( args, pwszFormat );
-	BOOL bResult = v_printFmtConsoleStream( stdout, pwszFormat, args );
+
+	// Allocate a buffer and write the formatted message to it
+	wchar_t* pBuffer = v_printFmtString( pwszFormat, args );
+	if (pBuffer) {
+		// Print the debug message to standard output
+		printFmtConsoleStream( stdout, L"[D] %ls\n", pBuffer );
+
+		freeHeap( pBuffer );
+	}
+
 	va_end( args );
-	return bResult;
 }
 
 
 //
-// Print an error message to standard error output
+// Print an error message to standard error output.
 //
 void printError( const wchar_t* pwszMessage, DWORD dwCode, int iPosition )
 {
@@ -145,4 +171,25 @@ void printError( const wchar_t* pwszMessage, DWORD dwCode, int iPosition )
 		*pEnd = L'\0';
 	}
 	printFmtConsoleStream( stderr, pwszFormat, pwszMessage, dwCode, iPosition );
+}
+
+
+//
+// Print a formatted error message with variable arguments to standard error output.
+//
+void printFmtError( DWORD dwCode, int iPosition, const wchar_t* pwszFormat, ... )
+{
+	va_list args;
+	va_start( args, pwszFormat );
+
+	// Allocate a buffer and write the formatted error message to it
+	wchar_t* pBuffer = v_printFmtString( pwszFormat, args );
+	if (pBuffer) {
+		// Print the error message to standard error output
+		printError( pBuffer, dwCode, iPosition );
+
+		freeHeap( pBuffer );
+	}
+
+	va_end( args );
 }

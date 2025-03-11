@@ -84,8 +84,7 @@ void setAllPrivileges( HANDLE hToken, BOOL bVerbose )
 	for (int i = 0; i < (sizeof( apcwszTokenPrivileges ) /
 		sizeof( *apcwszTokenPrivileges )); i++)
 		if (! enableTokenPrivilege( hToken, apcwszTokenPrivileges[ i ] ) && bVerbose)
-			printFmtConsole(
-				L"[D] Could not set privilege [%ls], you most likely don't have it.\n",
+			printFmtDebug( L"Could not set privilege [%ls], you most likely don't have it.",
 				apcwszTokenPrivileges[ i ] );
 }
 

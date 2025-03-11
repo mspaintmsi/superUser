@@ -22,9 +22,11 @@ void freeHeap( LPVOID lpMem );
 // Print a string to standard output using the current console output code page.
 BOOL printConsole( const wchar_t* pwszString );
 
-// Print a formatted string with variable arguments to standard output
-// using the current console output code page.
-BOOL printFmtConsole( const wchar_t* pwszFormat, ... );
-
 // Print an error message to standard error output.
 void printError( const wchar_t* pwszMessage, DWORD dwCode, int iPosition );
+
+// Print a formatted debug message with variable arguments to standard output.
+void printFmtDebug( const wchar_t* pwszFormat, ... );
+
+// Print a formatted error message with variable arguments to standard error output.
+void printFmtError( DWORD dwCode, int iPosition, const wchar_t* pwszFormat, ... );
