@@ -96,26 +96,6 @@ static wchar_t* v_printFmtString( const wchar_t* pwszFormat, va_list arg_list )
 
 
 //
-// Print a formatted string with a list of variable arguments to a stream
-// using the current console output code page.
-//
-static BOOL v_printFmtConsoleStream( FILE* stream, const wchar_t* pwszFormat,
-	va_list arg_list )
-{
-	// Allocate a buffer and write the formatted string to it
-	wchar_t* pBuffer = v_printFmtString( pwszFormat, arg_list );
-	if (! pBuffer) return FALSE;
-
-	// Print the buffer to the stream using the current console output code page
-	BOOL bSuccess = printConsoleStream( stream, pBuffer );
-
-	freeHeap( pBuffer );
-
-	return bSuccess;
-}
-
-
-//
 // Print a formatted string with variable arguments to a stream
 // using the current console output code page.
 //
@@ -123,9 +103,19 @@ static BOOL printFmtConsoleStream( FILE* stream, const wchar_t* pwszFormat, ... 
 {
 	va_list args;
 	va_start( args, pwszFormat );
-	BOOL bResult = v_printFmtConsoleStream( stream, pwszFormat, args );
+	BOOL bSuccess = FALSE;
+
+	// Allocate a buffer and write the formatted string to it
+	wchar_t* pBuffer = v_printFmtString( pwszFormat, args );
+	if (pBuffer) {
+		// Print the buffer to the stream using the current console output code page
+		bSuccess = printConsoleStream( stream, pBuffer );
+
+		freeHeap( pBuffer );
+	}
+
 	va_end( args );
-	return bResult;
+	return bSuccess;
 }
 
 
