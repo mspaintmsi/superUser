@@ -108,12 +108,16 @@ If successful, the files `superUser32.exe` and `superUser64.exe` are created.
 
 
 Linux
------
+=====
 
 To build on Linux, native executables running on Windows.
 
 Tested on Linux Mint based on Ubuntu.
 
+
+
+GCC-MinGW
+---------
 
 Install the `gcc-mingw-w64` package:
 
@@ -122,6 +126,26 @@ Install the `gcc-mingw-w64` package:
 
 Open a terminal and run the following commands:
 
+	cd $HOME/Desktop/superUser 	# (or wherever you put the source to)
+	make
+
+If successful, the files `superUser32.exe` and `superUser64.exe` are created.
+
+
+
+LLVM-MinGW
+----------
+
+LLVM-MinGW is a simple toolchain based on the modern CLANG compiler.
+It produces smaller executables than GCC and does not need to be installed.
+
+Go to <https://github.com/mstorsjo/llvm-mingw/releases> and download the latest
+`llvm-mingw-<version>-msvcrt-ubuntu-<version>-x86_64.tar.xz` file.  
+Extract its contents to a folder, for example `$HOME/llvm-mingw`.
+
+Open a terminal and run the following commands:
+
+	PATH=$HOME/llvm-mingw/bin:$PATH
 	cd $HOME/Desktop/superUser 	# (or wherever you put the source to)
 	make
 
