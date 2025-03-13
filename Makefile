@@ -17,7 +17,6 @@
 
 HOST32 =
 HOST64 =
-INCLUDE =
 TARGETS = x86 x64
 
 ifeq (32,$(findstring 32,$(MSYSTEM)))	# MSYS2 32-bit
@@ -45,7 +44,7 @@ WINDRES64 = $(HOST64)windres
 # Windows Vista: the earliest to utilize the Trusted Installer.
 
 CPPFLAGS = -D_WIN32_WINNT=_WIN32_WINNT_VISTA
-CFLAGS = -municode -Os -s -flto -fno-ident -Wall $(INCLUDE)
+CFLAGS = -municode -Os -s -flto -fno-ident -Wall
 CFLAGS32 = -m32 $(CFLAGS)
 CFLAGS64 = -m64 $(CFLAGS)
 LDFLAGS = -Wl,--exclude-all-symbols,--dynamicbase,--nxcompat,--subsystem,console
