@@ -9,7 +9,8 @@
 #		- LLVM-MinGW
 #
 #	* Linux
-#		- with mingw-w64 package
+#		- GCC-MinGW (gcc-mingw-w64 package)
+#		- LLVM-MinGW
 #
 # Read BUILD_INSTRUCTIONS.md file for details.
 #
@@ -26,9 +27,6 @@ TARGETS = x64
 else	# Cygwin, LLVM-MinGW or Linux
 HOST32 = i686-w64-mingw32-
 HOST64 = x86_64-w64-mingw32-
-endif
-ifneq ($(OS),Windows_NT)
-INCLUDE += -I/usr/share/mingw-w64/include	# Linux mingw-w64 package
 endif
 
 NATIVEWIN =
