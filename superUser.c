@@ -80,7 +80,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 		}
 
 		// Set all privileges in the child process token
-		setAllPrivileges( hChildProcessToken, options.bVerbose );
+		setAllPrivilegesV( hChildProcessToken, options.bVerbose );
 	}
 
 	// Initialize startupInfo
@@ -146,7 +146,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 			OpenProcessToken( processInfo.hProcess, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
 				&hProcessToken );
 			// Set all privileges in the child process token
-			setAllPrivileges( hProcessToken, options.bVerbose );
+			setAllPrivilegesV( hProcessToken, options.bVerbose );
 			CloseHandle( hProcessToken );
 
 			ResumeThread( processInfo.hThread );

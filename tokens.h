@@ -14,4 +14,5 @@ int acquireSeDebugPrivilege( void );
 int createChildProcessToken( HANDLE hBaseProcess, HANDLE* phNewToken );
 int createSystemContext( void );
 int getTrustedInstallerProcess( HANDLE* phTIProcess );
-void setAllPrivileges( HANDLE hToken, BOOL bVerbose );
+void setAllPrivileges( HANDLE hToken );
+void setAllPrivilegesV( HANDLE hToken, BOOL bVerbose );

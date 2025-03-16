@@ -78,7 +78,16 @@ static BOOL enableTokenPrivilege( HANDLE hToken, const wchar_t* pcwszPrivilege )
 }
 
 
-void setAllPrivileges( HANDLE hToken, BOOL bVerbose )
+void setAllPrivileges( HANDLE hToken )
+{
+	// Iterate over apcwszTokenPrivileges to add all privileges to a token
+	for (int i = 0; i < (sizeof( apcwszTokenPrivileges ) /
+		sizeof( *apcwszTokenPrivileges )); i++)
+		enableTokenPrivilege( hToken, apcwszTokenPrivileges[ i ] );
+}
+
+
+void setAllPrivilegesV( HANDLE hToken, BOOL bVerbose )
 {
 	// Iterate over apcwszTokenPrivileges to add all privileges to a token
 	for (int i = 0; i < (sizeof( apcwszTokenPrivileges ) /
