@@ -68,3 +68,25 @@ Open a command prompt __as administrator__ to run these commands.
 
 If the `/w` option is specified, the exit code of the child process is returned.
 If _superUser_ fails, it returns a code from -1000001 to -1000005 (e.g., -1000002 instead of 2).
+
+
+# sudo
+
+`sudo32.exe` and `sudo64.exe` are simpler versions of superUser.
+
+They are equivalent to `superUser /ws`.
+
+- The new process runs in the same window and performs its inputs and outputs there.
+- `sudo` waits for this process to finish.
+- Then its exit code is returned and you can retrieve it with the errorlevel variable.
+
+The `/v` option is not implemented.
+
+
+### Examples
+
+Open a command prompt __as administrator__ to run these commands.
+
+	sudo64 whoami /user
+	sudo64 whoami /groups | find "TrustedInstaller"
+	sudo64 my_script.cmd arg1 arg2
