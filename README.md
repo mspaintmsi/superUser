@@ -76,11 +76,10 @@ If _superUser_ fails, it returns a code from -1000001 to -1000005 (e.g., -100000
 
 They are equivalent to `superUser /ws`.
 
-- The new process runs in the same window and performs its inputs and outputs there.
-- `sudo` waits for this process to finish.
-- Then its exit code is returned and you can retrieve it with the errorlevel variable.
+- The child process runs in the same window and performs its inputs and outputs there.
+- `sudo` waits for this process to finish and returns its exit code.
 
-The `/v` option is not implemented.
+Usage is the same as superUser, except that the `s`, `v`, and `w` options do not exist.
 
 
 ### Examples
