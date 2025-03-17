@@ -77,9 +77,9 @@ If _superUser_ fails, it returns a code from -1000001 to -1000005 (e.g., -100000
 They are equivalent to `superUser /ws`.
 
 - The child process runs in the same window and performs its inputs and outputs there.
-- `sudo` waits for this process to finish and returns its exit code.
+- _sudo_ waits for this process to finish and returns its exit code.
 
-Usage is the same as superUser, except that the `s`, `v`, and `w` options do not exist.
+Usage is the same as _superUser_, except that the _s_, _v_, and _w_ options do not exist.
 
 
 ### Examples
