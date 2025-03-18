@@ -51,7 +51,7 @@ LDFLAGS = -Wl,--exclude-all-symbols,--dynamicbase,--nxcompat,--subsystem,console
 LDLIBS = -lwtsapi32
 WRFLAGS = --codepage 65001 -O coff
 
-SRCS = superUser.c tokens.c utils.c
+SRCS = tokens.c utils.c
 DEPS = tokens.h utils.h winnt2.h
 
 .PHONY: all clean x86 x64
@@ -66,19 +66,35 @@ else
 	rm -f *.exe *.res
 endif
 
-x86: superUser32.exe
-x64: superUser64.exe
+x86: superUser32.exe sudo32.exe
+x64: superUser64.exe sudo64.exe
+
 
 superUser32.exe superUser64.exe: $(SRCS) $(DEPS)
 
 superUser32.exe: superUser32.res
-	$(CC32) $(CPPFLAGS) $(CFLAGS32) $(SRCS) $(LDFLAGS) superUser32.res $(LDLIBS) -o $@ 
+	$(CC32) $(CPPFLAGS) $(CFLAGS32) superUser.c $(SRCS) $(LDFLAGS) superUser32.res $(LDLIBS) -o $@ 
 
 superUser64.exe: superUser64.res
-	$(CC64) $(CPPFLAGS) $(CFLAGS64) $(SRCS) $(LDFLAGS) superUser64.res $(LDLIBS) -o $@
+	$(CC64) $(CPPFLAGS) $(CFLAGS64) superUser.c $(SRCS) $(LDFLAGS) superUser64.res $(LDLIBS) -o $@
 
 superUser32.res: superUser.rc
 	$(WINDRES32) $(WRFLAGS) -F pe-i386 -DTARGET32 $< $@
 
 superUser64.res: superUser.rc
+	$(WINDRES64) $(WRFLAGS) -F pe-x86-64 -DTARGET64 $< $@
+
+
+sudo32.exe sudo64.exe: $(SRCS) $(DEPS)
+
+sudo32.exe: sudo32.res
+	$(CC32) $(CPPFLAGS) $(CFLAGS32) sudo.c $(SRCS) $(LDFLAGS) sudo32.res $(LDLIBS) -o $@ 
+
+sudo64.exe: sudo64.res
+	$(CC64) $(CPPFLAGS) $(CFLAGS64) sudo.c $(SRCS) $(LDFLAGS) sudo64.res $(LDLIBS) -o $@
+
+sudo32.res: sudo.rc
+	$(WINDRES32) $(WRFLAGS) -F pe-i386 -DTARGET32 $< $@
+
+sudo64.res: sudo.rc
 	$(WINDRES64) $(WRFLAGS) -F pe-x86-64 -DTARGET64 $< $@
