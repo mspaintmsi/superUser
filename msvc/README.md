@@ -50,9 +50,9 @@ and copy them to the `msvc` directory.
 
 Then you can build the project with Visual Studio.
 
-- Open the `msvc\superUser` project.
+- Open the `msvc\superUser.sln` solution.
 - In the toolbar, choose the _Release_ configuration.
 - Select the platform (_x64_ or _x86_).
-- Build the project (menu _Build > Build Solution_, or press _Ctrl+Shift+B_).
+- Build the solution (menu _Build > Build Solution_, or press _Ctrl+Shift+B_).
 
 This creates `superUser32.exe` or `superUser64.exe` in the project directory (`msvc`).

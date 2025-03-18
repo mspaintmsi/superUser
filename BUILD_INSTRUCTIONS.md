@@ -3,6 +3,10 @@ Building from source
 ====================
 
 
+Windows
+=======
+
+
 Visual Studio
 -------------
 
@@ -150,3 +154,30 @@ Open a terminal and run the following commands:
 	make
 
 If successful, the files `superUser32.exe` and `superUser64.exe` are created.
+
+
+
+Building ARM executables
+========================
+
+
+Visual Studio
+-------------
+
+Go to the [msvc/ucrt](msvc/ucrt) directory and follow the instructions in
+[msvc/ucrt/README](msvc/ucrt/README.md).
+
+Select the platform __ARM64__ instead of x64/x86 and build the solution.
+
+
+LLVM-MinGW
+----------
+
+LLVM-MinGW produces smaller executables than Visual Studio and does not need to be installed.
+
+Go to <https://github.com/mstorsjo/llvm-mingw/releases> and download the latest
+`llvm-mingw-<version>-ucrt-*` file that matches your __development__ OS and architecture
+(not necessarily ARM).
+
+Extract its contents to a folder, and follow the instructions above for LLVM-MinGW in the
+Windows or Linux section.
