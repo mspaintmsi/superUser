@@ -1,0 +1,89 @@
+﻿#
+# superUser ARM Makefile
+#
+# Build native executables running on Windows, on different platforms.
+#
+#	* Windows 
+#		- LLVM-MinGW (UCRT)
+#
+#	* Linux
+#		- LLVM-MinGW (UCRT)
+#
+# Read BUILD_INSTRUCTIONS.md file for details.
+#
+
+TARGETS = arm32 arm64
+
+HOST32 = armv7-w64-mingw32-
+HOST64 = aarch64-w64-mingw32-
+
+NATIVEWIN =
+ifeq ($(OS),Windows_NT)
+ifeq '$(findstring ;,$(PATH))' ';'
+NATIVEWIN = 1
+endif
+endif
+
+CC32 = $(HOST32)clang
+CC64 = $(HOST64)clang
+WINDRES32 = $(HOST32)windres
+WINDRES64 = $(HOST64)windres
+
+# _WIN32_WINNT: the minimal Windows version the app can run on.
+# Windows Vista: the earliest to utilize the Trusted Installer.
+
+CPPFLAGS = -D_WIN32_WINNT=_WIN32_WINNT_VISTA
+CFLAGS = -municode -Os -s -flto -fno-ident -Wall
+CFLAGS32 = $(CFLAGS)
+CFLAGS64 = $(CFLAGS)
+LDFLAGS = -Wl,--exclude-all-symbols,--dynamicbase,--nxcompat,--subsystem,console
+LDLIBS = -lwtsapi32
+WRFLAGS = --codepage 65001 -O coff
+
+SRCS = tokens.c utils.c
+DEPS = tokens.h utils.h winnt2.h
+
+.PHONY: all clean arm32 arm64
+
+all: $(TARGETS)
+
+clean:
+ifdef NATIVEWIN
+	if exist *.exe del *.exe
+	if exist *.res del *.res
+else
+	rm -f *.exe *.res
+endif
+
+arm32: superUserA32.exe sudoA32.exe
+arm64: superUserA64.exe sudoA64.exe
+
+
+superUserA32.exe superUserA64.exe: $(SRCS) $(DEPS)
+
+superUserA32.exe: superUserA32.res
+	$(CC32) $(CPPFLAGS) $(CFLAGS32) superUser.c $(SRCS) $(LDFLAGS) superUserA32.res $(LDLIBS) -o $@
+
+superUserA64.exe: superUserA64.res
+	$(CC64) $(CPPFLAGS) $(CFLAGS64) superUser.c $(SRCS) $(LDFLAGS) superUserA64.res $(LDLIBS) -o $@
+
+superUserA32.res: superUser.rc
+	$(WINDRES32) $(WRFLAGS) -DTARGET_ARM32 $< $@
+
+superUserA64.res: superUser.rc
+	$(WINDRES64) $(WRFLAGS) -DTARGET_ARM64 $< $@
+
+
+sudoA32.exe sudoA64.exe: $(SRCS) $(DEPS)
+
+sudoA32.exe: sudoA32.res
+	$(CC32) $(CPPFLAGS) $(CFLAGS32) sudo.c $(SRCS) $(LDFLAGS) sudoA32.res $(LDLIBS) -o $@
+
+sudoA64.exe: sudoA64.res
+	$(CC64) $(CPPFLAGS) $(CFLAGS64) sudo.c $(SRCS) $(LDFLAGS) sudoA64.res $(LDLIBS) -o $@
+
+sudoA32.res: sudo.rc
+	$(WINDRES32) $(WRFLAGS) -DTARGET_ARM32 $< $@
+
+sudoA64.res: sudo.rc
+	$(WINDRES64) $(WRFLAGS) -DTARGET_ARM64 $< $@

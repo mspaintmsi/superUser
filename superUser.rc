@@ -2,6 +2,10 @@
 	#define FILENAME "superUser32.exe"
 #elif defined(TARGET64)
 	#define FILENAME "superUser64.exe"
+#elif defined(TARGET_ARM32)
+	#define FILENAME "superUserA32.exe"
+#elif defined(TARGET_ARM64)
+	#define FILENAME "superUserA64.exe"
 #else
 	#define FILENAME "superUser.exe"
 #endif

@@ -2,6 +2,10 @@
 	#define FILENAME "sudo32.exe"
 #elif defined(TARGET64)
 	#define FILENAME "sudo64.exe"
+#elif defined(TARGET_ARM32)
+	#define FILENAME "sudoA32.exe"
+#elif defined(TARGET_ARM64)
+	#define FILENAME "sudoA64.exe"
 #else
 	#define FILENAME "sudo.exe"
 #endif
