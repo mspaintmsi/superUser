@@ -183,7 +183,8 @@ LLVM-MinGW produces smaller executables than Visual Studio and does not need to 
 
 Go to <https://github.com/mstorsjo/llvm-mingw/releases> and download the latest
 `llvm-mingw-<version>-msvcrt-*` file that matches your __development__ OS and architecture
-(not necessarily ARM).
+(not necessarily ARM). If no file matches your architecture, choose the `ucrt` version 
+`llvm-mingw-<version>-ucrt-*`.
 
 Follow the instructions for LLVM-MinGW in the Windows or Linux section above.
 
