@@ -101,7 +101,6 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>msvcrt32.lib;advapi32.lib;wtsapi32.lib</AdditionalDependencies>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <SubSystem>Console</SubSystem>
       <IgnoreSpecificDefaultLibraries>libcmtd.lib</IgnoreSpecificDefaultLibraries>
