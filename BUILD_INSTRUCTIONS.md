@@ -166,13 +166,18 @@ Building ARM executables
 Visual Studio
 -------------
 
-The component "MSVC v143 - VS 2022 C++ ARM64/ARM64EC build tools (Latest)" must be installed.
+The following components must be installed:
+
+- For ARM (32-bits):  
+"MSVC v143 - VS 2022 C++ ARM build tools (Latest)"
+- For ARM64 (64-bits):  
+"MSVC v143 - VS 2022 C++ ARM64/ARM64EC build tools (Latest)"
 
 Follow the instructions in [msvc/ucrt/README](msvc/ucrt/README.md).
 
-Select the ___ARM64___ platform instead of _x64_/_x86_ and build the solution.
+Select the ___ARM___ or ___ARM64___ platform instead of _x64_/_x86_ and build the solution.
 
-This creates `superUserA64.exe` in the solution directory (`msvc\ucrt`).
+This creates `superUserA32.exe` or `superUserA64.exe` in the solution directory (`msvc\ucrt`).
 
 
 
