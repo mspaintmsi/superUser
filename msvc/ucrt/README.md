@@ -20,5 +20,5 @@ The executable size is around 26-31 KB.
 - Select the platform (_x64_ or _x86_).
 - Build the solution (menu _Build > Build Solution_, or press _Ctrl+Shift+B_).
 
-This creates `superUser32.exe` or `superUser64.exe` in the project directory
+This creates `superUser32.exe` or `superUser64.exe` in the solution directory
 (`msvc\ucrt`).

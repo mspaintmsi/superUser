@@ -55,4 +55,4 @@ Then you can build the project with Visual Studio.
 - Select the platform (_x64_ or _x86_).
 - Build the solution (menu _Build > Build Solution_, or press _Ctrl+Shift+B_).
 
-This creates `superUser32.exe` or `superUser64.exe` in the project directory (`msvc`).
+This creates `superUser32.exe` or `superUser64.exe` in the solution directory (`msvc`).

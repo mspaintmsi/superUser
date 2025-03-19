@@ -25,7 +25,8 @@ LLVM-MinGW is a simple toolchain based on the modern CLANG compiler.
 It produces smaller executables than GCC and does not need to be installed.
 
 Go to <https://github.com/mstorsjo/llvm-mingw/releases> and download the latest
-`llvm-mingw-<version>-msvcrt-x86_64.zip` file.  
+`llvm-mingw-<version>-msvcrt-x86_64.zip` file (if your development system
+architecture is Intel/AMD 64-bit).  
 Extract its contents to a folder, for example `C:\llvm-mingw`.
 
 Open a command prompt and run the following commands:
@@ -164,10 +165,12 @@ Building ARM executables
 Visual Studio
 -------------
 
-Go to the [msvc/ucrt](msvc/ucrt) directory and follow the instructions in
-[msvc/ucrt/README](msvc/ucrt/README.md).
+Follow the instructions in [msvc/ucrt/README](msvc/ucrt/README.md).
 
-Select the platform __ARM64__ instead of x64/x86 and build the solution.
+Select the ___ARM64___ platform instead of _x64_/_x86_ and build the solution.
+
+This creates `superUserA64.exe` in the solution directory (`msvc\ucrt`).
+
 
 
 LLVM-MinGW
@@ -176,8 +179,14 @@ LLVM-MinGW
 LLVM-MinGW produces smaller executables than Visual Studio and does not need to be installed.
 
 Go to <https://github.com/mstorsjo/llvm-mingw/releases> and download the latest
-`llvm-mingw-<version>-ucrt-*` file that matches your __development__ OS and architecture
+`llvm-mingw-<version>-msvcrt-*` file that matches your __development__ OS and architecture
 (not necessarily ARM).
 
-Extract its contents to a folder, and follow the instructions above for LLVM-MinGW in the
-Windows or Linux section.
+Follow the instructions for LLVM-MinGW in the Windows or Linux section above.
+
+Add `-f Makefile-arm` after the `make` (or `mingw32-make`) command to build the ARM executables:
+
+	make -f Makefile-arm
+or
+
+	mingw32-make -f Makefile-arm
