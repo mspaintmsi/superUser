@@ -145,7 +145,8 @@ LLVM-MinGW is a simple toolchain based on the modern CLANG compiler.
 It produces smaller executables than GCC and does not need to be installed.
 
 Go to <https://github.com/mstorsjo/llvm-mingw/releases> and download the latest
-`llvm-mingw-<version>-msvcrt-ubuntu-<version>-x86_64.tar.xz` file.  
+`llvm-mingw-<version>-msvcrt-ubuntu-<version>-x86_64.tar.xz` file (if your
+development system architecture is Intel/AMD 64-bit).  
 Extract its contents to a folder, for example `$HOME/llvm-mingw`.
 
 Open a terminal and run the following commands:
@@ -164,6 +165,8 @@ Building ARM executables
 
 Visual Studio
 -------------
+
+The component "MSVC v143 - VS 2022 C++ ARM64/ARM64EC build tools (Latest)" must be installed.
 
 Follow the instructions in [msvc/ucrt/README](msvc/ucrt/README.md).
 
