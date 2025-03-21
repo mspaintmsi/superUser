@@ -3,8 +3,8 @@
 #
 # Build native ARMv7 / ARM64 executables running on Windows on ARM.
 #
-#	Toolchain: LLVM-MinGW
-#	Development OS: Windows or Linux (Intel/AMD or ARM)
+# Toolchain: LLVM-MinGW
+# Development OS: Windows or Linux (Intel/AMD or ARM)
 #
 # Read BUILD_INSTRUCTIONS.md file for details.
 #
