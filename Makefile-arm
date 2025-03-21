@@ -1,13 +1,10 @@
 ﻿#
 # superUser ARM Makefile
 #
-# Build native executables running on Windows, on different platforms.
+# Build native ARMv7 / ARM64 executables running on Windows on ARM.
 #
-#	* Windows 
-#		- LLVM-MinGW (UCRT)
-#
-#	* Linux
-#		- LLVM-MinGW (UCRT)
+#	Toolchain: LLVM-MinGW
+#	Development OS: Windows or Linux (Intel/AMD or ARM)
 #
 # Read BUILD_INSTRUCTIONS.md file for details.
 #
