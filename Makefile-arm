@@ -1,18 +1,29 @@
 ﻿#
 # superUser ARM Makefile
 #
-# Build native ARMv7 / ARM64 executables running on Windows on ARM.
+# Build native ARMv7 / ARM64 executables for "Windows on ARM".
 #
-# Toolchain: LLVM-MinGW
-# Development OS: Windows or Linux (Intel/AMD or ARM)
+# Supported development OS and toolchains:
+#
+#	* Windows or Linux (Intel/AMD or ARM, 32 or 64-bit)
+#	  Toolchain: LLVM-MinGW
+#
+#	* Windows 11 on Arm64
+#	  Toolchain: MSYS2 / CLANGARM64
 #
 # Read BUILD_INSTRUCTIONS.md file for details.
 #
 
+HOST32 =
+HOST64 =
 TARGETS = arm32 arm64
 
+ifeq (64,$(findstring 64,$(MSYSTEM)))	# MSYS2 CLANGARM64
+TARGETS = arm64
+else	# LLVM-MinGW
 HOST32 = armv7-w64-mingw32-
 HOST64 = aarch64-w64-mingw32-
+endif
 
 NATIVEWIN =
 ifeq ($(OS),Windows_NT)

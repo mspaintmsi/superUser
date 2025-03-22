@@ -1,7 +1,9 @@
 ﻿#
 # superUser Makefile
 #
-# Build native executables running on Windows, on different platforms.
+# Build x86 / x64 executables for Windows (Intel/AMD).
+#
+# Supported development OS and toolchains:
 #
 #	* Windows 
 #		- Cygwin / MinGW-w64
