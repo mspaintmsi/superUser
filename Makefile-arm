@@ -1,7 +1,7 @@
-﻿#
+#
 # superUser ARM Makefile
 #
-# Build native ARMv7 / ARM64 executables for "Windows on ARM".
+# Build native ARMv7 / ARM64 executables for "Windows on Arm".
 #
 # Supported development OS and toolchains:
 #
@@ -14,36 +14,50 @@
 # Read BUILD_INSTRUCTIONS.md file for details.
 #
 
+NATIVEWIN =
+DEVNUL = /dev/null
+ifeq ($(OS),Windows_NT)
+ifeq ($(findstring ;,$(PATH)),;)
+NATIVEWIN = 1
+DEVNUL = nul
+endif
+endif
+
 HOST32 =
 HOST64 =
-TARGETS = arm32 arm64
-
-ifeq (64,$(findstring 64,$(MSYSTEM)))	# MSYS2 CLANGARM64
-TARGETS = arm64
-else	# LLVM-MinGW
-HOST32 = armv7-w64-mingw32-
-HOST64 = aarch64-w64-mingw32-
-endif
-
-NATIVEWIN =
-ifeq ($(OS),Windows_NT)
-ifeq '$(findstring ;,$(PATH))' ';'
-NATIVEWIN = 1
-endif
-endif
-
-CC32 = $(HOST32)clang
-CC64 = $(HOST64)clang
+CC32 = $(HOST32)gcc
+CC64 = $(HOST64)gcc
 WINDRES32 = $(HOST32)windres
 WINDRES64 = $(HOST64)windres
+
+TARGETS =
+ifeq (CLANGARM64,$(findstring CLANGARM64,$(MSYSTEM)))	# MSYS2 CLANGARM64
+CC32 =
+CC64 = $(HOST64)clang
+TARGETS = arm64
+else ifneq (,$(findstring 32,$(MSYSTEM))$(findstring 64,$(MSYSTEM)))	# MSYS2
+CC32 =
+CC64 =
+else	# LLVM-MinGW or Linux
+HOST32 = armv7-w64-mingw32-
+HOST64 = aarch64-w64-mingw32-
+ifneq ($(shell $(CC32) --version 2>$(DEVNUL)),)	# 32-bit compiler exists
+TARGETS += arm32
+else
+CC32 =
+endif
+ifneq ($(shell $(CC64) --version 2>$(DEVNUL)),)	# 64-bit compiler exists
+TARGETS += arm64
+else
+CC64 =
+endif
+endif
 
 # _WIN32_WINNT: the minimal Windows version the app can run on.
 # Windows Vista: the earliest to utilize the Trusted Installer.
 
-CPPFLAGS = -D_WIN32_WINNT=_WIN32_WINNT_VISTA
+CPPFLAGS = -D_WIN32_WINNT=_WIN32_WINNT_VISTA -D_UNICODE
 CFLAGS = -municode -Os -s -flto -fno-ident -Wall
-CFLAGS32 = $(CFLAGS)
-CFLAGS64 = $(CFLAGS)
 LDFLAGS = -Wl,--exclude-all-symbols,--dynamicbase,--nxcompat,--subsystem,console
 LDLIBS = -lwtsapi32
 WRFLAGS = --codepage 65001 -O coff
@@ -51,9 +65,9 @@ WRFLAGS = --codepage 65001 -O coff
 SRCS = tokens.c utils.c
 DEPS = tokens.h utils.h winnt2.h
 
-.PHONY: all clean arm32 arm64
+.PHONY: all clean check check32 check64 arm32 arm64
 
-all: $(TARGETS)
+all: $(TARGETS) | check
 
 clean:
 ifdef NATIVEWIN
@@ -63,35 +77,57 @@ else
 	rm -f *.exe *.res
 endif
 
+check:
+ifeq (,$(CC32)$(CC64))
+	@echo ERROR: No suitable toolchain.
+	@exit 1
+endif
+
+check32:
+ifndef CC32
+	@echo ERROR: No toolchain to build arm32.
+	@exit 1
+endif
+
+check64:
+ifndef CC64
+	@echo ERROR: No toolchain to build arm64.
+	@exit 1
+endif
+
 arm32: superUserA32.exe sudoA32.exe
 arm64: superUserA64.exe sudoA64.exe
 
 
+# superUser
+
 superUserA32.exe superUserA64.exe: $(SRCS) $(DEPS)
 
-superUserA32.exe: superUserA32.res
-	$(CC32) $(CPPFLAGS) $(CFLAGS32) superUser.c $(SRCS) $(LDFLAGS) superUserA32.res $(LDLIBS) -o $@
+superUserA32.exe: superUserA32.res | check32
+	$(CC32) $(CPPFLAGS) $(CFLAGS) superUser.c $(SRCS) $(LDFLAGS) superUserA32.res $(LDLIBS) -o $@
 
-superUserA64.exe: superUserA64.res
-	$(CC64) $(CPPFLAGS) $(CFLAGS64) superUser.c $(SRCS) $(LDFLAGS) superUserA64.res $(LDLIBS) -o $@
+superUserA64.exe: superUserA64.res | check64
+	$(CC64) $(CPPFLAGS) $(CFLAGS) superUser.c $(SRCS) $(LDFLAGS) superUserA64.res $(LDLIBS) -o $@
 
-superUserA32.res: superUser.rc
+superUserA32.res: superUser.rc | check32
 	$(WINDRES32) $(WRFLAGS) -DTARGET_ARM32 $< $@
 
-superUserA64.res: superUser.rc
+superUserA64.res: superUser.rc | check64
 	$(WINDRES64) $(WRFLAGS) -DTARGET_ARM64 $< $@
 
 
+# sudo
+
 sudoA32.exe sudoA64.exe: $(SRCS) $(DEPS)
 
-sudoA32.exe: sudoA32.res
-	$(CC32) $(CPPFLAGS) $(CFLAGS32) sudo.c $(SRCS) $(LDFLAGS) sudoA32.res $(LDLIBS) -o $@
+sudoA32.exe: sudoA32.res | check32
+	$(CC32) $(CPPFLAGS) $(CFLAGS) sudo.c $(SRCS) $(LDFLAGS) sudoA32.res $(LDLIBS) -o $@
 
-sudoA64.exe: sudoA64.res
-	$(CC64) $(CPPFLAGS) $(CFLAGS64) sudo.c $(SRCS) $(LDFLAGS) sudoA64.res $(LDLIBS) -o $@
+sudoA64.exe: sudoA64.res | check64
+	$(CC64) $(CPPFLAGS) $(CFLAGS) sudo.c $(SRCS) $(LDFLAGS) sudoA64.res $(LDLIBS) -o $@
 
-sudoA32.res: sudo.rc
+sudoA32.res: sudo.rc | check32
 	$(WINDRES32) $(WRFLAGS) -DTARGET_ARM32 $< $@
 
-sudoA64.res: sudo.rc
+sudoA64.res: sudo.rc | check64
 	$(WINDRES64) $(WRFLAGS) -DTARGET_ARM64 $< $@
