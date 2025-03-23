@@ -199,3 +199,17 @@ Add `-f Makefile-arm` after the `make` (or `mingw32-make`) command to build the 
 or
 
 	mingw32-make -f Makefile-arm
+
+
+
+MSYS2 (Windows 11 on Arm64 ___only___)
+--------------------------------------
+
+Follow the instructions for MSYS2 in the Windows section above.
+
+Install the `mingw-w64-clang-aarch64-clang` package instead of the 
+`mingw-w64-i686-gcc` and `mingw-w64-x86_64-gcc` packages.
+
+Execute `clangarm64.exe` in the MSYS2 install directory to open the __MSYS2 CLANGARM64__ terminal.
+
+Use the `make -f Makefile-arm` command to build the ARM executables. 
