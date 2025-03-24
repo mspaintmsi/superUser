@@ -2,6 +2,34 @@
 Building from source
 ====================
 
+All the solutions presented below produce executables that run on Windows.
+
+Some can also generate executables for Windows on Arm.
+
+The executable names are as follows:
+
+- Windows Intel/AMD 32-bit  
+`superUser32.exe`
+`sudo32.exe`
+
+- Windows Intel/AMD 64-bit  
+`superUser64.exe`
+`sudo64.exe`
+
+- Windows on ARMv7 32-bit  
+`superUserA32.exe`
+`sudoA32.exe`
+
+- Windows on Arm64  
+`superUserA64.exe`
+`sudoA64.exe`
+
+The development tools may run on different systems (Windows, Linux, macOS)
+and architectures (Intel/AMD or Arm, 32 or 64 bit).
+
+First, choose the system on which you want to run these tools.
+
+
 
 Windows
 =======
@@ -21,12 +49,24 @@ don't want to do this, see the alternative in [msvc/ucrt](msvc/ucrt).
 LLVM-MinGW
 ----------
 
-LLVM-MinGW is a simple toolchain based on the modern CLANG compiler.
+LLVM-MinGW is a simple toolchain based on the modern Clang compiler.
 It produces smaller executables than GCC and does not need to be installed.
 
-Go to <https://github.com/mstorsjo/llvm-mingw/releases> and download the latest
-`llvm-mingw-<version>-msvcrt-x86_64.zip` file (if your development system
-architecture is Intel/AMD 64-bit).  
+Go to <https://github.com/mstorsjo/llvm-mingw/releases> and download the latest file
+that matches your __development__ system's architecture.  
+
+- Windows Intel/AMD 64-bit  
+`llvm-mingw-<version>-msvcrt-x86_64.zip`
+
+- Windows on Arm64  
+`llvm-mingw-<version>-ucrt-aarch64.zip`
+
+- Windows Intel/AMD 32-bit  
+`llvm-mingw-<version>-msvcrt-i686.zip`
+
+- Windows on Arm 32-bit  
+`llvm-mingw-<version>-ucrt-armv7.zip`
+
 Extract its contents to a folder, for example `C:\llvm-mingw`.
 
 Open a command prompt and run the following commands:
@@ -35,7 +75,7 @@ Open a command prompt and run the following commands:
 	cd /d %USERPROFILE%\Desktop\superUser 	&rem (or wherever you put the source to)
 	mingw32-make
 
-If successful, the files `superUser32.exe` and `superUser64.exe` are created.
+If successful, both 32-bit and 64-bit executables are created.
 
 
 
@@ -62,20 +102,20 @@ Run the following command several times until all the packages are up-to-date:
 When done, close the __MSYS2 UCRT64__ terminal.
 
 
-To build the 64-bit executable, open the __MSYS2 MINGW64__ terminal and run:
+To build the 64-bit executables, open the __MSYS2 MINGW64__ terminal and run:
 
 	cd /c/Users/$USER/Desktop/superUser 	# (or wherever you put the source to)
 	make
 
-If successful, the file `superUser64.exe` is created.
+If successful, the 64-bit executables are created.
 
 
-To build the 32-bit executable, open the __MSYS2 MINGW32__ terminal and run:
+To build the 32-bit executables, open the __MSYS2 MINGW32__ terminal and run:
 
 	cd /c/Users/$USER/Desktop/superUser 	# (or wherever you put the source to)
 	make
 
-If successful, the file `superUser32.exe` is created.
+If successful, the 32-bit executables are created.
 
 
 It is also possible to use the __CLANG64__ environment, which have a newer
@@ -108,16 +148,14 @@ Open a Cygwin terminal and run the following commands:
 	cd /cygdrive/c/Users/$USER/Desktop/superUser 	# (or wherever you put the source to)
 	make
 
-If successful, the files `superUser32.exe` and `superUser64.exe` are created.
+If successful, both 32-bit and 64-bit executables are created.
 
 
 
 Linux
 =====
 
-To build on Linux, native executables running on Windows.
-
-Tested on Linux Mint based on Ubuntu.
+These solutions have been tested on Linux Mint based on Ubuntu.
 
 
 
@@ -134,19 +172,25 @@ Open a terminal and run the following commands:
 	cd $HOME/Desktop/superUser 	# (or wherever you put the source to)
 	make
 
-If successful, the files `superUser32.exe` and `superUser64.exe` are created.
+If successful, both 32-bit and 64-bit executables are created.
 
 
 
 LLVM-MinGW
 ----------
 
-LLVM-MinGW is a simple toolchain based on the modern CLANG compiler.
+LLVM-MinGW is a simple toolchain based on the modern Clang compiler.
 It produces smaller executables than GCC and does not need to be installed.
 
-Go to <https://github.com/mstorsjo/llvm-mingw/releases> and download the latest
-`llvm-mingw-<version>-msvcrt-ubuntu-<version>-x86_64.tar.xz` file (if your
-development system architecture is Intel/AMD 64-bit).  
+Go to <https://github.com/mstorsjo/llvm-mingw/releases> and download the latest file
+that matches your __development__ system's architecture.  
+
+- Linux Intel/AMD 64-bit  
+`llvm-mingw-<version>-msvcrt-ubuntu-<ubuntu_version>-x86_64.tar.xz`
+
+- Linux Arm64  
+`llvm-mingw-<version>-ucrt-ubuntu-<ubuntu_version>-aarch64.tar.xz`
+
 Extract its contents to a folder, for example `$HOME/llvm-mingw`.
 
 Open a terminal and run the following commands:
@@ -155,7 +199,7 @@ Open a terminal and run the following commands:
 	cd $HOME/Desktop/superUser 	# (or wherever you put the source to)
 	make
 
-If successful, the files `superUser32.exe` and `superUser64.exe` are created.
+If successful, both 32-bit and 64-bit executables are created.
 
 
 
@@ -168,34 +212,36 @@ Visual Studio
 
 The following components must be installed:
 
-- For ARM (32-bits):  
+- For ARM (32-bit):  
 "MSVC v143 - VS 2022 C++ ARM build tools (Latest)"
-- For ARM64 (64-bits):  
+- For ARM64 (64-bit):  
 "MSVC v143 - VS 2022 C++ ARM64/ARM64EC build tools (Latest)"
 
 Follow the instructions in [msvc/ucrt/README](msvc/ucrt/README.md).
 
-Select the ___ARM___ or ___ARM64___ platform instead of _x64_/_x86_ and build the solution.
+Select the ___ARM___ or ___ARM64___ platform instead of _x64_/_x86_ and build 
+the solution.
 
-This creates `superUserA32.exe` or `superUserA64.exe` in the solution directory (`msvc\ucrt`).
+This creates the 32-bit or 64-bit executables in the solution directory (`msvc\ucrt`).
 
 
 
 LLVM-MinGW
 ----------
 
-LLVM-MinGW produces smaller executables than Visual Studio and does not need to be installed.
+LLVM-MinGW produces smaller executables than Visual Studio and does not need
+to be installed.
 
-Go to <https://github.com/mstorsjo/llvm-mingw/releases> and download the latest
-`llvm-mingw-<version>-msvcrt-*` file that matches your __development__ OS and architecture
-(not necessarily ARM). If no file matches your architecture, choose the `ucrt` version 
-`llvm-mingw-<version>-ucrt-*`.
+There is a version for every system (Windows, Linux, macOS) and architecture
+(Intel/AMD, ARM, 32 or 64 bit).
 
 Follow the instructions for LLVM-MinGW in the Windows or Linux section above.
 
-Add `-f Makefile-arm` after the `make` (or `mingw32-make`) command to build the ARM executables:
+Add `-f Makefile-arm` after the `make` (or `mingw32-make`) command to build
+the ARM executables:
 
 	make -f Makefile-arm
+
 or
 
 	mingw32-make -f Makefile-arm
@@ -207,9 +253,10 @@ MSYS2 (Windows 11 on Arm64 ___only___)
 
 Follow the instructions for MSYS2 in the Windows section above.
 
-Install the `mingw-w64-clang-aarch64-clang` package instead of the 
+Install the `mingw-w64-clang-aarch64-clang` package instead of the
 `mingw-w64-i686-gcc` and `mingw-w64-x86_64-gcc` packages.
 
-Execute `clangarm64.exe` in the MSYS2 install directory to open the __MSYS2 CLANGARM64__ terminal.
+Execute `clangarm64.exe` in the MSYS2 install directory to open the
+__MSYS2 CLANGARM64__ terminal.
 
 Use the `make -f Makefile-arm` command to build the ARM executables. 
