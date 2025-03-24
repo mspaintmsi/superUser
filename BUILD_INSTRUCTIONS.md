@@ -2,9 +2,9 @@
 Building from source
 ====================
 
-All the solutions presented below produce executables that run on Windows.
+All the solutions presented below produce executables that run on __Windows__.
 
-Some can also generate executables for Windows on Arm.
+Some can also generate executables for [Windows on Arm](#building-arm-executables).
 
 The executable names are as follows:
 
@@ -24,8 +24,9 @@ The executable names are as follows:
 `superUserA64.exe`
 `sudoA64.exe`
 
-The development tools may run on different systems (Windows, Linux, macOS)
-and architectures (Intel/AMD or Arm, 32 or 64 bit).
+On the other hand, the development tools for building these executables may run on
+different systems (Windows, Linux, macOS) and architectures (Intel/AMD or Arm,
+32 or 64 bit).
 
 First, choose the system on which you want to run these tools.
 
@@ -73,7 +74,14 @@ Open a command prompt and run the following commands:
 
 	path=C:\llvm-mingw\bin;%path%
 	cd /d %USERPROFILE%\Desktop\superUser 	&rem (or wherever you put the source to)
+
+To build the Intel/AMD executables, run:
+
 	mingw32-make
+	
+To build the ARM executables, run:
+
+	mingw32-make -f Makefile-arm
 
 If successful, both 32-bit and 64-bit executables are created.
 
@@ -197,7 +205,14 @@ Open a terminal and run the following commands:
 
 	PATH=$HOME/llvm-mingw/bin:$PATH
 	cd $HOME/Desktop/superUser 	# (or wherever you put the source to)
+
+To build the Intel/AMD executables, run:
+
 	make
+	
+To build the ARM executables, run:
+
+	make -f Makefile-arm
 
 If successful, both 32-bit and 64-bit executables are created.
 
@@ -236,15 +251,6 @@ There is a version for every system (Windows, Linux, macOS) and architecture
 (Intel/AMD, ARM, 32 or 64 bit).
 
 Follow the instructions for LLVM-MinGW in the Windows or Linux section above.
-
-Add `-f Makefile-arm` after the `make` (or `mingw32-make`) command to build
-the ARM executables:
-
-	make -f Makefile-arm
-
-or
-
-	mingw32-make -f Makefile-arm
 
 
 
