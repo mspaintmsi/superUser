@@ -31,22 +31,22 @@ WINDRES32 = $(HOST32)windres
 WINDRES64 = $(HOST64)windres
 
 TARGETS =
-ifeq (CLANGARM64,$(findstring CLANGARM64,$(MSYSTEM)))	# MSYS2 CLANGARM64
-CC32 =
-CC64 = $(HOST64)clang
+ifeq (CLANGARM64,$(MSYSTEM))	# MSYS2 CLANGARM64
 TARGETS = arm64
+CC64 = clang
+CC32 =
 else ifneq (,$(findstring 32,$(MSYSTEM))$(findstring 64,$(MSYSTEM)))	# MSYS2
 CC32 =
 CC64 =
 else	# LLVM-MinGW or Linux
 HOST32 = armv7-w64-mingw32-
 HOST64 = aarch64-w64-mingw32-
-ifneq ($(shell $(CC32) --version 2>$(DEVNUL)),)	# 32-bit compiler exists
+ifneq (,$(shell $(CC32) --version 2>$(DEVNUL)))	# 32-bit compiler exists
 TARGETS += arm32
 else
 CC32 =
 endif
-ifneq ($(shell $(CC64) --version 2>$(DEVNUL)),)	# 64-bit compiler exists
+ifneq (,$(shell $(CC64) --version 2>$(DEVNUL)))	# 64-bit compiler exists
 TARGETS += arm64
 else
 CC64 =

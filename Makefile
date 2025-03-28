@@ -46,12 +46,12 @@ CC32 =
 else	# Cygwin, LLVM-MinGW or Linux
 HOST32 = i686-w64-mingw32-
 HOST64 = x86_64-w64-mingw32-
-ifneq ($(shell $(CC32) --version 2>$(DEVNUL)),)	# 32-bit compiler exists
+ifneq (,$(shell $(CC32) --version 2>$(DEVNUL)))	# 32-bit compiler exists
 TARGETS += x86
 else
 CC32 =
 endif
-ifneq ($(shell $(CC64) --version 2>$(DEVNUL)),)	# 64-bit compiler exists
+ifneq (,$(shell $(CC64) --version 2>$(DEVNUL)))	# 64-bit compiler exists
 TARGETS += x64
 else
 CC64 =
