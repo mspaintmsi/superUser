@@ -20,9 +20,11 @@
 NATIVEWIN =
 DEVNUL = /dev/null
 ifeq ($(OS),Windows_NT)
+ifeq (,$(findstring OSTYPE=cygwin,$(shell set)))
 ifeq ($(findstring ;,$(PATH)),;)
 NATIVEWIN = 1
 DEVNUL = nul
+endif
 endif
 endif
 
