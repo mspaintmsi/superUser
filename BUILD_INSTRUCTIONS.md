@@ -39,8 +39,8 @@ Windows
 Visual Studio
 -------------
 
-The `msvc` directory contains what is needed to build the project. Read the file
-[msvc/README](msvc/README.md), which explains how.
+The `msvc` directory contains what is needed to build the Intel/AMD executables.
+Read the document [msvc/README](msvc/README.md), which explains how.
 
 You will need to download the library files from Microsoft as indicated. If you
 don't want to do this, see the alternative in [msvc/ucrt](msvc/ucrt).
@@ -54,7 +54,7 @@ LLVM-MinGW is a simple toolchain based on the modern Clang compiler.
 It produces smaller executables than GCC and does not need to be installed.
 
 Go to <https://github.com/mstorsjo/llvm-mingw/releases> and download the latest file
-that matches your __development__ system's architecture.  
+that matches your __development__ system's architecture:  
 
 - Windows Intel/AMD 64-bit  
 `llvm-mingw-<version>-msvcrt-x86_64.zip`
@@ -99,8 +99,8 @@ Do NOT install the packages `*ucrt*` indicated in the "_Installation_" procedure
 In the __MSYS2 UCRT64__ terminal, run:
 
 	pacman -S make
-	pacman -S mingw-w64-i686-gcc
-	pacman -S mingw-w64-x86_64-gcc
+	pacman -S mingw-w64-i686-gcc	# for 32-bit Intel/AMD executables
+	pacman -S mingw-w64-x86_64-gcc	# for 64-bit Intel/AMD executables
 
 Run the following command several times until all the packages are up-to-date:
 (read the beginning of this page for details: <https://www.msys2.org/docs/updating/> )
@@ -110,24 +110,20 @@ Run the following command several times until all the packages are up-to-date:
 When done, close the __MSYS2 UCRT64__ terminal.
 
 
-To build the 64-bit executables, open the __MSYS2 MINGW64__ terminal and run:
+To build the 64-bit Intel/AMD executables, open the __MSYS2 MINGW64__ terminal and run:
 
 	cd /c/Users/$USER/Desktop/superUser 	# (or wherever you put the source to)
 	make
 
-If successful, the 64-bit executables are created.
 
-
-To build the 32-bit executables, open the __MSYS2 MINGW32__ terminal and run:
+To build the 32-bit Intel/AMD executables, open the __MSYS2 MINGW32__ terminal and run:
 
 	cd /c/Users/$USER/Desktop/superUser 	# (or wherever you put the source to)
 	make
-
-If successful, the 32-bit executables are created.
 
 
 It is also possible to use the __CLANG64__ environment, which have a newer
-compiler that builds smaller executables (24 KB instead of 27 KB).
+compiler that builds smaller 64-bit executables (24 KB instead of 27 KB).
 To do this, you will need to install the appropriate package as above
 (`mingw-w64-clang-x86_64-gcc-compat`).
 The generated executables require the UCRT dll to run (included in Windows 10 or
@@ -145,25 +141,25 @@ at the top left, and expand the tree by clicking on "_All_" and "_Devel_".
 Then choose the following packages (you can use the search box to reduce the
 list), by selecting the version to install in the column "_New_":
 
-- make
-- mingw64-i686-binutils
-- mingw64-i686-gcc-core
-- mingw64-x86_64-binutils
-- mingw64-x86_64-gcc-core
+	make
+	mingw64-i686-binutils	# for 32-bit Intel/AMD executables
+	mingw64-i686-gcc-core	# 
+	mingw64-x86_64-binutils	# for 64-bit Intel/AMD executables
+	mingw64-x86_64-gcc-core	#
 
 Open a Cygwin terminal and run the following commands:
 
 	cd /cygdrive/c/Users/$USER/Desktop/superUser 	# (or wherever you put the source to)
 	make
 
-If successful, both 32-bit and 64-bit executables are created.
+If successful, both 32-bit and 64-bit Intel/AMD executables are created.
 
 
 
 Linux
 =====
 
-These solutions have been tested on Linux Mint based on Ubuntu.
+These solutions have been tested on Ubuntu-based Linux Mint.
 
 
 
@@ -180,7 +176,7 @@ Open a terminal and run the following commands:
 	cd $HOME/Desktop/superUser 	# (or wherever you put the source to)
 	make
 
-If successful, both 32-bit and 64-bit executables are created.
+If successful, both 32-bit and 64-bit Intel/AMD executables are created.
 
 
 
@@ -191,7 +187,7 @@ LLVM-MinGW is a simple toolchain based on the modern Clang compiler.
 It produces smaller executables than GCC and does not need to be installed.
 
 Go to <https://github.com/mstorsjo/llvm-mingw/releases> and download the latest file
-that matches your __development__ system's architecture.  
+that matches your __development__ system's architecture:  
 
 - Linux Intel/AMD 64-bit  
 `llvm-mingw-<version>-msvcrt-ubuntu-<ubuntu_version>-x86_64.tar.xz`
@@ -230,14 +226,11 @@ The following components must be installed:
 - For ARM (32-bit):  
 "MSVC v143 - VS 2022 C++ ARM build tools (Latest)"
 - For ARM64 (64-bit):  
-"MSVC v143 - VS 2022 C++ ARM64/ARM64EC build tools (Latest)"
+"MSVC v143 - VS 2022 C++ ARM64 build tools (Latest)"
 
-Follow the instructions in [msvc/ucrt/README](msvc/ucrt/README.md).
+Then follow the instructions in [msvc/ucrt/README](msvc/ucrt/README.md).
 
-Select the ___ARM___ or ___ARM64___ platform instead of _x64_/_x86_ and build 
-the solution.
-
-This creates the 32-bit or 64-bit executables in the solution directory (`msvc\ucrt`).
+Select the ___ARM___ or ___ARM64___ platform and build the solution.
 
 
 
@@ -247,22 +240,22 @@ LLVM-MinGW
 LLVM-MinGW produces smaller executables than Visual Studio and does not need
 to be installed.
 
-There is a version for every system (Windows, Linux, macOS) and architecture
-(Intel/AMD, ARM, 32 or 64 bit).
-
-Follow the instructions for LLVM-MinGW in the Windows or Linux section above.
+Depending on your development system, follow the instructions for LLVM-MinGW in the
+__Windows__ or __Linux__ section above.
 
 
 
 MSYS2 (Windows 11 on Arm64 ___only___)
 --------------------------------------
 
-Follow the instructions for MSYS2 in the Windows section above.
+Follow the instructions for MSYS2 in the Windows section above, except for the
+following:
 
 Install the `mingw-w64-clang-aarch64-clang` package instead of the
 `mingw-w64-i686-gcc` and `mingw-w64-x86_64-gcc` packages.
 
 Execute `clangarm64.exe` in the MSYS2 install directory to open the
-__MSYS2 CLANGARM64__ terminal.
+__MSYS2 CLANGARM64__ terminal, and run:
 
-Use the `make -f Makefile-arm` command to build the ARM executables. 
+	cd /c/Users/$USER/Desktop/superUser 	# (or wherever you put the source to)
+	make -f Makefile-arm

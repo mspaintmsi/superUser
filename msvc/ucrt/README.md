@@ -17,8 +17,7 @@ The executable size is around 26-31 KB.
 
 - Open the `msvc\ucrt\superUser.sln` solution with Visual Studio.
 - In the toolbar, choose the _Release_ configuration.
-- Select the platform (_x64_ or _x86_).
+- Select the platform (_x64_, _x86_, _ARM_ or _ARM64_).
 - Build the solution (menu _Build > Build Solution_, or press _Ctrl+Shift+B_).
 
-This creates `superUser32.exe` or `superUser64.exe` in the solution directory
-(`msvc\ucrt`).
+This creates the executables in the solution directory (`msvc\ucrt`).

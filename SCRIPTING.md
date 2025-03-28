@@ -17,6 +17,8 @@ So the `/ws` options allow you to run a process in a completely transparent way:
 - The new process runs in the same window and performs its inputs and outputs there.
 - The exit code of the new process is returned and you can retrieve it with the errorlevel variable.
 
+You can also use the `sudo` executable, equivalent to `superUser /ws`.
+
 If you prefer to open a new window but minimize it (temporarily or not), use the `/m` option.
 You can make the window visible later in the script.
 
