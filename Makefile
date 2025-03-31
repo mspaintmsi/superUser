@@ -135,13 +135,13 @@ endif
 
 checkintel:
 ifeq (,$(CC32)$(CC64))
-	@echo ERROR: No suitable toolchain to build intel.
+	@echo ERROR: No toolchain to build intel.
 	@exit 1
 endif
 
 checkarm:
 ifeq (,$(CCA32)$(CCA64))
-	@echo ERROR: No suitable toolchain to build arm.
+	@echo ERROR: No toolchain to build arm.
 	@exit 1
 endif
 
