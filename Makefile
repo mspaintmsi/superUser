@@ -40,9 +40,8 @@ ifeq ($(OS),Windows_NT)
   DEFAULT_TARGET = arm
  endif
 else
- proctype = $(shell uname -p 2>$(DEVNUL))
-# ifneq (,$(strip $(foreach arch,aarch64 arm,$(findstring $(arch),$(proctype)))))
- ifneq (,$(filter aarch64% arm%,$(proctype)))
+ machtype := $(shell uname -m 2>$(DEVNUL))
+ ifneq (,$(filter aarch64% arm%,$(machtype)))
   DEFAULT_TARGET = arm
  endif
 endif
