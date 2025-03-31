@@ -40,7 +40,7 @@ Visual Studio
 -------------
 
 The `msvc` directory contains what is needed to build the Intel/AMD executables.
-Read the document [msvc/README](msvc/README.md), which explains how.
+Read the [msvc/README](msvc/README.md) file, which explains how.
 
 You will need to download the library files from Microsoft as indicated. If you
 don't want to do this, see the alternative in [msvc/ucrt](msvc/ucrt).
@@ -73,15 +73,14 @@ Extract its contents to a folder, for example `C:\llvm-mingw`.
 Open a command prompt and run the following commands:
 
 	path=C:\llvm-mingw\bin;%path%
-	cd /d %USERPROFILE%\Desktop\superUser 	&rem (or wherever you put the source to)
+	cd /d "%USERPROFILE%\Desktop\superUser" 	&:: (or wherever you put the source to)
 
-To build the Intel/AMD executables, run:
+To build the executables, run one of these commands:
 
-	mingw32-make
-	
-To build the ARM executables, run:
-
-	mingw32-make -f Makefile-arm
+	mingw32-make 		&:: Default architecture for your machine
+	mingw32-make intel 	&:: Intel/AMD executables
+	mingw32-make arm 	&:: ARM executables
+	mingw32-make all 	&:: All the executables
 
 If successful, both 32-bit and 64-bit executables are created.
 
@@ -109,18 +108,15 @@ Run the following command several times until all the packages are up-to-date:
 
 When done, close the __MSYS2 UCRT64__ terminal.
 
+Open the terminal associated with the type of Intel/AMD executables you want to build:
 
-To build the 64-bit Intel/AMD executables, open the __MSYS2 MINGW64__ terminal and run:
+- For 64-bit executables: the __MSYS2 MINGW64__ terminal.
+- For 32-bit executables: the __MSYS2 MINGW32__ terminal.
 
-	cd /c/Users/$USER/Desktop/superUser 	# (or wherever you put the source to)
+Then run:
+
+	cd "/c/Users/$USER/Desktop/superUser" 	# (or wherever you put the source to)
 	make
-
-
-To build the 32-bit Intel/AMD executables, open the __MSYS2 MINGW32__ terminal and run:
-
-	cd /c/Users/$USER/Desktop/superUser 	# (or wherever you put the source to)
-	make
-
 
 It is also possible to use the __CLANG64__ environment, which have a newer
 compiler that builds smaller 64-bit executables (24 KB instead of 27 KB).
@@ -143,13 +139,13 @@ list), by selecting the version to install in the column "_New_":
 
 	make
 	mingw64-i686-binutils	# for 32-bit Intel/AMD executables
-	mingw64-i686-gcc-core	# 
+	mingw64-i686-gcc-core	# -
 	mingw64-x86_64-binutils	# for 64-bit Intel/AMD executables
-	mingw64-x86_64-gcc-core	#
+	mingw64-x86_64-gcc-core	# -
 
 Open a Cygwin terminal and run the following commands:
 
-	cd /cygdrive/c/Users/$USER/Desktop/superUser 	# (or wherever you put the source to)
+	cd "/cygdrive/c/Users/$USER/Desktop/superUser" 	# (or wherever you put the source to)
 	make
 
 If successful, both 32-bit and 64-bit Intel/AMD executables are created.
@@ -173,7 +169,7 @@ Install the `gcc-mingw-w64` package:
 
 Open a terminal and run the following commands:
 
-	cd $HOME/Desktop/superUser 	# (or wherever you put the source to)
+	cd "$HOME/Desktop/superUser" 	# (or wherever you put the source to)
 	make
 
 If successful, both 32-bit and 64-bit Intel/AMD executables are created.
@@ -200,15 +196,14 @@ Extract its contents to a folder, for example `$HOME/llvm-mingw`.
 Open a terminal and run the following commands:
 
 	PATH=$HOME/llvm-mingw/bin:$PATH
-	cd $HOME/Desktop/superUser 	# (or wherever you put the source to)
+	cd "$HOME/Desktop/superUser" 	# (or wherever you put the source to)
 
-To build the Intel/AMD executables, run:
+To build the executables, run one of these commands:
 
-	make
-	
-To build the ARM executables, run:
-
-	make -f Makefile-arm
+	make		# Default architecture for your machine
+	make intel	# Intel/AMD executables
+	make arm	# ARM executables
+	make all	# All the executables
 
 If successful, both 32-bit and 64-bit executables are created.
 
@@ -257,5 +252,5 @@ Install the `mingw-w64-clang-aarch64-clang` package instead of the
 Execute `clangarm64.exe` in the MSYS2 install directory to open the
 __MSYS2 CLANGARM64__ terminal, and run:
 
-	cd /c/Users/$USER/Desktop/superUser 	# (or wherever you put the source to)
-	make -f Makefile-arm
+	cd "/c/Users/$USER/Desktop/superUser" 	# (or wherever you put the source to)
+	make
