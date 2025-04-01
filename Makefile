@@ -5,24 +5,31 @@
 #
 # superUser Makefile
 #
-# Build x86 / x64 executables for Windows (Intel/AMD).
-# Build native ARMv7 / ARM64 executables for "Windows on Arm".
+# - Building x86 / x64 executables for Windows (Intel/AMD).
+# - Building native ARMv7 / ARM64 executables for "Windows on Arm".
 #
 # Supported development OS and toolchains:
 #
-#	* Windows (Intel/AMD)
+#	* Windows Intel/AMD
 #		- Cygwin / MinGW-w64	-> [Intel/AMD]
 #		- MSYS2 / MINGW32, MINGW64, CLANG64, UCRT64	-> [Intel/AMD]
+#		- LLVM-MinGW	-> [Intel/AMD, ARM]
+#		- WinLibs	-> [Intel/AMD] (*)
+#
+#	* Windows on Arm
 #		- LLVM-MinGW	-> [Intel/AMD, ARM]
 #
 #	* Windows 11 on Arm64
 #	  - MSYS2 / CLANGARM64	-> [ARM]
 #
-#	* Linux
+#	* Linux, macOS
 #		- GCC-MinGW (gcc-mingw-w64 package)	-> [Intel/AMD]
 #		- LLVM-MinGW	-> [Intel/AMD, ARM]
 #
-# Read BUILD_INSTRUCTIONS.md file for details.
+# Note: "-> [xxx]" means "builds executables for [xxx]".
+# (*) See instructions before use.
+#
+# Read the BUILD_INSTRUCTIONS.md file for details.
 #
 
 NATIVEWIN =
@@ -127,6 +134,11 @@ else
 	rm -f *.exe *.res
 endif
 
+define ERROR_NO_TOOLCHAIN
+	@echo ERROR: No toolchain to build $(1).
+	@exit 1
+endef
+
 check:
 ifeq (,$(CC32)$(CC64)$(CCA32)$(CCA64))
 	@echo ERROR: No suitable toolchain.
@@ -135,38 +147,32 @@ endif
 
 checkintel:
 ifeq (,$(CC32)$(CC64))
-	@echo ERROR: No toolchain to build intel.
-	@exit 1
+	$(call ERROR_NO_TOOLCHAIN,intel)
 endif
 
 checkarm:
 ifeq (,$(CCA32)$(CCA64))
-	@echo ERROR: No toolchain to build arm.
-	@exit 1
+	$(call ERROR_NO_TOOLCHAIN,arm)
 endif
 
 check32:
 ifndef CC32
-	@echo ERROR: No toolchain to build x86.
-	@exit 1
+	$(call ERROR_NO_TOOLCHAIN,x86)
 endif
 
 check64:
 ifndef CC64
-	@echo ERROR: No toolchain to build x64.
-	@exit 1
+	$(call ERROR_NO_TOOLCHAIN,x64)
 endif
 
 checkA32:
 ifndef CCA32
-	@echo ERROR: No toolchain to build arm32.
-	@exit 1
+	$(call ERROR_NO_TOOLCHAIN,arm32)
 endif
 
 checkA64:
 ifndef CCA64
-	@echo ERROR: No toolchain to build arm64.
-	@exit 1
+	$(call ERROR_NO_TOOLCHAIN,arm64)
 endif
 
 
@@ -191,24 +197,24 @@ arm32: $(PROJECTS:%=%A32.exe)
 arm64: $(PROJECTS:%=%A64.exe)
 
 define COMPILE_PROJECT
-# $(1) is the project name
-# $(2) is 32, 64, A32 or A64
+# $(1): Project name
+# $(2): 32, 64, A32 or A64
 #
 $(1)$(2).exe: $(1)$(2).res | check$(2)
 	$$(CC$(2)) $$(CPPFLAGS) $$(CFLAGS) $(1).c $$(SRCS) $$(LDFLAGS) $(1)$(2).res $$(LDLIBS) -o $$@
 endef
 
 define COMPILE_PROJECT_RESOURCE
-# $(1) is the project name
-# $(2) is 32, 64, A32 or A64
+# $(1): Project name
+# $(2): 32, 64, A32 or A64
 #
 $(1)$(2).res: $(1).rc | check$(2)
 	$$(WINDRES$(2)) $$(WRFLAGS) -DTARGET=$(2) $$< $$@
 endef
 
 define BUILD_PROJECT
-# $(1) is the project name
-# $(2) is 32, 64, A32 or A64
+# $(1): Project name
+# $(2): 32, 64, A32 or A64
 #
 $(1)$(2).exe: $$(SRCS) $$(DEPS)
 
