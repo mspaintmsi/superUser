@@ -4,8 +4,23 @@ Building from source
 
 All the solutions presented below produce executables that run on __Windows__.
 
-Some can also generate executables for [Windows on Arm](#building-arm-executables).
+Some can also generate executables for Windows on Arm.
 
+On the other hand, the development tools for building these executables may run on
+different systems (Windows, Linux, macOS) and architectures (Intel/AMD or Arm,
+32 or 64 bit).
+
+|   Toolchain   |       Runs on       |   Generates executables for    |
+|:-------------:|---------------------|--------------------------------|
+| Visual Studio | Windows (x64/Arm64) | Intel/AMD, Arm                 |
+| LLVM-MinGW    | Windows (all)<br />Linux<br />macOS | Intel/AMD, Arm |
+| WinLibs<br />GCC-MinGW | Windows (x86/x64) | Intel/AMD               |
+| GCC-MinGW     | Linux<br />macOS    | Intel/AMD                      |
+| MSYS2         | Windows (x64)       | Intel/AMD                      |
+| MSYS2         | Windows 11 on Arm64 | Intel/AMD, Arm                 |
+| Cygwin        | Windows (x64)       | Intel/AMD                      |
+
+<br />
 The executable names are as follows:
 
 - Windows Intel/AMD 32-bit  
@@ -24,11 +39,9 @@ The executable names are as follows:
 `superUserA64.exe`
 `sudoA64.exe`
 
-On the other hand, the development tools for building these executables may run on
-different systems (Windows, Linux, macOS) and architectures (Intel/AMD or Arm,
-32 or 64 bit).
-
+<br />
 First, choose the system on which you want to run these tools.
+<br /><br />
 
 
 
@@ -83,6 +96,31 @@ To build the executables, run one of these commands:
 	mingw32-make all 	&:: All the executables
 
 If successful, both 32-bit and 64-bit executables are created.
+
+
+
+WinLibs
+-------
+
+WinLibs is a simple toolchain based on the GCC compiler and MinGW-w64 library.
+
+Go to <https://winlibs.com> and download the latest release files for the MSVCRT 
+runtime, Win32 and Win64.  
+
+Extract their contents into a folder, for example `C:\WinLibs`. It will
+contain the `mingw32` and `mingw64` subfolders.
+
+Open a command prompt and run the following commands:
+
+	path=C:\WinLibs\mingw32\bin;C:\WinLibs\mingw64\bin;%path%
+	cd /d "C:\WinLibs"
+	copy /y mingw32\bin\windres.exe mingw32\bin\i686-w64-mingw32-windres.exe
+	copy /y mingw64\bin\windres.exe mingw64\bin\x86_64-w64-mingw32-windres.exe
+
+To build the executables, run:
+
+	cd /d "%USERPROFILE%\Desktop\superUser" 	&:: (or wherever you put the source to)
+	mingw32-make
 
 
 
