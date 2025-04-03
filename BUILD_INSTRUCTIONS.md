@@ -90,7 +90,7 @@ Open a command prompt and run the following commands:
 
 To build the executables, run one of these commands:
 
-	mingw32-make 		&:: Default architecture for your machine
+	mingw32-make 		&:: Executables for your machine architecture
 	mingw32-make intel 	&:: Intel/AMD executables
 	mingw32-make arm 	&:: ARM executables
 	mingw32-make all 	&:: All the executables
@@ -103,9 +103,13 @@ WinLibs
 -------
 
 WinLibs is a simple toolchain based on the GCC compiler and MinGW-w64 library.
+It does not need to be installed.
 
 Go to <https://winlibs.com> and download the latest release files for the MSVCRT 
-runtime, Win32 and Win64.  
+runtime:
+
+- The _Win32_ version runs on 32/64-bit Windows and generates executables for 32-bit Windows.
+- The _Win64_ version runs on 64-bit Windows and generates executables for 64-bit Windows.
 
 Extract their contents into a folder, for example `C:\WinLibs`. It will
 contain the `mingw32` and `mingw64` subfolders.
@@ -238,7 +242,7 @@ Open a terminal and run the following commands:
 
 To build the executables, run one of these commands:
 
-	make		# Default architecture for your machine
+	make		# Executables for your machine architecture
 	make intel	# Intel/AMD executables
 	make arm	# ARM executables
 	make all	# All the executables

@@ -10,23 +10,18 @@
 #
 # Supported development OS and toolchains:
 #
-#	* Windows Intel/AMD
-#		- Cygwin / MinGW-w64	-> [Intel/AMD]
-#		- MSYS2 / MINGW32, MINGW64, CLANG64, UCRT64	-> [Intel/AMD]
-#		- LLVM-MinGW	-> [Intel/AMD, ARM]
-#		- WinLibs	-> [Intel/AMD] (*)
+#    Toolchain     |       Runs on       | Generates executables for
+# -------------------------------------------------------------------
+# LLVM-MinGW         Windows (all),        Intel/AMD, Arm
+#                    Linux,
+#                    macOS
+# WinLibs GCC-MinGW  Windows (x86/x64)     Intel/AMD (*)
+# GCC-MinGW          Linux,                Intel/AMD
+#                    macOS
+# MSYS2              Windows (x64)         Intel/AMD
+# MSYS2              Windows 11 on Arm64   Intel/AMD, Arm
+# Cygwin             Windows (x64)         Intel/AMD
 #
-#	* Windows on Arm
-#		- LLVM-MinGW	-> [Intel/AMD, ARM]
-#
-#	* Windows 11 on Arm64
-#	  - MSYS2 / CLANGARM64	-> [ARM]
-#
-#	* Linux, macOS
-#		- GCC-MinGW (gcc-mingw-w64 package)	-> [Intel/AMD]
-#		- LLVM-MinGW	-> [Intel/AMD, ARM]
-#
-# Note: "-> [xxx]" means "builds executables for [xxx]".
 # (*) See instructions before use.
 #
 # Read the BUILD_INSTRUCTIONS.md file for details.
@@ -35,7 +30,7 @@
 NATIVEWIN =
 DEVNUL = /dev/null
 ifeq ($(OS),Windows_NT)
- ifeq ($(patsubst PPID=%,%,$(filter PPID=%,$(shell set))),$(PPID))
+ ifeq ($(shell echo $$PPID),$$PPID)
   NATIVEWIN = 1
   DEVNUL = nul
  endif
