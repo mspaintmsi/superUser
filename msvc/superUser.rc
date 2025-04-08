@@ -29,7 +29,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
 #define QUOTE(x) #x
 #define BUILD_NAME(t) PROJECT_NAME QUOTE(t) ".exe"
 
-#if (TARGET == 32) || (TARGET == 64) || (TARGET == A32) || (TARGET == A64)
+#ifdef TARGET
 	#define FILENAME BUILD_NAME(TARGET)
 #else
 	#define FILENAME BUILD_NAME()
