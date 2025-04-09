@@ -47,18 +47,26 @@ else
  endif
 endif
 
+ARCHS = 32 64 A32 A64
+
 HOST_32 =
 HOST_64 =
 HOST_A32 =
 HOST_A64 =
-CC_32 = $(HOST_32)gcc
-CC_64 = $(HOST_64)gcc
-CC_A32 = $(HOST_A32)gcc
-CC_A64 = $(HOST_A64)gcc
-WINDRES_32 = $(HOST_32)windres
-WINDRES_64 = $(HOST_64)windres
-WINDRES_A32 = $(HOST_A32)windres
-WINDRES_A64 = $(HOST_A64)windres
+
+CC = gcc
+CC_32 = $(HOST_32)$(CC)
+CC_64 = $(HOST_64)$(CC)
+CC_A32 = $(HOST_A32)$(CC)
+CC_A64 = $(HOST_A64)$(CC)
+CC_ = $(CC)
+
+WINDRES = windres
+WINDRES_32 = $(HOST_32)$(WINDRES)
+WINDRES_64 = $(HOST_64)$(WINDRES)
+WINDRES_A32 = $(HOST_A32)$(WINDRES)
+WINDRES_A64 = $(HOST_A64)$(WINDRES)
+WINDRES_ = $(WINDRES)
 
 TARGETS_INTEL =
 TARGETS_ARM =
@@ -82,31 +90,60 @@ else ifeq (64,$(findstring 64,$(MSYSTEM)))	# MSYS2 64-bit Intel/AMD
  CC_32 =
  CC_A32 =
  CC_A64 =
-else	# Cygwin, LLVM-MinGW or Linux
+else	# Cygwin, LLVM-MinGW, WinLibs or Linux
  HOST_32 = i686-w64-mingw32-
  HOST_64 = x86_64-w64-mingw32-
  HOST_A32 = armv7-w64-mingw32-
  HOST_A64 = aarch64-w64-mingw32-
 
- ifneq (,$(shell $(CC_32) --version 2>$(DEVNUL)))	# 32-bit Intel/AMD compiler exists
+ # Check if both a native C compiler and a native resource compiler exist,
+ # and detect their target architecture.
+ NATIVE_CC_ARCH =
+ ifneq (,$(and $(shell $(CC_) --version 2>$(DEVNUL)),$\
+    $(shell $(WINDRES_) --version 2>$(DEVNUL))))	# If they both exist
+  target := $(shell $(CC_) -dumpmachine 2>$(DEVNUL))
+  ifneq (,$(filter i686-%-mingw32 i686-%-windows-gnu,$(target)))
+   NATIVE_CC_ARCH = 32
+  else ifneq (,$(filter x86_64-%-mingw32 x86_64-%-windows-gnu,$(target)))
+   NATIVE_CC_ARCH = 64
+  else ifneq (,$(filter armv7-%-mingw32 armv7-%-windows-gnu,$(target)))
+   NATIVE_CC_ARCH = A32
+  else ifneq (,$(filter aarch64-%-mingw32 aarch64-%-windows-gnu,$(target)))
+   NATIVE_CC_ARCH = A64
+  endif
+ else
+  CC_ =
+ endif
+
+ define CHECK_COMPILER
+ # Check if both a C compiler and a resource compiler exist for the specified
+ # target architecture.
+ # $(1): 32, 64, A32 or A64
+ #
+ ifeq (,$$(and $$(shell $$(CC_$(1)) --version 2>$$(DEVNUL)),$\
+    $$(shell $$(WINDRES_$(1)) --version 2>$$(DEVNUL))))	# If at least one does not exist
+  ifeq ($$(NATIVE_CC_ARCH),$(1))	# Use native ones if suitable
+   CC_$(1) = $$(CC_)
+   WINDRES_$(1) = $$(WINDRES_)
+  else  # Otherwise, disable this architecture
+   CC_$(1) =
+  endif
+ endif
+ endef
+
+ $(foreach arch,$(ARCHS),$(eval $(call CHECK_COMPILER,$(arch))))
+
+ ifdef CC_32
   TARGETS_INTEL += x86
- else
-  CC_32 =
  endif
- ifneq (,$(shell $(CC_64) --version 2>$(DEVNUL)))	# 64-bit Intel/AMD compiler exists
+ ifdef CC_64
   TARGETS_INTEL += x64
- else
-  CC_64 =
  endif
- ifneq (,$(shell $(CC_A32) --version 2>$(DEVNUL)))	# 32-bit ARM compiler exists
+ ifdef CC_A32
   TARGETS_ARM += arm32
- else
-  CC_A32 =
  endif
- ifneq (,$(shell $(CC_A64) --version 2>$(DEVNUL)))	# 64-bit ARM compiler exists
+ ifdef CC_A64
   TARGETS_ARM += arm64
- else
-  CC_A64 =
  endif
 endif
 
@@ -183,7 +220,6 @@ SRCS = tokens.c utils.c
 DEPS = tokens.h utils.h winnt2.h
 
 PROJECTS = superUser sudo
-ARCHS = 32 64 A32 A64
 
 x86: $(PROJECTS:%=%32.exe)
 x64: $(PROJECTS:%=%64.exe)
