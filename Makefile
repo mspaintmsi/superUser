@@ -102,16 +102,19 @@ else	# Cygwin, LLVM-MinGW, WinLibs or Linux
  ifneq (,$(and $(shell $(CC_) --version 2>$(DEVNUL)),$\
     $(shell $(WINDRES_) --version 2>$(DEVNUL))))	# If they both exist
   target := $(shell $(CC_) -dumpmachine 2>$(DEVNUL))
-  ifneq (,$(filter i686-%-mingw32 i686-%-windows-gnu,$(target)))
-   NATIVE_CC_ARCH = 32
-  else ifneq (,$(filter x86_64-%-mingw32 x86_64-%-windows-gnu,$(target)))
-   NATIVE_CC_ARCH = 64
-  else ifneq (,$(filter armv7-%-mingw32 armv7-%-windows-gnu,$(target)))
-   NATIVE_CC_ARCH = A32
-  else ifneq (,$(filter aarch64-%-mingw32 aarch64-%-windows-gnu,$(target)))
-   NATIVE_CC_ARCH = A64
+  ifneq (,$(filter %-mingw32 %-windows-gnu,$(target)))
+   ifneq (,$(filter i686-%,$(target)))
+    NATIVE_CC_ARCH = 32
+   else ifneq (,$(filter x86_64-%,$(target)))
+    NATIVE_CC_ARCH = 64
+   else ifneq (,$(filter armv7-%,$(target)))
+    NATIVE_CC_ARCH = A32
+   else ifneq (,$(filter aarch64-%,$(target)))
+    NATIVE_CC_ARCH = A64
+   endif
   endif
- else
+ endif
+ ifndef NATIVE_CC_ARCH
   CC_ =
  endif
 
