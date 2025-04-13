@@ -179,8 +179,8 @@ else	# Cygwin, LLVM-MinGW or Linux
  HOST_32 = i686-pc-windows-msvc-
  HOST_64 = x86_64-pc-windows-msvc-
 
- # Check if both a native toolchain (C compiler/linker/resource compiler) exist,
- # and detect their target architecture.
+ # Check if a native toolchain (C compiler/linker/resource compiler) exists,
+ # and detect its target architecture.
  NATIVE_CC_ARCH =
  ifneq (,$(and $(shell $(CC_) --version 2>$(DEVNUL)),$\
     $(shell $(LD_) --version 2>$(DEVNUL)),$\
@@ -199,8 +199,8 @@ else	# Cygwin, LLVM-MinGW or Linux
  endif
 
  define CHECK_COMPILER
- # Check if both a C compiler and a resource compiler exist for the specified
- # target architecture.
+ # Check if a toolchain (C compiler/linker/resource compiler) exists for the
+ # specified target architecture.
  # $(1): 32 or 64
  #
  ifeq (,$$(and $$(shell $$(CC_$(1)) --version 2>$$(DEVNUL)),$\
@@ -279,7 +279,7 @@ endif
 CPPFLAGS = -D _WIN32_WINNT=_WIN32_WINNT_VISTA -D _NO_CRT_STDIO_INLINE -D _UNICODE -D UNICODE
 
 CFLAGS = -c -W3 -O1 -Os -MT -GS- -Gy -TC
-# CFLAGS += -Wno-nonportable-include-path
+CFLAGS += -Wno-nonportable-include-path
 CFLAGS += -Wno-microsoft-anon-tag
 CFLAGS += -Wno-pragma-pack -Wno-unknown-pragmas -Wno-ignored-pragma-intrinsic
 CFLAGS += -I"$(MSVC_CRT_PATH)/include" -I"$(MSVC_SDK_INCLUDE_PATH)/ucrt"
@@ -301,12 +301,12 @@ RCFLAGS = -C 65001 -L 0x0409
 SRCS = ../tokens.c ../utils.c msvcrt.c
 DEPS = ../tokens.h ../utils.h
 
-OBJS = $(patsubst %.c,%.obj,$(notdir $(SRCS)))
+OBJS := $(patsubst %.c,%.obj,$(notdir $(SRCS)))
 
 PROJECTS = superUser sudo
 
-x86: $(PROJECTS:%=%-clang32.exe)
-x64: $(PROJECTS:%=%-clang64.exe)
+x86: $(PROJECTS:%=%32.exe)
+x64: $(PROJECTS:%=%64.exe)
 
 .DELETE_ON_ERROR:
 
@@ -338,8 +338,8 @@ $$(INTDIR_$(2))/$(1).obj: ../$(1).c $$(DEPS) | check_$(2) $$(INTDIR_$(2))
 	@echo $(1).c
 	@$$(CC_$(2)) $$(CPPFLAGS) $$(CFLAGS_$(2)) $$< -Fo$$(INTDIR_$(2))/
 
-$(1)-clang$(2).exe: $$(INTDIR_$(2))/$(1).obj $$(OBJS_$(2)) $$(INTDIR_$(2))/$(1).res | check_$(2)
-	@echo $(1)-clang$(2).exe
+$(1)$(2).exe: $$(INTDIR_$(2))/$(1).obj $$(OBJS_$(2)) $$(INTDIR_$(2))/$(1).res | check_$(2)
+	@echo $(1)$(2).exe
 	@$$(LD_$(2)) $$(LDFLAGS_$(2)) $$(LDLIBS_$(2)) -out:$$@ \
 		$$(INTDIR_$(2))/$(1).res $$(INTDIR_$(2))/$(1).obj $$(OBJS_$(2))
 
