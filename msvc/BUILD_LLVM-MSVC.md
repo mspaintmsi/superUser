@@ -16,6 +16,7 @@ Requirements
 You need:
 - The LLVM toolchain (clang-cl/lld-link/llvm-rc).
 - The Visual Studio library (MSVC and SDK).
+- The MSVCRT library files.
 - GNU make.
 
 
@@ -80,7 +81,7 @@ Open a terminal and run:
 
 where `<download_directory>` is the directory where you want to put the downloaded files.
 
-Then put the `make_msvc-libs` script (available soon) to the download directory and run it.
+Then put the `make_msvc-libs` script (available soon) in the download directory and run it.
 
 	# On Linux:
 	chmod u+x make_msvc-libs.sh
@@ -94,6 +95,15 @@ Move it to the final location and set the `MSVC_LIBS_PATH` environment
 variable to it to use it.
 
 You can then delete the download directory and its contents.
+
+
+
+MSVCRT library files
+--------------------
+
+The two files `msvcrt32.lib` and `msvcrt64.lib` must be present in this `msvc`
+directory.  
+Read the [msvc/README](README.md) file for details.
 
 
 

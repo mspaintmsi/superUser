@@ -53,10 +53,10 @@ Visual Studio
 -------------
 
 The `msvc` directory contains what is needed to build the Intel/AMD executables.
-Read the [msvc/README](msvc/README.md) file, which explains how.
+Read the [msvc/README](/msvc/README.md) file, which explains how.
 
 You will need to download the library files from Microsoft as indicated. If you
-don't want to do this, see the alternative in [msvc/ucrt](msvc/ucrt).
+don't want to do this, see the alternative in [msvc/ucrt](/msvc/ucrt).
 
 
 
@@ -265,7 +265,7 @@ The following components must be installed:
 - For ARM64 (64-bit):  
 "MSVC v143 - VS 2022 C++ ARM64 build tools (Latest)"
 
-Then follow the instructions in [msvc/ucrt/README](msvc/ucrt/README.md).
+Then follow the instructions in [msvc/ucrt/README](/msvc/ucrt/README.md).
 
 Select the ___ARM___ or ___ARM64___ platform and build the solution.
 
