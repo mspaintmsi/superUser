@@ -1,8 +1,8 @@
 
-Building from source with LLVM-MSVC toolchain
-=============================================
+Building from source with the LLVM-MSVC toolchain
+=================================================
 
-The solutions presented below produce executables that run on __Windows__.
+The solution presented below produces executables that run on __Windows__.
 
 On the other hand, the development tools for building these executables may run on
 different systems (Windows, Linux, macOS) and architectures (Intel/AMD or Arm,
@@ -23,7 +23,7 @@ The Visual Studio library can be repackaged to be usable on Linux.
 
 Note that it isn't redistributable, so the repackaged version isn't either.
 
-This version can be used also in Windows, without the need to have Visual
+This version can be used also on Windows, without the need to have Visual
 Studio installed.
 
 
@@ -72,11 +72,23 @@ github repository to download the files.
 
 Open a terminal and run:
 
-	./vsdownload.py --dest <download_directory>
+	# On Linux:
+	./vsdownload.py --dest "<download_directory>"
+	
+	:: On Windows:
+	vsdownload.py --dest "<download_directory>"
 
 where `<download_directory>` is the directory where you want to put the downloaded files.
 
-Then put the `make_msvc-libs.cmd` script (available soon) to the download directory and run it.
+Then put the `make_msvc-libs` script (available soon) to the download directory and run it.
+
+	# On Linux:
+	chmod u+x make_msvc-libs.sh
+	./make_msvc-libs.sh
+	
+	:: On Windows (you can also double-click on it):
+	make_msvc-libs.cmd
+
 This creates the repackaged version in the new `msvc-libs` subdirectory.
 Move it to the final location and set the `MSVC_LIBS_PATH` environment 
 variable to it to use it.
