@@ -5,6 +5,8 @@
 #
 # Makefile LLVM-MSVC (version for GNU make)
 #
+# Author: Matrix3600 https://github.com/Matrix3600
+#
 # - Build x86 / x64 executables for Windows (Intel/AMD).
 #
 # Toolchain: LLVM (clang-cl/lld-link/llvm-rc) + MSVC/SDK headers/libraries
@@ -24,79 +26,39 @@
 # Targets: *-pc-windows-msvc
 # CRT version: MSVCRT
 #
-# Requirements:
+# Read the msvc/BUILD_LLVM-MSVC.md file for details.
 #
-# - [Not required for MSYS2 / CLANG64]
-#   The LLVM toolchain for your development platform, e.g.,
-#   "LLVM-*-win64.exe" for Windows or "LLVM-*-Linux-X64.tar.xz" for Linux.
-#   https://github.com/llvm/llvm-project/releases
-#
-# - The MSVC headers and libraries (pulled from Visual Studio).
-#   On Linux, we need a special repackaged version (with files renamed to
-#   lowercase and include directives adjusted accordingly in header files).
-#
-# - The library files msvcrt32.lib and msvcrt64.lib in this msvc directory.
-#   Read the msvc/README.md file for details.
-#
-# Environment variables must be set to the locations of the above tools:
-#
-# - [Not required for MSYS2 / CLANG64]
-#   The LLVM toolchain "bin" directory must be added to the PATH.
-#
-# - The following environment variables must be set to locate the
-#   MSVC/SDK library:
-#
-#     * MSVC_LIBS_PATH for the repackaged version of the MSVC library
-#       (Linux or Windows).
-#     OR
-#     * VCToolsInstallDir, WindowsSdkDir and WindowsSDKVersion defined by the
-#       Visual Studio environment (if installed!).
-#     OR
-#     * Individual variables pointing to library items:
-#       MSVC_CRT_PATH, MSVC_SDK_INCLUDE_PATH and MSVC_SDK_LIB_PATH.
-#
-# There is currently a script to create the repackaged libraries, but it is
-# not yet fully finalized to be released. If anyone is interested, maybe...
-#
-# Good luck...
-#
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
-#
-# Try to locate the MSVC and SDK headers/libraries...
-#
+# -----------------------------------------------------------------------------
+# Locate the MSVC and SDK headers/libraries
+# -----------------------------------------------------------------------------
+
 ifdef MSVC_LIBS_PATH
  #
- # Use the repackaged headers and libraries (the only Linux compatible ones!).
+ # Use the repackaged headers and libraries (the only Linux compatible ones!)
  #
+ $(info Using MSVC_LIBS_PATH)
  MSVC_CRT_PATH = $(MSVC_LIBS_PATH)/crt
  MSVC_SDK_INCLUDE_PATH = $(MSVC_LIBS_PATH)/sdk/include
  MSVC_SDK_LIB_PATH = $(MSVC_LIBS_PATH)/sdk/lib
 else
  msvc_path_ok =
- ifdef MSVC_CRT_PATH
-  ifdef MSVC_SDK_INCLUDE_PATH
-   ifdef MSVC_SDK_LIB_PATH
+ #
+ # If Visual Studio is installed (includes SDK), use its environment variables
+ #
+ ifdef VCToolsInstallDir
+  ifdef WindowsSdkDir
+   ifdef WindowsSDKVersion
+    $(info Using Visual Studio environment)
+    # $(info VCToolsInstallDir=$(VCToolsInstallDir))
+    # $(info WindowsSdkDir=$(WindowsSdkDir))
+    # $(info WindowsSDKVersion=$(WindowsSDKVersion))
+    # $(info )
+    MSVC_CRT_PATH = $(VCToolsInstallDir)
+    MSVC_SDK_INCLUDE_PATH = $(WindowsSdkDir)/Include/$(WindowsSDKVersion)
+    MSVC_SDK_LIB_PATH = $(WindowsSdkDir)/Lib/$(WindowsSDKVersion)
     msvc_path_ok = 1
-   endif
-  endif
- endif
- ifndef msvc_path_ok
-  #
-  # If Visual Studio is installed (includes SDK), use the MSVC environment variables.
-  #
-  ifdef VCToolsInstallDir
-   ifdef WindowsSdkDir
-    ifdef WindowsSDKVersion
-     $(info VCToolsInstallDir=$(VCToolsInstallDir))
-     $(info WindowsSdkDir=$(WindowsSdkDir))
-     $(info WindowsSDKVersion=$(WindowsSDKVersion))
-     $(info )
-     MSVC_CRT_PATH = $(VCToolsInstallDir)
-     MSVC_SDK_INCLUDE_PATH = $(WindowsSdkDir)/Include/$(WindowsSDKVersion)
-     MSVC_SDK_LIB_PATH = $(WindowsSdkDir)/Lib/$(WindowsSDKVersion)
-     msvc_path_ok = 1
-    endif
    endif
   endif
  endif
@@ -105,7 +67,7 @@ else
  endif
 endif
 
-# Convert $(1) pathname (if it contains backslashes) to Unix pathname
+# Convert $(1) pathname (backslashes) to Unix pathname
 empty :=
 space := $(empty) $(empty)
 CONVERT_PATH = $(patsubst %/,%,$(subst //,/,$(subst \,/,$(1))))
@@ -114,22 +76,22 @@ QUOTE_SPACES = $(subst $(space),\ ,$(1))
 MSVC_CRT_PATH := $(call CONVERT_PATH,$(MSVC_CRT_PATH))
 MSVC_SDK_INCLUDE_PATH := $(call CONVERT_PATH,$(MSVC_SDK_INCLUDE_PATH))
 MSVC_SDK_LIB_PATH := $(call CONVERT_PATH,$(MSVC_SDK_LIB_PATH))
-
-$(info MSVC_CRT_PATH=$(MSVC_CRT_PATH))
-$(info MSVC_SDK_INCLUDE_PATH=$(MSVC_SDK_INCLUDE_PATH))
-$(info MSVC_SDK_LIB_PATH=$(MSVC_SDK_LIB_PATH))
-$(info )
+# $(info MSVC_CRT_PATH=$(MSVC_CRT_PATH))
+# $(info MSVC_SDK_INCLUDE_PATH=$(MSVC_SDK_INCLUDE_PATH))
+# $(info MSVC_SDK_LIB_PATH=$(MSVC_SDK_LIB_PATH))
+# $(info )
 
 ifeq (,$(wildcard $(call QUOTE_SPACES,$(MSVC_CRT_PATH)/include/stdarg.h)))
- $(error ERROR: MSVC CRT library not found)
+ $(error ERROR: MSVC library not found)
 endif
 
 ifeq (,$(wildcard $(call QUOTE_SPACES,$(MSVC_SDK_INCLUDE_PATH)/um/windows.h)))
  $(error ERROR: Windows SDK library not found)
 endif
 
-INTDIR_32 = llvm-x86
-INTDIR_64 = llvm-x64
+# -----------------------------------------------------------------------------
+# Detect system and available toolchains
+# -----------------------------------------------------------------------------
 
 NATIVEWIN =
 DEVNUL = /dev/null
@@ -226,6 +188,11 @@ else	# Cygwin, LLVM-MinGW or Linux
  endif
 endif
 
+# -----------------------------------------------------------------------------
+
+# Intermediate directories for temporary files
+INTDIR_32 = llvm-x86
+INTDIR_64 = llvm-x64
 
 .PHONY: all intel x86 x64 default clean \
 	check_all check_intel check_32 check_64
@@ -272,25 +239,48 @@ ifndef CC_64
 	$(call ERROR_NO_TOOLCHAIN,x64)
 endif
 
+# -----------------------------------------------------------------------------
+# Set environment variables for the compiler and linker
+# -----------------------------------------------------------------------------
+
+# C Compiler
+INCLUDE = $(MSVC_CRT_PATH)/include;$(MSVC_SDK_INCLUDE_PATH)/ucrt;$\
+	$(MSVC_SDK_INCLUDE_PATH)/um;$(MSVC_SDK_INCLUDE_PATH)/shared
+export INCLUDE
 
 # _WIN32_WINNT: the minimal Windows version the app can run on.
 # Windows Vista: the earliest to utilize the Trusted Installer.
 
-CPPFLAGS = -D _WIN32_WINNT=_WIN32_WINNT_VISTA -D _NO_CRT_STDIO_INLINE -D _UNICODE -D UNICODE
+CL = -W3 -O1 -Os -MT -GS- -Gy -TC
+CL += -Wno-nonportable-include-path -Wno-microsoft-anon-tag
+CL += -Wno-pragma-pack -Wno-unknown-pragmas -Wno-ignored-pragma-intrinsic
+CL += -D _WIN32_WINNT=_WIN32_WINNT_VISTA -D _NO_CRT_STDIO_INLINE
+CL += -D _UNICODE -D UNICODE
+CL_32 = $(CL) --target=i686-pc-windows-msvc
+CL_64 = $(CL) --target=x86_64-pc-windows-msvc
+export CL
 
-CFLAGS = -c -W3 -O1 -Os -MT -GS- -Gy -TC
-CFLAGS += -Wno-nonportable-include-path
-CFLAGS += -Wno-microsoft-anon-tag
-CFLAGS += -Wno-pragma-pack -Wno-unknown-pragmas -Wno-ignored-pragma-intrinsic
-CFLAGS += -I"$(MSVC_CRT_PATH)/include" -I"$(MSVC_SDK_INCLUDE_PATH)/ucrt"
-CFLAGS += -I"$(MSVC_SDK_INCLUDE_PATH)/um" -I"$(MSVC_SDK_INCLUDE_PATH)/shared"
-CFLAGS_32 = $(CFLAGS) --target=i686-pc-windows-msvc
-CFLAGS_64 = $(CFLAGS) --target=x86_64-pc-windows-msvc
+# Linker
+LINK = -incremental:no -nodefaultlib:libcmt.lib -manifest:no -subsystem:console
+LINK += -opt:ref -dynamicbase -nxcompat -safeseh:no -release
+export LINK
 
-LDFLAGS = -incremental:no -nodefaultlib:libcmt.lib -manifest:no -subsystem:console
-LDFLAGS += -opt:ref -dynamicbase -nxcompat -safeseh:no -release
-LDFLAGS_32 = $(LDFLAGS) -libpath:"$(MSVC_CRT_PATH)/lib/x86" -libpath:"$(MSVC_SDK_LIB_PATH)/um/x86"
-LDFLAGS_64 = $(LDFLAGS) -libpath:"$(MSVC_CRT_PATH)/lib/x64" -libpath:"$(MSVC_SDK_LIB_PATH)/um/x64"
+LIB_32 = $(MSVC_CRT_PATH)/lib/x86;$(MSVC_SDK_LIB_PATH)/um/x86
+LIB_64 = $(MSVC_CRT_PATH)/lib/x64;$(MSVC_SDK_LIB_PATH)/um/x64
+export LIB
+
+# -----------------------------------------------------------------------------
+
+PROJECTS = superUser sudo
+
+# Initialize the variables
+INITIALIZE_LDFLAGS = LDFLAGS_$(1)_$(2) =
+$(foreach project,$(PROJECTS),$(foreach arch,$(ARCHS),\
+	$(eval $(call INITIALIZE_LDFLAGS,$(project),$(arch)))))
+
+CFLAGS = -c
+
+LDFLAGS_64 = -merge:".pdata=.text"
 
 LDLIBS = advapi32.lib wtsapi32.lib
 LDLIBS_32 = $(LDLIBS) msvcrt32.lib
@@ -303,28 +293,31 @@ DEPS = ../tokens.h ../utils.h
 
 OBJS := $(patsubst %.c,%.obj,$(notdir $(SRCS)))
 
-PROJECTS = superUser sudo
-
 x86: $(PROJECTS:%=%32.exe)
 x64: $(PROJECTS:%=%64.exe)
 
 .DELETE_ON_ERROR:
 
+# ENV_VAR: Define the $(1) environment variable for $(2) architecture
+# e.g., $(call ENV_VAR,LIB,32) evaluates to LIB=$(LIB_32)
+ENV_VAR = $(eval $(1)=$($(1)_$(2)))
 
 define BUILD_OBJECTS
 # $(1): 32 or 64
-#
+
 # Create the intermediate directory for the $(1) architecture
-$$(INTDIR_$(1)):
-	@echo [$(INTDIR_$(1))]
-	@mkdir $$(INTDIR_$(1))
+$(INTDIR_$(1)):
+	$$(info --- Create directory $(INTDIR_$(1)) ---)
+	@mkdir $(INTDIR_$(1))
 
-OBJS_$(1) := $$(addprefix $$(INTDIR_$(1))/,$$(OBJS))
+OBJS_$(1) := $(OBJS:%=$(INTDIR_$(1))/%)
 
-# Build objects
-$$(OBJS_$(1)): $$(SRCS) $$(DEPS) | check_$(1) $$(INTDIR_$(1))
-	@echo $$(notdir $$(SRCS))
-	@$$(CC_$(1)) $$(CPPFLAGS) $$(CFLAGS_$(1)) $$(SRCS) -Fo$$(INTDIR_$(1))/
+# Compile the secondary C source files
+$$(OBJS_$(1)): $$(SRCS) $$(DEPS) | check_$(1) \
+		$$(INTDIR_$(1)) ; $$(call ENV_VAR,CL,$(1))
+	$$(info --- Compile $$(notdir $$(SRCS)) ($(1)) ---)
+	$$(CC_$(1)) $$(CFLAGS) $$(SRCS) -Fo$$(INTDIR_$(1))/
+
 endef
 
 $(foreach arch,$(ARCHS),$(eval $(call BUILD_OBJECTS,$(arch))))
@@ -333,19 +326,32 @@ $(foreach arch,$(ARCHS),$(eval $(call BUILD_OBJECTS,$(arch))))
 define BUILD_PROJECT
 # $(1): Project name
 # $(2): 32 or 64
-#
-$$(INTDIR_$(2))/$(1).obj: ../$(1).c $$(DEPS) | check_$(2) $$(INTDIR_$(2))
-	@echo $(1).c
-	@$$(CC_$(2)) $$(CPPFLAGS) $$(CFLAGS_$(2)) $$< -Fo$$(INTDIR_$(2))/
 
-$(1)$(2).exe: $$(INTDIR_$(2))/$(1).obj $$(OBJS_$(2)) $$(INTDIR_$(2))/$(1).res | check_$(2)
-	@echo $(1)$(2).exe
-	@$$(LD_$(2)) $$(LDFLAGS_$(2)) $$(LDLIBS_$(2)) -out:$$@ \
-		$$(INTDIR_$(2))/$(1).res $$(INTDIR_$(2))/$(1).obj $$(OBJS_$(2))
+ifndef LDFLAGS_$(1)_$(2)
+ LDFLAGS_$(1)_$(2) =
+ ifdef LDFLAGS_$(2)
+  LDFLAGS_$(1)_$(2) += $$(LDFLAGS_$(2))
+ endif
+endif
 
+# Compile the main C source file
+$$(INTDIR_$(2))/$(1).obj: ../$(1).c $$(DEPS) | check_$(2) \
+		$$(INTDIR_$(2)) ; $$(call ENV_VAR,CL,$(2))
+	$$(info --- Compile $(1).c ($(2)) ---)
+	$$(CC_$(2)) $$(CFLAGS) $$< -Fo$$(INTDIR_$(2))/
+
+# Link the project
+$(1)$(2).exe: $$(INTDIR_$(2))/$(1).obj $$(OBJS_$(2)) \
+		$$(INTDIR_$(2))/$(1).res | check_$(2) ; $$(call ENV_VAR,LIB,$(2))
+	$$(info --- Link $(1)$(2).exe ---)
+	$$(LD_$(2)) $$(LDFLAGS_$(1)_$(2)) -out:$$@ $$(INTDIR_$(2))/$(1).obj \
+		$$(OBJS_$(2)) $$(INTDIR_$(2))/$(1).res $$(LDLIBS_$(2))
+
+# Compile the resource file
 $$(INTDIR_$(2))/$(1).res: ../$(1).rc | check_$(2) $$(INTDIR_$(2))
-	@echo $(1).rc
-	@$$(RC_$(2)) $$(RCFLAGS) -D TARGET=$(2) -FO $$@ $$<
+	$$(info --- Compile $(1).rc ($(2)) ---)
+	$$(RC_$(2)) $$(RCFLAGS) -D TARGET=$(2) -FO $$@ $$<
+
 endef
 
 $(foreach project,$(PROJECTS),\

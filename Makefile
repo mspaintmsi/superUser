@@ -26,6 +26,11 @@
 #
 # Read the BUILD_INSTRUCTIONS.md file for details.
 #
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Detect system and available toolchains
+# -----------------------------------------------------------------------------
 
 NATIVEWIN =
 DEVNUL = /dev/null
@@ -150,6 +155,7 @@ else	# Cygwin, LLVM-MinGW, WinLibs or Linux
  endif
 endif
 
+# -----------------------------------------------------------------------------
 
 .PHONY: all intel arm x86 x64 arm32 arm64 default clean \
 	check_all check_intel check_arm check_32 check_64 check_A32 check_A64
@@ -209,6 +215,9 @@ ifndef CC_A64
 	$(call ERROR_NO_TOOLCHAIN,arm64)
 endif
 
+# -----------------------------------------------------------------------------
+
+PROJECTS = superUser sudo
 
 # _WIN32_WINNT: the minimal Windows version the app can run on.
 # Windows Vista: the earliest to utilize the Trusted Installer.
@@ -222,8 +231,6 @@ WRFLAGS = --codepage 65001 -O coff
 SRCS = tokens.c utils.c
 DEPS = tokens.h utils.h winnt2.h
 
-PROJECTS = superUser sudo
-
 x86: $(PROJECTS:%=%32.exe)
 x64: $(PROJECTS:%=%64.exe)
 arm32: $(PROJECTS:%=%A32.exe)
@@ -234,12 +241,17 @@ arm64: $(PROJECTS:%=%A64.exe)
 define BUILD_PROJECT
 # $(1): Project name
 # $(2): 32, 64, A32 or A64
-#
+
+# Compile and link the project
 $(1)$(2).exe: $(1).c $$(SRCS) $$(DEPS) $(1)$(2).res | check_$(2)
+	$$(info --- Compile and link $(1)$(2).exe ---)
 	$$(CC_$(2)) $$(CPPFLAGS) $$(CFLAGS) $$< $$(SRCS) $$(LDFLAGS) $(1)$(2).res $$(LDLIBS) -o $$@
 
+# Compile the resource file
 $(1)$(2).res: $(1).rc | check_$(2)
+	$$(info --- Compile $(1).rc ($(2)) ---)
 	$$(WINDRES_$(2)) $$(WRFLAGS) -DTARGET=$(2) $$< $$@
+
 endef
 
 $(foreach project,$(PROJECTS),\
