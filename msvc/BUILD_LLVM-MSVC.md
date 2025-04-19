@@ -46,6 +46,9 @@ that matches your __development__ system's architecture, for example:
 - Windows Intel/AMD 64-bit  
 `LLVM-<version>-win64.exe`
 
+- Windows on Arm64  
+`LLVM-<version>-woa64.exe` (maybe not the latest version)
+
 - Linux Intel/AMD 64-bit   
 `LLVM-<version>-Linux-X64.tar.xz`
 
@@ -81,7 +84,12 @@ Open a terminal and run:
 
 where `<download_directory>` is the directory where you want to put the downloaded files.
 
-Then put the `make_msvc-libs` script (available soon) in the download directory and run it.
+Go to <https://github.com/Matrix3600/msvc-libs/releases> and download the source code.
+
+Choose the `make_msvc-libs` script (`.cmd` or `.sh`) that matches your system (Windows or Linux).
+Place it in `<download_directory>`, along with the `make_msvc-libs_conf.txt` configuration file.
+
+Then run (you can also double-click on the script):
 
 	# On Linux:
 	chmod u+x make_msvc-libs.sh
@@ -90,7 +98,7 @@ Then put the `make_msvc-libs` script (available soon) in the download directory 
 	:: On Windows (you can also double-click on it):
 	make_msvc-libs.cmd
 
-This creates the repackaged version in the new `msvc-libs` subdirectory.
+This creates the repackaged version in a new `msvc-libs` subdirectory.
 Move it to the final location and set the `MSVC_LIBS_PATH` environment 
 variable to it to use it.
 
@@ -103,7 +111,7 @@ MSVCRT library files
 
 The two files `msvcrt32.lib` and `msvcrt64.lib` must be present in this `msvc`
 directory.  
-Read the [msvc/README](README.md) file for details.
+Read the [msvc/README](/msvc/README.md) file for details.
 
 
 
