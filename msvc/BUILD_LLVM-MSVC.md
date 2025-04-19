@@ -66,25 +66,12 @@ Visual Studio library
 
 If Visual Studio is installed, the library is ready to use.
 
-Otherwise, the original files are downloadable from the Microsoft servers. You
-need to accept the [license](
-https://visualstudio.microsoft.com/en/license-terms/vs2022-ga-community/).
+Otherwise, the original files are downloadable from the Microsoft servers.
 
-You can use a Python script in the [msvc-wine](
-https://github.com/mstorsjo/msvc-wine) github repository to download the files.
-
-Only the file `vsdownload.py` is needed. Python must be installed.
-
-Open a terminal and run:
-
-	# On Linux:
-	./vsdownload.py --dest "<download_directory>"
-	
-	:: On Windows:
-	vsdownload.py --dest "<download_directory>"
-
-where `<download_directory>` is the directory where you want to put the
-downloaded files.
+Follow these [instructions](
+https://github.com/Matrix3600/msvc-libs/blob/main/download_vslib.md)
+to download the Visual Studio MSVC/SDK library to a directory
+`<download_directory>` where you want to put the downloaded files.
 
 Go to <https://github.com/Matrix3600/msvc-libs/releases> and download the
 source code.
