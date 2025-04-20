@@ -110,23 +110,15 @@ Read the [msvc/README](/msvc/README.md) file for details.
 GNU make
 --------
 
-On Windows, if you don't have a version of GNU Make running on your computer,
-you can use the version included in LLVM-MinGW.
+On Windows, if you don't have a working version of GNU Make on your computer,
+you can either use the version included in LLVM-MinGW or download the one
+provided by [ezwinports](https://sourceforge.net/projects/ezwinports).
 
-Go to <https://github.com/mstorsjo/llvm-mingw/releases> and download the latest
-file that matches your __development__ system's architecture:  
+Go to <https://sourceforge.net/projects/ezwinports/files> and download the latest
+file `make-<version>-without-guile-w32-bin.zip`.
 
-- Windows Intel/AMD 64-bit  
-`llvm-mingw-<version>-msvcrt-x86_64.zip`
-
-- Windows on Arm64  
-`llvm-mingw-<version>-ucrt-aarch64.zip`
-
-- Windows Intel/AMD 32-bit  
-`llvm-mingw-<version>-msvcrt-i686.zip`
-
-Extract the executable `\bin\mingw32-make.exe` and put it anywhere on your
-machine. Rename it to `make.exe` and add its directory in your PATH.
+Extract the executable `\bin\make.exe` and put it anywhere on your machine. Add
+its directory in your PATH.
 
 
 
