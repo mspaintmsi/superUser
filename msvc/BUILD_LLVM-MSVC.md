@@ -118,7 +118,7 @@ Go to <https://sourceforge.net/projects/ezwinports/files> and download the lates
 file `make-<version>-without-guile-w32-bin.zip`.
 
 Extract the executable `\bin\make.exe` and put it anywhere on your machine. Add
-its directory in your PATH.
+its directory to your PATH.
 
 
 
@@ -129,17 +129,14 @@ The makefile must know where the MSVC/SDK library is located.
 
 There are two possibilities:
 
-- Visual Studio is installed.
+- Visual Studio is installed.  
+  Open the "_Developer Command Prompt for VS_" using the Start menu shortcut.
+  It sets the necessary environment variables automatically.
 
-Open the "_Developer Command Prompt for VS_" using the Start menu shortcut.
-It sets the necessary environment variables automatically.
-
-- Visual Studio is not installed.
-
-You need the MSVC/SDK repackaged version.  
-
-Set the `MSVC_LIBS_PATH` environment variable to the directory where it is
-located.
+- Visual Studio is not installed.  
+  You need the MSVC/SDK repackaged version.  
+  Set the `MSVC_LIBS_PATH` environment variable to the directory where it is
+  located.
 
 
 To build the executables, in the Windows command prompt or Linux terminal,
