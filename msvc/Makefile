@@ -109,15 +109,17 @@ ARCHS = 32 64
 HOST_32 =
 HOST_64 =
 
-# "clang-cl" is identical to "clang --driver-mode=cl".
-# Use one or the other depending on their availability in your toolchain.
-# CC = clang-cl
-CC = clang --driver-mode=cl
+# "clang-cl" is equivalent to "clang --driver-mode=cl".
+# "lld-link" is equivalent to "lld -flavor link".
+
+CC = clang-cl
+CC_ALT = clang --driver-mode=cl
 CC_32 = $(HOST_32)$(CC)
 CC_64 = $(HOST_64)$(CC)
 CC_ = $(CC)
 
 LD = lld-link
+LD_ALT = lld -flavor link
 LD_32 = $(HOST_32)$(LD)
 LD_64 = $(HOST_64)$(LD)
 LD_ = $(LD)
@@ -129,63 +131,65 @@ RC_ = $(RC)
 
 TARGETS_INTEL =
 
-ifeq (CLANG64,$(MSYSTEM))	# MSYS2 CLANG64
- TARGETS_INTEL = x86 x64
-else ifeq (32,$(findstring 32,$(MSYSTEM)))	# MSYS2 32-bit Intel/AMD (GNU)
- CC_32 =
- CC_64 =
-else ifeq (64,$(findstring 64,$(MSYSTEM)))	# MSYS2 64-bit Intel/AMD (GNU)
- CC_64 =
- CC_32 =
-else	# Cygwin, LLVM-MinGW or Linux
- HOST_32 = i686-pc-windows-msvc-
- HOST_64 = x86_64-pc-windows-msvc-
+HOST_32 = i686-pc-windows-msvc-
+HOST_64 = x86_64-pc-windows-msvc-
 
- # Check if a native toolchain (C compiler/linker/resource compiler) exists,
- # and detect its target architecture.
- NATIVE_CC_ARCH =
- ifneq (,$(and $(shell $(CC_) --version 2>$(DEVNUL)),$\
-    $(shell $(LD_) --version 2>$(DEVNUL)),$\
-    $(shell $(RC_) -h 2>$(DEVNUL))))	# If they both exist
-  target := $(shell $(CC_) -print-target-triple 2>$(DEVNUL))
-  ifneq (,$(filter %-windows-msvc,$(target)))
-   ifneq (,$(filter i686-%,$(target)))
-    NATIVE_CC_ARCH = 32
-   else ifneq (,$(filter x86_64-%,$(target)))
-    NATIVE_CC_ARCH = 64
-   endif
+# Check if a native toolchain (C compiler/linker/resource compiler) exists,
+# and detect its target architecture.
+NATIVE_CC_ARCH =
+ifeq (,$(shell $(CC_) --version 2>$(DEVNUL)))
+ CC_ = $(CC_ALT)
+endif
+ifeq (,$(shell $(LD_) --version 2>$(DEVNUL)))
+ LD_ = $(LD_ALT)
+endif
+ifneq (,$(and $(shell $(CC_) --version 2>$(DEVNUL)),$\
+   $(shell $(LD_) --version 2>$(DEVNUL)),$\
+   $(shell $(RC_) -h 2>$(DEVNUL))))	# If they both exist
+ target := $(shell $(CC_) -print-target-triple 2>$(DEVNUL))
+ ifneq (,$(filter %-windows-msvc,$(target)))
+  ifneq (,$(filter i686-%,$(target)))
+   NATIVE_CC_ARCH = 32
+  else ifneq (,$(filter x86_64-%,$(target)))
+   NATIVE_CC_ARCH = 64
   endif
  endif
- ifndef NATIVE_CC_ARCH
-  CC_ =
- endif
+endif
+ifndef NATIVE_CC_ARCH
+ CC_ =
+endif
 
- define CHECK_COMPILER
- # Check if a toolchain (C compiler/linker/resource compiler) exists for the
- # specified target architecture.
- # $(1): 32 or 64
- #
- ifeq (,$$(and $$(shell $$(CC_$(1)) --version 2>$$(DEVNUL)),$\
-    $$(shell $$(LD_$(1)) --version 2>$$(DEVNUL)),$\
-    $$(shell $$(RC_$(1)) -h 2>$$(DEVNUL))))	# If at least one does not exist
-  ifdef CC_	# Use native ones if available
-   CC_$(1) = $$(CC_)
-   RC_$(1) = $$(RC_)
-   LD_$(1) = $$(LD_)
-  else  # Otherwise, disable this architecture
-   CC_$(1) =
-  endif
+define CHECK_COMPILER
+# Check if a toolchain (C compiler/linker/resource compiler) exists for the
+# specified target architecture.
+# $(1): 32 or 64
+#
+ifeq (,$(shell $(CC_$(1)) --version 2>$(DEVNUL)))
+ CC_$(1) = $$(HOST_$(1))$$(CC_ALT)
+endif
+ifeq (,$(shell $(LD_$(1)) --version 2>$(DEVNUL)))
+ LD_$(1) = $$(HOST_$(1))$$(LD_ALT)
+endif
+ifeq (,$$(and $$(shell $$(CC_$(1)) --version 2>$$(DEVNUL)),$\
+   $$(shell $$(LD_$(1)) --version 2>$$(DEVNUL)),$\
+   $$(shell $$(RC_$(1)) -h 2>$$(DEVNUL))))	# If at least one does not exist
+ ifdef CC_	# Use native ones if available
+  CC_$(1) = $$(CC_)
+  RC_$(1) = $$(RC_)
+  LD_$(1) = $$(LD_)
+ else  # Otherwise, disable this architecture
+  CC_$(1) =
  endif
- endef
+endif
+endef
 
- $(foreach arch,$(ARCHS),$(eval $(call CHECK_COMPILER,$(arch))))
+$(foreach arch,$(ARCHS),$(eval $(call CHECK_COMPILER,$(arch))))
 
- ifdef CC_32
-  TARGETS_INTEL += x86
- endif
- ifdef CC_64
-  TARGETS_INTEL += x64
- endif
+ifdef CC_32
+ TARGETS_INTEL += x86
+endif
+ifdef CC_64
+ TARGETS_INTEL += x64
 endif
 
 # -----------------------------------------------------------------------------

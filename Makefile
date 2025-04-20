@@ -101,8 +101,8 @@ else	# Cygwin, LLVM-MinGW, WinLibs or Linux
  HOST_A32 = armv7-w64-mingw32-
  HOST_A64 = aarch64-w64-mingw32-
 
- # Check if both a native C compiler and a native resource compiler exist,
- # and detect their target architecture.
+ # Check if a native toolchain (C compiler/linker/resource compiler) exists,
+ # and detect its target architecture.
  NATIVE_CC_ARCH =
  ifneq (,$(and $(shell $(CC_) --version 2>$(DEVNUL)),$\
     $(shell $(WINDRES_) --version 2>$(DEVNUL))))	# If they both exist
@@ -124,8 +124,8 @@ else	# Cygwin, LLVM-MinGW, WinLibs or Linux
  endif
 
  define CHECK_COMPILER
- # Check if both a C compiler and a resource compiler exist for the specified
- # target architecture.
+ # Check if a toolchain (C compiler/linker/resource compiler) exists for the
+ # specified target architecture.
  # $(1): 32, 64, A32 or A64
  #
  ifeq (,$$(and $$(shell $$(CC_$(1)) --version 2>$$(DEVNUL)),$\
