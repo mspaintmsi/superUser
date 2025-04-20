@@ -73,8 +73,9 @@ https://github.com/Matrix3600/msvc-libs/blob/main/download_vslib.md)
 to download the Visual Studio MSVC/SDK library to a directory
 `<download_directory>` where you want to put the downloaded files.
 
-Go to <https://github.com/Matrix3600/msvc-libs/releases> and download the
-source code.
+To get the script to build the repackaged library, go to
+<https://github.com/Matrix3600/msvc-libs/releases> and download the source
+code.
 
 Choose the `make_msvc-libs` script (`.cmd` or `.sh`) that matches your system
 (Windows or Linux). Place it in `<download_directory>`, along with the

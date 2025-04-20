@@ -14,6 +14,7 @@ different systems (Windows, Linux, macOS) and architectures (Intel/AMD or Arm,
 |:-------------:|---------------------|--------------------------------|
 | Visual Studio | Windows (x64/Arm64) | Intel/AMD, Arm                 |
 | LLVM-MinGW    | Windows (all)<br />Linux<br />macOS | Intel/AMD, Arm |
+| LLVM-MSVC     | Windows (all)<br />Linux<br />macOS | Intel/AMD      |
 | WinLibs<br />GCC-MinGW | Windows (x86/x64) | Intel/AMD               |
 | GCC-MinGW     | Linux<br />macOS    | Intel/AMD                      |
 | MSYS2         | Windows (x64)       | Intel/AMD                      |
@@ -41,9 +42,9 @@ The executable names are as follows:
 
 <br />
 First, choose the system on which you want to run these tools.
+
+
 <br /><br />
-
-
 
 Windows
 =======
@@ -96,6 +97,13 @@ To build the executables, run one of these commands:
 	mingw32-make all 	&:: All the executables
 
 If successful, both 32-bit and 64-bit executables are created.
+
+
+
+LLVM-MSVC
+---------
+
+Refer to the instructions in [msvc/BUILD_LLVM-MSVC](/msvc/BUILD_LLVM-MSVC.md).
 
 
 
@@ -193,6 +201,7 @@ Open a Cygwin terminal and run the following commands:
 If successful, both 32-bit and 64-bit Intel/AMD executables are created.
 
 
+<br />
 
 Linux
 =====
@@ -250,6 +259,14 @@ To build the executables, run one of these commands:
 If successful, both 32-bit and 64-bit executables are created.
 
 
+
+LLVM-MSVC
+---------
+
+Refer to the instructions in [msvc/BUILD_LLVM-MSVC](/msvc/BUILD_LLVM-MSVC.md).
+
+
+<br />
 
 Building ARM executables
 ========================
