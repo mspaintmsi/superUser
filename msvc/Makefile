@@ -11,7 +11,7 @@
 #
 # Toolchain: LLVM (clang-cl/lld-link/llvm-rc) + MSVC/SDK headers/libraries
 # Visual Studio does not need to be installed.
-# MinGW or GCC are NOT used, even on Linux!
+# MinGW or GCC are NOT used, even on Linux.
 #
 # Supported development OS and toolchains:
 #
@@ -35,26 +35,18 @@
 # -----------------------------------------------------------------------------
 
 ifdef MSVC_LIBS_PATH
- #
- # Use the repackaged headers and libraries (the only Linux compatible ones!)
- #
+ # Use the repackaged headers and libraries (the only Linux compatible ones)
  $(info Using MSVC_LIBS_PATH)
  MSVC_CRT_PATH = $(MSVC_LIBS_PATH)/crt
  MSVC_SDK_INCLUDE_PATH = $(MSVC_LIBS_PATH)/sdk/include
  MSVC_SDK_LIB_PATH = $(MSVC_LIBS_PATH)/sdk/lib
 else
  msvc_path_ok =
- #
  # If Visual Studio is installed (includes SDK), use its environment variables
- #
  ifdef VCToolsInstallDir
   ifdef WindowsSdkDir
    ifdef WindowsSDKVersion
     $(info Using Visual Studio environment)
-    # $(info VCToolsInstallDir=$(VCToolsInstallDir))
-    # $(info WindowsSdkDir=$(WindowsSdkDir))
-    # $(info WindowsSDKVersion=$(WindowsSDKVersion))
-    # $(info )
     MSVC_CRT_PATH = $(VCToolsInstallDir)
     MSVC_SDK_INCLUDE_PATH = $(WindowsSdkDir)/Include/$(WindowsSDKVersion)
     MSVC_SDK_LIB_PATH = $(WindowsSdkDir)/Lib/$(WindowsSDKVersion)
@@ -67,25 +59,21 @@ else
  endif
 endif
 
-# Convert $(1) pathname (backslashes) to Unix pathname
+# Clean pathname and escape spaces
 empty :=
 space := $(empty) $(empty)
-CONVERT_PATH = $(patsubst %/,%,$(subst //,/,$(subst \,/,$(1))))
-QUOTE_SPACES = $(subst $(space),\ ,$(1))
+CLEAN_PATH = $(patsubst %/,%,$(subst //,/,$(subst \,/,$(1))))
+ESC_SPACE = $(subst $(space),\ ,$(1))
 
-MSVC_CRT_PATH := $(call CONVERT_PATH,$(MSVC_CRT_PATH))
-MSVC_SDK_INCLUDE_PATH := $(call CONVERT_PATH,$(MSVC_SDK_INCLUDE_PATH))
-MSVC_SDK_LIB_PATH := $(call CONVERT_PATH,$(MSVC_SDK_LIB_PATH))
-# $(info MSVC_CRT_PATH=$(MSVC_CRT_PATH))
-# $(info MSVC_SDK_INCLUDE_PATH=$(MSVC_SDK_INCLUDE_PATH))
-# $(info MSVC_SDK_LIB_PATH=$(MSVC_SDK_LIB_PATH))
-# $(info )
+MSVC_CRT_PATH := $(call CLEAN_PATH,$(MSVC_CRT_PATH))
+MSVC_SDK_INCLUDE_PATH := $(call CLEAN_PATH,$(MSVC_SDK_INCLUDE_PATH))
+MSVC_SDK_LIB_PATH := $(call CLEAN_PATH,$(MSVC_SDK_LIB_PATH))
 
-ifeq (,$(wildcard $(call QUOTE_SPACES,$(MSVC_CRT_PATH)/include/stdarg.h)))
+ifeq (,$(wildcard $(call ESC_SPACE,$(MSVC_CRT_PATH)/include/stdarg.h)))
  $(error ERROR: MSVC library not found)
 endif
 
-ifeq (,$(wildcard $(call QUOTE_SPACES,$(MSVC_SDK_INCLUDE_PATH)/um/windows.h)))
+ifeq (,$(wildcard $(call ESC_SPACE,$(MSVC_SDK_INCLUDE_PATH)/um/windows.h)))
  $(error ERROR: Windows SDK library not found)
 endif
 
@@ -102,109 +90,57 @@ ifeq ($(OS),Windows_NT)
  endif
 endif
 
-.DEFAULT_GOAL = intel
-
-ARCHS = 32 64
-
-HOST_32 =
-HOST_64 =
-
 # "clang-cl" is equivalent to "clang --driver-mode=cl".
 # "lld-link" is equivalent to "lld -flavor link".
 
 CC = clang-cl
 CC_ALT = clang --driver-mode=cl
-CC_32 = $(HOST_32)$(CC)
-CC_64 = $(HOST_64)$(CC)
-CC_ = $(CC)
+CC_32 = $(CC) --target=i686-pc-windows-msvc
+CC_64 = $(CC) --target=x86_64-pc-windows-msvc
 
 LD = lld-link
 LD_ALT = lld -flavor link
-LD_32 = $(HOST_32)$(LD)
-LD_64 = $(HOST_64)$(LD)
-LD_ = $(LD)
 
 RC = llvm-rc
-RC_32 = $(HOST_32)$(RC)
-RC_64 = $(HOST_64)$(RC)
-RC_ = $(RC)
-
-TARGETS_INTEL =
-
-HOST_32 = i686-pc-windows-msvc-
-HOST_64 = x86_64-pc-windows-msvc-
 
 # Check if a native toolchain (C compiler/linker/resource compiler) exists,
 # and detect its target architecture.
-NATIVE_CC_ARCH =
-ifeq (,$(shell $(CC_) --version 2>$(DEVNUL)))
- CC_ = $(CC_ALT)
+ifeq (,$(shell $(CC) --version 2>$(DEVNUL)))
+ CC = $(CC_ALT)
 endif
-ifeq (,$(shell $(LD_) --version 2>$(DEVNUL)))
- LD_ = $(LD_ALT)
+ifeq (,$(shell $(LD) --version 2>$(DEVNUL)))
+ LD = $(LD_ALT)
 endif
-ifneq (,$(and $(shell $(CC_) --version 2>$(DEVNUL)),$\
-   $(shell $(LD_) --version 2>$(DEVNUL)),$\
-   $(shell $(RC_) -h 2>$(DEVNUL))))	# If they both exist
- target := $(shell $(CC_) -print-target-triple 2>$(DEVNUL))
+native_toolchain =
+ifneq (,$(and $(shell $(CC) --version 2>$(DEVNUL)),$\
+   $(shell $(LD) --version 2>$(DEVNUL)),$\
+   $(shell $(RC) -h 2>$(DEVNUL))))	# If they both exist
+ target := $(shell $(CC) -print-target-triple 2>$(DEVNUL))
  ifneq (,$(filter %-windows-msvc,$(target)))
-  ifneq (,$(filter i686-%,$(target)))
-   NATIVE_CC_ARCH = 32
-  else ifneq (,$(filter x86_64-%,$(target)))
-   NATIVE_CC_ARCH = 64
-  endif
+  native_toolchain = 1
  endif
 endif
-ifndef NATIVE_CC_ARCH
- CC_ =
-endif
-
-define CHECK_COMPILER
-# Check if a toolchain (C compiler/linker/resource compiler) exists for the
-# specified target architecture.
-# $(1): 32 or 64
-#
-ifeq (,$(shell $(CC_$(1)) --version 2>$(DEVNUL)))
- CC_$(1) = $$(HOST_$(1))$$(CC_ALT)
-endif
-ifeq (,$(shell $(LD_$(1)) --version 2>$(DEVNUL)))
- LD_$(1) = $$(HOST_$(1))$$(LD_ALT)
-endif
-ifeq (,$$(and $$(shell $$(CC_$(1)) --version 2>$$(DEVNUL)),$\
-   $$(shell $$(LD_$(1)) --version 2>$$(DEVNUL)),$\
-   $$(shell $$(RC_$(1)) -h 2>$$(DEVNUL))))	# If at least one does not exist
- ifdef CC_	# Use native ones if available
-  CC_$(1) = $$(CC_)
-  RC_$(1) = $$(RC_)
-  LD_$(1) = $$(LD_)
- else  # Otherwise, disable this architecture
-  CC_$(1) =
- endif
-endif
-endef
-
-$(foreach arch,$(ARCHS),$(eval $(call CHECK_COMPILER,$(arch))))
-
-ifdef CC_32
- TARGETS_INTEL += x86
-endif
-ifdef CC_64
- TARGETS_INTEL += x64
+ifndef native_toolchain
+ CC =
 endif
 
 # -----------------------------------------------------------------------------
+
+.DEFAULT_GOAL = intel
+
+ARCHS = 32 64
+TARGETS_INTEL = x86 x64
 
 # Intermediate directories for temporary files
 INTDIR_32 = llvm-x86
 INTDIR_64 = llvm-x64
 
-.PHONY: all intel x86 x64 default clean \
-	check_all check_intel check_32 check_64
+.PHONY: all intel x86 x64 default clean check_all
 
 default: $(.DEFAULT_GOAL)
 
 all: $(TARGETS_INTEL) | check_all
-intel: $(TARGETS_INTEL) | check_intel
+intel: $(TARGETS_INTEL) | check_all
 
 clean:
 ifdef NATIVEWIN
@@ -217,30 +153,10 @@ else
 	rm -rf $(INTDIR_64)
 endif
 
-define ERROR_NO_TOOLCHAIN
-	@echo ERROR: No toolchain to build $(1).
-	@exit 1
-endef
-
 check_all:
-ifeq (,$(CC_32)$(CC_64))
+ifndef CC
 	@echo ERROR: No suitable toolchain.
 	@exit 1
-endif
-
-check_intel:
-ifeq (,$(CC_32)$(CC_64))
-	$(call ERROR_NO_TOOLCHAIN,intel)
-endif
-
-check_32:
-ifndef CC_32
-	$(call ERROR_NO_TOOLCHAIN,x86)
-endif
-
-check_64:
-ifndef CC_64
-	$(call ERROR_NO_TOOLCHAIN,x64)
 endif
 
 # -----------------------------------------------------------------------------
@@ -260,8 +176,6 @@ CL += -Wno-nonportable-include-path -Wno-microsoft-anon-tag
 CL += -Wno-pragma-pack -Wno-unknown-pragmas -Wno-ignored-pragma-intrinsic
 CL += -D _WIN32_WINNT=_WIN32_WINNT_VISTA -D _NO_CRT_STDIO_INLINE
 CL += -D _UNICODE -D UNICODE
-CL_32 = $(CL) --target=i686-pc-windows-msvc
-CL_64 = $(CL) --target=x86_64-pc-windows-msvc
 export CL
 
 # Linker
@@ -317,8 +231,7 @@ $(INTDIR_$(1)):
 OBJS_$(1) := $(OBJS:%=$(INTDIR_$(1))/%)
 
 # Compile the secondary C source files
-$$(OBJS_$(1)): $$(SRCS) $$(DEPS) | check_$(1) \
-		$$(INTDIR_$(1)) ; $$(call ENV_VAR,CL,$(1))
+$$(OBJS_$(1)): $$(SRCS) $$(DEPS) | check_all $$(INTDIR_$(1))
 	$$(info --- Compile $$(notdir $$(SRCS)) ($(1)) ---)
 	$$(CC_$(1)) $$(CFLAGS) $$(SRCS) -Fo$$(INTDIR_$(1))/
 
@@ -339,22 +252,21 @@ ifndef LDFLAGS_$(1)_$(2)
 endif
 
 # Compile the main C source file
-$$(INTDIR_$(2))/$(1).obj: ../$(1).c $$(DEPS) | check_$(2) \
-		$$(INTDIR_$(2)) ; $$(call ENV_VAR,CL,$(2))
+$$(INTDIR_$(2))/$(1).obj: ../$(1).c $$(DEPS) | check_all $$(INTDIR_$(2))
 	$$(info --- Compile $(1).c ($(2)) ---)
 	$$(CC_$(2)) $$(CFLAGS) $$< -Fo$$(INTDIR_$(2))/
 
 # Link the project
 $(1)$(2).exe: $$(INTDIR_$(2))/$(1).obj $$(OBJS_$(2)) \
-		$$(INTDIR_$(2))/$(1).res | check_$(2) ; $$(call ENV_VAR,LIB,$(2))
+		$$(INTDIR_$(2))/$(1).res | check_all ; $$(call ENV_VAR,LIB,$(2))
 	$$(info --- Link $(1)$(2).exe ---)
-	$$(LD_$(2)) $$(LDFLAGS_$(1)_$(2)) -out:$$@ $$(INTDIR_$(2))/$(1).obj \
+	$$(LD) $$(LDFLAGS_$(1)_$(2)) -out:$$@ $$(INTDIR_$(2))/$(1).obj \
 		$$(OBJS_$(2)) $$(INTDIR_$(2))/$(1).res $$(LDLIBS_$(2))
 
 # Compile the resource file
-$$(INTDIR_$(2))/$(1).res: ../$(1).rc | check_$(2) $$(INTDIR_$(2))
+$$(INTDIR_$(2))/$(1).res: ../$(1).rc | check_all $$(INTDIR_$(2))
 	$$(info --- Compile $(1).rc ($(2)) ---)
-	$$(RC_$(2)) $$(RCFLAGS) -D TARGET=$(2) -FO $$@ $$<
+	$$(RC) $$(RCFLAGS) -D TARGET=$(2) -FO $$@ $$<
 
 endef
 
