@@ -69,7 +69,7 @@ If Visual Studio is installed, the library is ready to use.
 Otherwise, the original files are downloadable from the Microsoft servers.
 
 Follow these [instructions](
-https://github.com/Matrix3600/msvc-libs/blob/main/download_vslib.md)
+https://github.com/Matrix3600/msvc-libs/blob/main/download/download_vslib.md)
 to download the Visual Studio MSVC/SDK library to a directory
 `<download_directory>` where you want to put the downloaded files.
 
