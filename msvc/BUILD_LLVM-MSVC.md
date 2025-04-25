@@ -69,32 +69,9 @@ If Visual Studio is installed, the library is ready to use.
 Otherwise, the original files are downloadable from the Microsoft servers.
 
 Follow these [instructions](
-https://github.com/Matrix3600/msvc-libs/blob/main/download/download_vslib.md)
-to download the Visual Studio MSVC/SDK library to a directory
-`<download_directory>` where you want to put the downloaded files.
-
-To get the script to build the repackaged library, go to
-<https://github.com/Matrix3600/msvc-libs/releases> and download the source
-code.
-
-Choose the `make_msvc-libs` script (`.cmd` or `.sh`) that matches your system
-(Windows or Linux). Place it in `<download_directory>`, along with the
-`make_msvc-libs_conf.txt` configuration file.
-
-Then run (you can also double-click on the script):
-
-	# On Linux:
-	chmod u+x make_msvc-libs.sh
-	./make_msvc-libs.sh
-	
-	:: On Windows:
-	make_msvc-libs.cmd
-
-This creates the repackaged version in a new `msvc-libs` subdirectory.
-Move it to the final location and set the `MSVC_LIBS_PATH` environment 
-variable to it to use it.
-
-You can then delete the download directory and its contents.
+https://github.com/Matrix3600/msvc-libs/blob/main/download/README.md)
+to download the Visual Studio MSVC/SDK library and create the repackaged
+version in one operation.
 
 
 
