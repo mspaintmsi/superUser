@@ -41,6 +41,7 @@ ifdef MSVC_LIBS_PATH
  MSVC_SDK_INCLUDE_PATH = $(MSVC_LIBS_PATH)/sdk/include
  MSVC_SDK_LIB_PATH = $(MSVC_LIBS_PATH)/sdk/lib
 else
+ override undefine msvc_path_ok
  msvc_path_ok =
  # If Visual Studio is installed (includes SDK), use its environment variables
  ifdef VCToolsInstallDir
@@ -60,6 +61,8 @@ else
 endif
 
 # Clean pathname and escape spaces
+override undefine empty
+override undefine space
 empty :=
 space := $(empty) $(empty)
 CLEAN_PATH = $(patsubst %/,%,$(subst //,/,$(subst \,/,$(1))))
@@ -111,6 +114,7 @@ endif
 ifeq (,$(shell $(LD) --version 2>$(DEVNUL)))
  LD = $(LD_ALT)
 endif
+override undefine native_toolchain
 native_toolchain =
 ifneq (,$(and $(shell $(CC) --version 2>$(DEVNUL)),$\
    $(shell $(LD) --version 2>$(DEVNUL)),$\
@@ -132,6 +136,8 @@ ARCHS = 32 64
 TARGETS_INTEL = x86 x64
 
 # Intermediate directories for temporary files
+override undefine INTDIR_32
+override undefine INTDIR_64
 INTDIR_32 = llvm-x86
 INTDIR_64 = llvm-x64
 
@@ -185,7 +191,6 @@ export LINK
 
 LIB_32 = $(MSVC_CRT_PATH)/lib/x86;$(MSVC_SDK_LIB_PATH)/um/x86
 LIB_64 = $(MSVC_CRT_PATH)/lib/x64;$(MSVC_SDK_LIB_PATH)/um/x64
-export LIB
 
 # -----------------------------------------------------------------------------
 
@@ -215,10 +220,6 @@ x86: $(PROJECTS:%=%32.exe)
 x64: $(PROJECTS:%=%64.exe)
 
 .DELETE_ON_ERROR:
-
-# ENV_VAR: Define the $(1) environment variable for $(2) architecture
-# e.g., $(call ENV_VAR,LIB,32) evaluates to LIB=$(LIB_32)
-ENV_VAR = $(eval $(1)=$($(1)_$(2)))
 
 define BUILD_OBJECTS
 # $(1): 32 or 64
@@ -257,8 +258,9 @@ $$(INTDIR_$(2))/$(1).obj: ../$(1).c $$(DEPS) | check_all $$(INTDIR_$(2))
 	$$(CC_$(2)) $$(CFLAGS) $$< -Fo$$(INTDIR_$(2))/
 
 # Link the project
+$(1)$(2).exe: export LIB=$$(LIB_$(2))
 $(1)$(2).exe: $$(INTDIR_$(2))/$(1).obj $$(OBJS_$(2)) \
-		$$(INTDIR_$(2))/$(1).res | check_all ; $$(call ENV_VAR,LIB,$(2))
+		$$(INTDIR_$(2))/$(1).res | check_all
 	$$(info --- Link $(1)$(2).exe ---)
 	$$(LD) $$(LDFLAGS_$(1)_$(2)) -out:$$@ $$(INTDIR_$(2))/$(1).obj \
 		$$(OBJS_$(2)) $$(INTDIR_$(2))/$(1).res $$(LDLIBS_$(2))
