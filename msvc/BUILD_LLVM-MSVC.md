@@ -68,6 +68,9 @@ If Visual Studio is installed, the library is ready to use.
 
 Otherwise, the original files are downloadable from the Microsoft servers.
 
+Go to <https://github.com/Matrix3600/msvc-libs/releases>. Download and extract
+the source code.
+
 Follow these [instructions](
 https://github.com/Matrix3600/msvc-libs/blob/main/download/README.md)
 to download the Visual Studio MSVC/SDK library and create the repackaged
