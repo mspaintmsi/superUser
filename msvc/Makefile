@@ -30,13 +30,17 @@
 #
 # -----------------------------------------------------------------------------
 
+override undefine build_targets
+build_targets := $(if $(MAKECMDGOALS),$(filter-out clean,$(MAKECMDGOALS)),$\
+ default)
+
 # -----------------------------------------------------------------------------
 # Locate the MSVC and SDK headers/libraries
 # -----------------------------------------------------------------------------
 
 ifdef MSVC_LIBS_PATH
  # Use the repackaged headers and libraries (the only Linux compatible ones)
- $(info Using MSVC_LIBS_PATH)
+ $(if $(build_targets),$(info Using MSVC_LIBS_PATH))
  MSVC_CRT_PATH = $(MSVC_LIBS_PATH)/crt
  MSVC_SDK_INCLUDE_PATH = $(MSVC_LIBS_PATH)/sdk/include
  MSVC_SDK_LIB_PATH = $(MSVC_LIBS_PATH)/sdk/lib
@@ -47,7 +51,7 @@ else
  ifdef VCToolsInstallDir
   ifdef WindowsSdkDir
    ifdef WindowsSDKVersion
-    $(info Using Visual Studio environment)
+    $(if $(build_targets),$(info Using Visual Studio environment))
     MSVC_CRT_PATH = $(VCToolsInstallDir)
     MSVC_SDK_INCLUDE_PATH = $(WindowsSdkDir)/Include/$(WindowsSDKVersion)
     MSVC_SDK_LIB_PATH = $(WindowsSdkDir)/Lib/$(WindowsSDKVersion)
@@ -108,24 +112,26 @@ RC = llvm-rc
 
 # Check if a native toolchain (C compiler/linker/resource compiler) exists,
 # and detect its target architecture.
-ifeq (,$(shell $(CC) --version 2>$(DEVNUL)))
- CC = $(CC_ALT)
-endif
-ifeq (,$(shell $(LD) --version 2>$(DEVNUL)))
- LD = $(LD_ALT)
-endif
-override undefine native_toolchain
-native_toolchain =
-ifneq (,$(and $(shell $(CC) --version 2>$(DEVNUL)),$\
-   $(shell $(LD) --version 2>$(DEVNUL)),$\
-   $(shell $(RC) -h 2>$(DEVNUL))))	# If they both exist
- target := $(shell $(CC) -print-target-triple 2>$(DEVNUL))
- ifneq (,$(filter %-windows-msvc,$(target)))
-  native_toolchain = 1
+ifdef build_targets
+ ifeq (,$(shell $(CC) --version 2>$(DEVNUL)))
+  CC = $(CC_ALT)
  endif
-endif
-ifndef native_toolchain
- CC =
+ ifeq (,$(shell $(LD) --version 2>$(DEVNUL)))
+  LD = $(LD_ALT)
+ endif
+ override undefine native_toolchain
+ native_toolchain =
+ ifneq (,$(and $(shell $(CC) --version 2>$(DEVNUL)),$\
+    $(shell $(LD) --version 2>$(DEVNUL)),$\
+    $(shell $(RC) -h 2>$(DEVNUL))))	# If they both exist
+  target := $(shell $(CC) -print-target-triple 2>$(DEVNUL))
+  ifneq (,$(filter %-windows-msvc,$(target)))
+   native_toolchain = 1
+  endif
+ endif
+ ifndef native_toolchain
+  CC =
+ endif
 endif
 
 # -----------------------------------------------------------------------------

@@ -28,6 +28,10 @@
 #
 # -----------------------------------------------------------------------------
 
+override undefine build_targets
+build_targets := $(if $(MAKECMDGOALS),$(filter-out clean,$(MAKECMDGOALS)),$\
+ default)
+
 # -----------------------------------------------------------------------------
 # Detect system and available toolchains
 # -----------------------------------------------------------------------------
@@ -101,45 +105,49 @@ else	# Cygwin, LLVM-MinGW, WinLibs or Linux
  HOST_A32 = armv7-w64-mingw32-
  HOST_A64 = aarch64-w64-mingw32-
 
- # Check if a native toolchain (C compiler/linker/resource compiler) exists,
- # and detect its target architecture.
- NATIVE_CC_ARCH =
- ifneq (,$(and $(shell $(CC_) --version 2>$(DEVNUL)),$\
-    $(shell $(WINDRES_) --version 2>$(DEVNUL))))	# If they both exist
-  target := $(shell $(CC_) -dumpmachine 2>$(DEVNUL))
-  ifneq (,$(filter %-mingw32 %-windows-gnu,$(target)))
-   ifneq (,$(filter i686-%,$(target)))
-    NATIVE_CC_ARCH = 32
-   else ifneq (,$(filter x86_64-%,$(target)))
-    NATIVE_CC_ARCH = 64
-   else ifneq (,$(filter armv7-%,$(target)))
-    NATIVE_CC_ARCH = A32
-   else ifneq (,$(filter aarch64-%,$(target)))
-    NATIVE_CC_ARCH = A64
+ ifdef build_targets
+
+  # Check if a native toolchain (C compiler/linker/resource compiler) exists,
+  # and detect its target architecture.
+  NATIVE_CC_ARCH =
+  ifneq (,$(and $(shell $(CC_) --version 2>$(DEVNUL)),$\
+     $(shell $(WINDRES_) --version 2>$(DEVNUL))))	# If they both exist
+   target := $(shell $(CC_) -dumpmachine 2>$(DEVNUL))
+   ifneq (,$(filter %-mingw32 %-windows-gnu,$(target)))
+    ifneq (,$(filter i686-%,$(target)))
+     NATIVE_CC_ARCH = 32
+    else ifneq (,$(filter x86_64-%,$(target)))
+     NATIVE_CC_ARCH = 64
+    else ifneq (,$(filter armv7-%,$(target)))
+     NATIVE_CC_ARCH = A32
+    else ifneq (,$(filter aarch64-%,$(target)))
+     NATIVE_CC_ARCH = A64
+    endif
    endif
   endif
- endif
- ifndef NATIVE_CC_ARCH
-  CC_ =
- endif
-
- define CHECK_COMPILER
- # Check if a toolchain (C compiler/linker/resource compiler) exists for the
- # specified target architecture.
- # $(1): 32, 64, A32 or A64
- #
- ifeq (,$$(and $$(shell $$(CC_$(1)) --version 2>$$(DEVNUL)),$\
-    $$(shell $$(WINDRES_$(1)) --version 2>$$(DEVNUL))))	# If at least one does not exist
-  ifeq ($$(NATIVE_CC_ARCH),$(1))	# Use native ones if suitable
-   CC_$(1) = $$(CC_)
-   WINDRES_$(1) = $$(WINDRES_)
-  else  # Otherwise, disable this architecture
-   CC_$(1) =
+  ifndef NATIVE_CC_ARCH
+   CC_ =
   endif
- endif
- endef
 
- $(foreach arch,$(ARCHS),$(eval $(call CHECK_COMPILER,$(arch))))
+  define CHECK_COMPILER
+  # Check if a toolchain (C compiler/linker/resource compiler) exists for the
+  # specified target architecture.
+  # $(1): 32, 64, A32 or A64
+  #
+  ifeq (,$$(and $$(shell $$(CC_$(1)) --version 2>$$(DEVNUL)),$\
+     $$(shell $$(WINDRES_$(1)) --version 2>$$(DEVNUL))))	# If at least one does not exist
+   ifeq ($$(NATIVE_CC_ARCH),$(1))	# Use native ones if suitable
+    CC_$(1) = $$(CC_)
+    WINDRES_$(1) = $$(WINDRES_)
+   else  # Otherwise, disable this architecture
+    CC_$(1) =
+   endif
+  endif
+  endef
+
+  $(foreach arch,$(ARCHS),$(eval $(call CHECK_COMPILER,$(arch))))
+
+ endif
 
  ifdef CC_32
   TARGETS_INTEL += x86
