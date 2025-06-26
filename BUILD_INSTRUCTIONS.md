@@ -41,7 +41,7 @@ The executable names are as follows:
 `sudoA64.exe`
 
 <br />
-First, choose the system on which you want to run these tools.
+First, choose the system on which you want to run the development tools.
 
 
 <br /><br />
@@ -277,10 +277,11 @@ Visual Studio
 
 The following components must be installed:
 
-- For ARM (32-bit):  
-"MSVC v143 - VS 2022 C++ ARM build tools (Latest)"
 - For ARM64 (64-bit):  
 "MSVC v143 - VS 2022 C++ ARM64 build tools (Latest)"
+- For ARM (32-bit):  
+"MSVC v143 - VS 2022 C++ ARM build tools (Latest)"  
+"Windows 11 Software Development Kit (SDK) 10.0.22621" or below
 
 Then follow the instructions in [msvc/ucrt/README](/msvc/ucrt/README.md).
 
