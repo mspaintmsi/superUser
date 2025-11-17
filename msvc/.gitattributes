@@ -5,6 +5,7 @@
 
 # VS project files have crlf line endings.
 *.sln text eol=crlf
+*.slnx text eol=crlf
 *.vcxproj text eol=crlf
 *.vcxproj.* text eol=crlf
 
