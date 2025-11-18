@@ -1,7 +1,7 @@
 #
 # superUser 6.0
 #
-# Copyright 2019-2025 https://github.com/mspaintmsi/superUser
+# Copyright 2019-2026 https://github.com/mspaintmsi/superUser
 #
 # Makefile (version for GNU make)
 #

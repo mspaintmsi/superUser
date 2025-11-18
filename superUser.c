@@ -4,7 +4,7 @@
 	A simple and lightweight utility to start any process
 	as the System user with Trusted Installer privileges.
 
-	Copyright 2019-2025 https://github.com/mspaintmsi/superUser
+	Copyright 2019-2026 https://github.com/mspaintmsi/superUser
 
 	superUser.c
 
