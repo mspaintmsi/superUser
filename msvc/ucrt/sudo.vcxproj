@@ -35,9 +35,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{DB8445E4-8E2C-4731-82E2-3C7205A5BD4D}</ProjectGuid>
-    <VCProjectVersion>16.0</VCProjectVersion>
+    <ProjectGuid>{db8445e4-8e2c-4731-82e2-3c7205a5bd4d}</ProjectGuid>
+    <RootNamespace>sudo</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
