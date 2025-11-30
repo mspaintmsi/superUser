@@ -10,6 +10,8 @@
 
 */
 
+#include <windows.h>
+
 int acquireSeDebugPrivilege( void );
 int createChildProcessToken( HANDLE hBaseProcess, HANDLE* phNewToken );
 int createSystemContext( void );

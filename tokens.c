@@ -11,10 +11,10 @@
 
 #include <windows.h>
 #include <wtsapi32.h>
-#include <winnt.h>
 #ifdef __GNUC__
 #include "winnt2.h"
 #endif
+#include <wchar.h>
 
 #include "utils.h" // Utility functions
 

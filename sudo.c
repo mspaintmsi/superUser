@@ -11,6 +11,7 @@
 */
 
 #include <windows.h>
+#include <wchar.h>
 
 #include "utils.h"  // Utility functions
 #include "tokens.h" // Tokens and privileges management functions
