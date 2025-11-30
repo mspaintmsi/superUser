@@ -5,6 +5,8 @@
 #
 # Makefile (version for GNU make)
 #
+# Author: Matrix3600 https://github.com/Matrix3600
+#
 # - Build x86 / x64 executables for Windows (Intel/AMD).
 # - Build native ARMv7 / ARM64 executables for "Windows on Arm".
 #
@@ -30,7 +32,7 @@
 
 override undefine build_targets
 build_targets := $(if $(MAKECMDGOALS),$(filter-out clean,$(MAKECMDGOALS)),$\
- default)
+  default)
 
 # -----------------------------------------------------------------------------
 # Detect system and available toolchains
@@ -80,26 +82,26 @@ WINDRES_ = $(WINDRES)
 TARGETS_INTEL =
 TARGETS_ARM =
 
-ifeq (CLANGARM64,$(MSYSTEM))	# MSYS2 CLANGARM64
+ifeq (CLANGARM64,$(MSYSTEM))  # MSYS2 CLANGARM64
  .DEFAULT_GOAL = arm
  TARGETS_ARM = arm64
  CC_A64 = clang
  CC_32 =
  CC_64 =
  CC_A32 =
-else ifeq (32,$(findstring 32,$(MSYSTEM)))	# MSYS2 32-bit Intel/AMD
+else ifeq (32,$(findstring 32,$(MSYSTEM)))  # MSYS2 32-bit Intel/AMD
  .DEFAULT_GOAL = intel
  TARGETS_INTEL = x86
  CC_64 =
  CC_A32 =
  CC_A64 =
-else ifeq (64,$(findstring 64,$(MSYSTEM)))	# MSYS2 64-bit Intel/AMD
+else ifeq (64,$(findstring 64,$(MSYSTEM)))  # MSYS2 64-bit Intel/AMD
  .DEFAULT_GOAL = intel
  TARGETS_INTEL = x64
  CC_32 =
  CC_A32 =
  CC_A64 =
-else	# Cygwin, LLVM-MinGW, WinLibs or Linux
+else  # Cygwin, LLVM-MinGW, WinLibs or Linux
  HOST_32 = i686-w64-mingw32-
  HOST_64 = x86_64-w64-mingw32-
  HOST_A32 = armv7-w64-mingw32-
@@ -111,7 +113,7 @@ else	# Cygwin, LLVM-MinGW, WinLibs or Linux
   # and detect its target architecture.
   NATIVE_CC_ARCH =
   ifneq (,$(and $(shell $(CC_) --version 2>$(DEVNUL)),$\
-     $(shell $(WINDRES_) --version 2>$(DEVNUL))))	# If they both exist
+     $(shell $(WINDRES_) --version 2>$(DEVNUL))))  # If they both exist
    target := $(shell $(CC_) -dumpmachine 2>$(DEVNUL))
    ifneq (,$(filter %-mingw32 %-windows-gnu,$(target)))
     ifneq (,$(filter i686-%,$(target)))
@@ -135,8 +137,8 @@ else	# Cygwin, LLVM-MinGW, WinLibs or Linux
   # $(1): 32, 64, A32 or A64
   #
   ifeq (,$$(and $$(shell $$(CC_$(1)) --version 2>$$(DEVNUL)),$\
-     $$(shell $$(WINDRES_$(1)) --version 2>$$(DEVNUL))))	# If at least one does not exist
-   ifeq ($$(NATIVE_CC_ARCH),$(1))	# Use native ones if suitable
+     $$(shell $$(WINDRES_$(1)) --version 2>$$(DEVNUL))))  # If at least one does not exist
+   ifeq ($$(NATIVE_CC_ARCH),$(1))  # Use native ones if suitable
     CC_$(1) = $$(CC_)
     WINDRES_$(1) = $$(WINDRES_)
    else  # Otherwise, disable this architecture
@@ -166,7 +168,7 @@ endif
 # -----------------------------------------------------------------------------
 
 .PHONY: all intel arm x86 x64 arm32 arm64 default clean \
-	check_all check_intel check_arm check_32 check_64 check_A32 check_A64
+  check_all check_intel check_arm check_32 check_64 check_A32 check_A64
 
 default: $(.DEFAULT_GOAL)
 
@@ -263,5 +265,5 @@ $(1)$(2).res: $(1).rc | check_$(2)
 endef
 
 $(foreach project,$(PROJECTS),\
-	$(foreach arch,$(ARCHS),\
-		$(eval $(call BUILD_PROJECT,$(project),$(arch)))))
+  $(foreach arch,$(ARCHS),\
+    $(eval $(call BUILD_PROJECT,$(project),$(arch)))))

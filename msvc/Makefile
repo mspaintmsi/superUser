@@ -32,7 +32,7 @@
 
 override undefine build_targets
 build_targets := $(if $(MAKECMDGOALS),$(filter-out clean,$(MAKECMDGOALS)),$\
- default)
+  default)
 
 # -----------------------------------------------------------------------------
 # Locate the MSVC and SDK headers/libraries
@@ -123,7 +123,7 @@ ifdef build_targets
  native_toolchain =
  ifneq (,$(and $(shell $(CC) --version 2>$(DEVNUL)),$\
     $(shell $(LD) --version 2>$(DEVNUL)),$\
-    $(shell $(RC) -h 2>$(DEVNUL))))	# If they both exist
+    $(shell $(RC) -h 2>$(DEVNUL))))  # If they both exist
   target := $(shell $(CC) -print-target-triple 2>$(DEVNUL))
   ifneq (,$(filter %-windows-msvc,$(target)))
    native_toolchain = 1
@@ -177,7 +177,7 @@ endif
 
 # C Compiler
 INCLUDE = $(MSVC_CRT_PATH)/include;$(MSVC_SDK_INCLUDE_PATH)/ucrt;$\
-	$(MSVC_SDK_INCLUDE_PATH)/um;$(MSVC_SDK_INCLUDE_PATH)/shared
+  $(MSVC_SDK_INCLUDE_PATH)/um;$(MSVC_SDK_INCLUDE_PATH)/shared
 export INCLUDE
 
 # _WIN32_WINNT: the minimal Windows version the app can run on.
@@ -205,7 +205,7 @@ PROJECTS = superUser sudo
 # Initialize the variables
 INITIALIZE_LDFLAGS = LDFLAGS_$(1)_$(2) =
 $(foreach project,$(PROJECTS),$(foreach arch,$(ARCHS),\
-	$(eval $(call INITIALIZE_LDFLAGS,$(project),$(arch)))))
+  $(eval $(call INITIALIZE_LDFLAGS,$(project),$(arch)))))
 
 CFLAGS = -c
 
@@ -279,5 +279,5 @@ $$(INTDIR_$(2))/$(1).res: ../$(1).rc | check_all $$(INTDIR_$(2))
 endef
 
 $(foreach project,$(PROJECTS),\
-	$(foreach arch,$(ARCHS),\
-		$(eval $(call BUILD_PROJECT,$(project),$(arch)))))
+  $(foreach arch,$(ARCHS),\
+    $(eval $(call BUILD_PROJECT,$(project),$(arch)))))
