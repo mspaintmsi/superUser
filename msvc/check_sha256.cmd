@@ -4,6 +4,8 @@
 ::
 :: Copyright 2019-2026 https://github.com/mspaintmsi/superUser
 ::
+:: Author: Matrix3600 https://github.com/Matrix3600
+::
 :: check_sha256.cmd
 ::
 :: Check the SHA256 hash for the files listed in the SHA256SUMS or
