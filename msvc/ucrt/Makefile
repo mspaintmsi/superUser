@@ -27,7 +27,7 @@
 # Targets: *-pc-windows-msvc
 # CRT version: UCRT
 #
-# Read the msvc/BUILD_LLVM-MSVC.md file for details, except that the MSVCRT 
+# Read the msvc/BUILD_LLVM-MSVC.md file for details, except that the MSVCRT
 # library files (msvcrt32.lib and msvcrt64.lib) are NOT needed.
 #
 # -----------------------------------------------------------------------------

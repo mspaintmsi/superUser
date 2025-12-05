@@ -137,7 +137,8 @@ else  # Cygwin, LLVM-MinGW, WinLibs or Linux
   # $(1): 32, 64, A32 or A64
   #
   ifeq (,$$(and $$(shell $$(CC_$(1)) --version 2>$$(DEVNUL)),$\
-     $$(shell $$(WINDRES_$(1)) --version 2>$$(DEVNUL))))  # If at least one does not exist
+     $$(shell $$(WINDRES_$(1)) --version 2>$$(DEVNUL))))
+     # If at least one does not exist
    ifeq ($$(NATIVE_CC_ARCH),$(1))  # Use native ones if suitable
     CC_$(1) = $$(CC_)
     WINDRES_$(1) = $$(WINDRES_)
@@ -234,7 +235,8 @@ PROJECTS = superUser sudo
 
 CPPFLAGS = -D_WIN32_WINNT=_WIN32_WINNT_VISTA -D_UNICODE
 CFLAGS = -municode -Os -s -flto -fno-ident -Wall
-LDFLAGS = -Wl,--exclude-all-symbols,--dynamicbase,--nxcompat,--subsystem,console
+LDFLAGS = -Wl,--exclude-all-symbols,--dynamicbase,--nxcompat,$\
+  --subsystem,console
 LDLIBS = -lwtsapi32
 WRFLAGS = --codepage 65001 -O coff
 
@@ -255,7 +257,8 @@ define BUILD_PROJECT
 # Compile and link the project
 $(1)$(2).exe: $(1).c $$(SRCS) $$(DEPS) $(1)$(2).res | check_$(2)
 	$$(info --- Compile and link $(1)$(2).exe ---)
-	$$(CC_$(2)) $$(CPPFLAGS) $$(CFLAGS) $$< $$(SRCS) $$(LDFLAGS) $(1)$(2).res $$(LDLIBS) -o $$@
+	$$(CC_$(2)) $$(CPPFLAGS) $$(CFLAGS) $$< $$(SRCS) $$(LDFLAGS) $(1)$(2).res \
+		$$(LDLIBS) -o $$@
 
 # Compile the resource file
 $(1)$(2).res: $(1).rc | check_$(2)
