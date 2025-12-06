@@ -191,7 +191,7 @@ CL += -D _UNICODE -D UNICODE
 export CL
 
 # Linker
-LINK = -incremental:no -nodefaultlib:libcmt.lib -manifest:no -subsystem:console
+LINK = -incremental:no -nodefaultlib:libcmt.lib -manifest:no
 LINK += -opt:ref -dynamicbase -nxcompat -safeseh:no -release
 export LINK
 
@@ -200,27 +200,38 @@ LIB_64 = $(MSVC_CRT_PATH)/lib/x64;$(MSVC_SDK_LIB_PATH)/um/x64
 
 # -----------------------------------------------------------------------------
 
-PROJECTS = superUser sudo
+PROJECTS = sudo superUser
 
 # Initialize the variables
-INITIALIZE_LDFLAGS = LDFLAGS_$(1)_$(2) =
+define INITIALIZE_VARS
+LDFLAGS_$(1)_$(2) =
+LDLIBS_$(1)_$(2) =
+SRCS_$(1) =
+endef
 $(foreach project,$(PROJECTS),$(foreach arch,$(ARCHS),\
-  $(eval $(call INITIALIZE_LDFLAGS,$(project),$(arch)))))
+  $(eval $(call INITIALIZE_VARS,$(project),$(arch)))))
 
 CFLAGS = -c
 
-LDFLAGS_64 = -merge:".pdata=.text"
+LDFLAGS =
+LDFLAGS_sudo = $(LDFLAGS) -subsystem:console
+LDFLAGS_superUser = $(LDFLAGS) -subsystem:console
+LDFLAGS_sudo_64 = $(LDFLAGS_sudo) -merge:".pdata=.text"
+LDFLAGS_superUser_64 = $(LDFLAGS_superUser) -merge:".pdata=.text"
 
 LDLIBS = advapi32.lib wtsapi32.lib
-LDLIBS_32 = $(LDLIBS) msvcrt32.lib
-LDLIBS_64 = $(LDLIBS) msvcrt64.lib
+LDLIBS_32 = msvcrt32.lib
+LDLIBS_64 = msvcrt64.lib
 
 RCFLAGS = -C 65001 -L 0x0409
 
+DEPS = ../output.h ../tokens.h ../utils.h
 SRCS = ../tokens.c ../utils.c msvcrt.c
-DEPS = ../tokens.h ../utils.h
+SRCS_sudo = ../output_console.c $(SRCS)
+SRCS_superUser = ../output_console.c $(SRCS)
 
-OBJS := $(patsubst %.c,%.obj,$(notdir $(SRCS)))
+$(eval SRCS_ALL = $$(sort $(SRCS) $(PROJECTS:%=$$(SRCS_%))))
+OBJS_ALL := $(patsubst %.c,%.obj,$(notdir $(SRCS_ALL)))
 
 x86: $(PROJECTS:%=%32.exe)
 x64: $(PROJECTS:%=%64.exe)
@@ -235,12 +246,12 @@ $(INTDIR_$(1)):
 	$$(info --- Create directory $(INTDIR_$(1)) ---)
 	@mkdir $(INTDIR_$(1))
 
-OBJS_$(1) := $(OBJS:%=$(INTDIR_$(1))/%)
+OBJS_$(1) := $$(OBJS_ALL:%=$$(INTDIR_$(1))/%)
 
 # Compile the secondary C source files
-$$(OBJS_$(1)): $$(SRCS) $$(DEPS) | check_all $$(INTDIR_$(1))
-	$$(info --- Compile $$(notdir $$(SRCS)) ($(1)) ---)
-	$$(CC_$(1)) $$(CFLAGS) $$(SRCS) -Fo$$(INTDIR_$(1))/
+$$(OBJS_$(1)): $$(SRCS_ALL) $$(DEPS) | check_all $$(INTDIR_$(1))
+	$$(info --- Compile $$(notdir $$(SRCS_ALL)) ($(1)) ---)
+	$$(CC_$(1)) $$(CFLAGS) $$(SRCS_ALL) -Fo$$(INTDIR_$(1))/
 
 endef
 
@@ -253,10 +264,33 @@ define BUILD_PROJECT
 
 ifndef LDFLAGS_$(1)_$(2)
  LDFLAGS_$(1)_$(2) =
+ ifdef LDFLAGS_$(1)
+  LDFLAGS_$(1)_$(2) = $$(LDFLAGS_$(1))
+ else
+  LDFLAGS_$(1)_$(2) = $$(LDFLAGS)
+ endif
  ifdef LDFLAGS_$(2)
   LDFLAGS_$(1)_$(2) += $$(LDFLAGS_$(2))
  endif
 endif
+
+ifndef LDLIBS_$(1)_$(2)
+ LDLIBS_$(1)_$(2) =
+ ifdef LDLIBS_$(1)
+  LDLIBS_$(1)_$(2) = $$(LDLIBS_$(1))
+ else
+  LDLIBS_$(1)_$(2) = $$(LDLIBS)
+ endif
+ ifdef LDLIBS_$(2)
+  LDLIBS_$(1)_$(2) += $$(LDLIBS_$(2))
+ endif
+endif
+
+ifndef SRCS_$(1)
+ SRCS_$(1) = $$(SRCS)
+endif
+OBJS_$(1)_$(2) := $$(patsubst %.c,%.obj,$$(notdir $$(SRCS_$(1))))
+OBJS_$(1)_$(2) := $$(OBJS_$(1)_$(2):%=$$(INTDIR_$(2))/%)
 
 # Compile the main C source file
 $$(INTDIR_$(2))/$(1).obj: ../$(1).c $$(DEPS) | check_all $$(INTDIR_$(2))
@@ -265,11 +299,11 @@ $$(INTDIR_$(2))/$(1).obj: ../$(1).c $$(DEPS) | check_all $$(INTDIR_$(2))
 
 # Link the project
 $(1)$(2).exe: export LIB=$$(LIB_$(2))
-$(1)$(2).exe: $$(INTDIR_$(2))/$(1).obj $$(OBJS_$(2)) \
+$(1)$(2).exe: $$(INTDIR_$(2))/$(1).obj $$(OBJS_$(1)_$(2)) \
 		$$(INTDIR_$(2))/$(1).res | check_all
 	$$(info --- Link $(1)$(2).exe ---)
 	$$(LD) $$(LDFLAGS_$(1)_$(2)) -out:$$@ $$(INTDIR_$(2))/$(1).obj \
-		$$(OBJS_$(2)) $$(INTDIR_$(2))/$(1).res $$(LDLIBS_$(2))
+		$$(OBJS_$(1)_$(2)) $$(INTDIR_$(2))/$(1).res $$(LDLIBS_$(1)_$(2))
 
 # Compile the resource file
 $$(INTDIR_$(2))/$(1).res: ../$(1).rc | check_all $$(INTDIR_$(2))

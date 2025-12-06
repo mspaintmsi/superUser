@@ -228,20 +228,26 @@ endif
 
 # -----------------------------------------------------------------------------
 
-PROJECTS = superUser sudo
+PROJECTS = sudo superUser
 
 # _WIN32_WINNT: the minimal Windows version the app can run on.
 # Windows Vista: the earliest to utilize the Trusted Installer.
 
 CPPFLAGS = -D_WIN32_WINNT=_WIN32_WINNT_VISTA -D_UNICODE
 CFLAGS = -municode -Os -s -flto -fno-ident -Wall
-LDFLAGS = -Wl,--exclude-all-symbols,--dynamicbase,--nxcompat,$\
-  --subsystem,console
+
+LDFLAGS = -Wl,--exclude-all-symbols,--dynamicbase,--nxcompat
+LDFLAGS_sudo = $(LDFLAGS) -Wl,--subsystem,console
+LDFLAGS_superUser = $(LDFLAGS) -Wl,--subsystem,console
+
 LDLIBS = -lwtsapi32
 WRFLAGS = --codepage 65001 -O coff
 
+DEPS = output.h tokens.h utils.h winnt2.h
 SRCS = tokens.c utils.c
-DEPS = tokens.h utils.h winnt2.h
+SRCS_sudo = output_console.c $(SRCS)
+SRCS_superUser = output_console.c $(SRCS)
+
 
 x86: $(PROJECTS:%=%32.exe)
 x64: $(PROJECTS:%=%64.exe)
@@ -254,10 +260,26 @@ define BUILD_PROJECT
 # $(1): Project name
 # $(2): 32, 64, A32 or A64
 
+ifndef LDFLAGS_$(1)_$(2)
+ LDFLAGS_$(1)_$(2) =
+ ifdef LDFLAGS_$(1)
+  LDFLAGS_$(1)_$(2) = $$(LDFLAGS_$(1))
+ else
+  LDFLAGS_$(1)_$(2) = $$(LDFLAGS)
+ endif
+ ifdef LDFLAGS_$(2)
+  LDFLAGS_$(1)_$(2) += $$(LDFLAGS_$(2))
+ endif
+endif
+
+ifndef SRCS_$(1)
+ SRCS_$(1) = $$(SRCS)
+endif
+
 # Compile and link the project
-$(1)$(2).exe: $(1).c $$(SRCS) $$(DEPS) $(1)$(2).res | check_$(2)
+$(1)$(2).exe: $(1).c $$(SRCS_$(1)) $$(DEPS) $(1)$(2).res | check_$(2)
 	$$(info --- Compile and link $(1)$(2).exe ---)
-	$$(CC_$(2)) $$(CPPFLAGS) $$(CFLAGS) $$< $$(SRCS) $$(LDFLAGS) $(1)$(2).res \
+	$$(CC_$(2)) $$(CPPFLAGS) $$(CFLAGS) $$< $$(SRCS_$(1)) $$(LDFLAGS_$(1)_$(2)) $(1)$(2).res \
 		$$(LDLIBS) -o $$@
 
 # Compile the resource file
