@@ -14,6 +14,7 @@
 #include <wchar.h>
 
 #include "utils.h"  // Utility functions
+#include "output.h" // Display functions
 #include "tokens.h" // Tokens and privileges management functions
 
 // Program options
@@ -121,7 +122,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 	}
 	else {
 		// Most commonly - 0x2 - The system cannot find the file specified.
-		printError( L"Process creation failed", dwCreateError, 0 );
+		showError( L"Process creation failed", dwCreateError, 0 );
 		return 4;
 	}
 
@@ -174,9 +175,9 @@ static BOOL getArgument( wchar_t** ppArgument, wchar_t** ppArgumentIndex )
 }
 
 
-static void printHelp( void )
+static void showHelp( void )
 {
-	printConsole( L"\n\
+	showInfo( L"\n\
 sudo [options] [command_to_run]\n\n\
 Options (you can use either \"-\" or \"/\"):\n\
   /h  Display this help message.\n\
@@ -206,14 +207,14 @@ int wmain( void )
 			while ((opt = pwszArgument[ j ])) {
 				switch (opt) {
 				case 'h':
-					printHelp();
+					showHelp();
 					errCode = -1;
 					goto done_params;
 				case 'm':
 					options.bMinimize = 1;
 					break;
 				default:
-					printFmtError( 0, 0, L"Invalid option '%lc'", opt );
+					showFmtError( 0, 0, L"Invalid option '%lc'", opt );
 					errCode = 1;
 					goto done_params;
 				}

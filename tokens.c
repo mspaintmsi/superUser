@@ -16,7 +16,7 @@
 #endif
 #include <wchar.h>
 
-#include "utils.h" // Utility functions
+#include "output.h" // Display functions
 
 #define CUSTOM_ERROR_PROCESS_NOT_FOUND 0xA0001000
 #define CUSTOM_ERROR_SERVICE_START_FAILED 0xA0001001
@@ -93,7 +93,7 @@ void setAllPrivilegesV( HANDLE hToken, BOOL bVerbose )
 	for (int i = 0; i < (sizeof( apcwszTokenPrivileges ) /
 		sizeof( *apcwszTokenPrivileges )); i++)
 		if (! enableTokenPrivilege( hToken, apcwszTokenPrivileges[ i ] ) && bVerbose)
-			printFmtDebug( L"Could not set privilege [%ls], you most likely don't have it.",
+			showFmtDebug( L"Could not set privilege [%ls], you most likely don't have it.",
 				apcwszTokenPrivileges[ i ] );
 }
 
@@ -114,7 +114,7 @@ int acquireSeDebugPrivilege( void )
 	else dwLastError = GetLastError();
 
 	if (! bSuccess) {
-		printError( L"Failed to acquire SeDebugPrivilege", dwLastError, iStep );
+		showError( L"Failed to acquire SeDebugPrivilege", dwLastError, iStep );
 		return 2;
 	}
 
@@ -189,7 +189,7 @@ int createSystemContext( void )
 	}
 
 	if (! bSuccess) {
-		printError( L"Failed to create system context", dwLastError, iStep );
+		showError( L"Failed to create system context", dwLastError, iStep );
 		return 5;
 	}
 
@@ -247,7 +247,7 @@ int getTrustedInstallerProcess( HANDLE* phTIProcess )
 	}
 
 	if (! *phTIProcess) {
-		printError( L"Failed to open TrustedInstaller process", dwLastError, iStep );
+		showError( L"Failed to open TrustedInstaller process", dwLastError, iStep );
 		return 3;
 	}
 
@@ -278,7 +278,7 @@ int createChildProcessToken( HANDLE hBaseProcess, HANDLE* phNewToken )
 	else dwLastError = GetLastError();
 
 	if (! *phNewToken) {
-		printError( L"Failed to create child process token", dwLastError, iStep );
+		showError( L"Failed to create child process token", dwLastError, iStep );
 		return 5;
 	}
 

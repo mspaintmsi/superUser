@@ -188,12 +188,14 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\output_console.c" />
     <ClCompile Include="..\superUser.c" />
     <ClCompile Include="..\tokens.c" />
     <ClCompile Include="..\utils.c" />
     <ClCompile Include="msvcrt.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\output.h" />
     <ClInclude Include="..\tokens.h" />
     <ClInclude Include="..\utils.h" />
     <ClInclude Include="resource.h" />

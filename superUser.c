@@ -8,12 +8,15 @@
 
 	superUser.c
 
+	Console version
+
 */
 
 #include <windows.h>
 #include <wchar.h>
 
 #include "utils.h"  // Utility functions
+#include "output.h" // Display functions
 #include "tokens.h" // Tokens and privileges management functions
 
 // Program options
@@ -24,8 +27,8 @@ static struct {
 	unsigned int bWait : 1;        // Whether to wait for child process to finish
 } options = {0};
 
-#define printFmtVerbose(...) \
-	if (options.bVerbose) printFmtDebug(__VA_ARGS__);
+#define showFmtVerbose(...) \
+	if (options.bVerbose) showFmtDebug(__VA_ARGS__);
 
 /*
 	Return codes (without /w option):
@@ -116,7 +119,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 		dwCreationFlags = CREATE_SUSPENDED | EXTENDED_STARTUPINFO_PRESENT |
 		CREATE_NEW_CONSOLE;
 
-	printFmtVerbose( L"Creating specified process" );
+	showFmtVerbose( L"Creating specified process" );
 
 	BOOL bCreateResult = CreateProcessAsUser(
 		hChildProcessToken,
@@ -153,10 +156,10 @@ static int createChildProcess( wchar_t* pwszImageName )
 			ResumeThread( processInfo.hThread );
 		}
 
-		printFmtVerbose( L"Created process ID: %lu", processInfo.dwProcessId );
+		showFmtVerbose( L"Created process ID: %lu", processInfo.dwProcessId );
 
 		if (options.bWait) {
-			printFmtVerbose( L"Waiting for process to exit" );
+			showFmtVerbose( L"Waiting for process to exit" );
 			WaitForSingleObject( processInfo.hProcess, INFINITE );
 
 			// Get exit code of child process
@@ -164,7 +167,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 			if (! GetExitCodeProcess( processInfo.hProcess, &dwExitCode ))
 				dwExitCode = getExitCode( 6 );
 
-			printFmtVerbose( L"Process exited with code %ld", dwExitCode );
+			showFmtVerbose( L"Process exited with code %ld", dwExitCode );
 			nChildExitCode = dwExitCode;
 		}
 
@@ -173,7 +176,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 	}
 	else {
 		// Most commonly - 0x2 - The system cannot find the file specified.
-		printError( L"Process creation failed", dwCreateError, 0 );
+		showError( L"Process creation failed", dwCreateError, 0 );
 		return 4;
 	}
 
@@ -226,9 +229,9 @@ static BOOL getArgument( wchar_t** ppArgument, wchar_t** ppArgumentIndex )
 }
 
 
-static void printHelp( void )
+static void showHelp( void )
 {
-	printConsole( L"\n\
+	showInfo( L"\n\
 superUser [options] [command_to_run]\n\n\
 Options (you can use either \"-\" or \"/\"):\n\
   /h  Display this help message.\n\
@@ -262,7 +265,7 @@ int wmain( void )
 				// Multiple options can be grouped together (eg: /ws)
 				switch (opt) {
 				case 'h':
-					printHelp();
+					showHelp();
 					errCode = -1;
 					goto done_params;
 				case 'm':
@@ -278,7 +281,7 @@ int wmain( void )
 					options.bWait = 1;
 					break;
 				default:
-					printFmtError( 0, 0, L"Invalid option '%lc'", opt );
+					showFmtError( 0, 0, L"Invalid option '%lc'", opt );
 					errCode = 1;
 					goto done_params;
 				}
@@ -299,13 +302,13 @@ done_params:
 
 	// Check the consistency of the options
 	if (options.bSeamless && ! options.bWait) {
-		printError( L"/s option requires /w", 0, 0 );
+		showError( L"/s option requires /w", 0, 0 );
 		return getExitCode( 1 );
 	}
 
 	if (! pwszCommandLine) pwszCommandLine = L"cmd.exe";
 
-	printFmtVerbose( L"Your command line is '%ls'", pwszCommandLine );
+	showFmtVerbose( L"Your command line is '%ls'", pwszCommandLine );
 
 	// pwszCommandLine may be read-only. It must be copied to a writable area.
 	size_t nCommandLineBufSize = (wcslen( pwszCommandLine ) + 1) * sizeof( wchar_t );
