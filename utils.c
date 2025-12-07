@@ -17,7 +17,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 //
 // Allocate a block of memory from the process heap.
 //
@@ -41,8 +40,8 @@ __declspec(noinline) void freeHeap( LPVOID lpMem )
 
 
 //
-// Print a formatted string with a list of variable arguments to a new string. 
-// 
+// Print a formatted string with a list of variable arguments to a new string.
+//
 // The caller must use freeHeap to free the returned string.
 // Returns NULL if an error occurs.
 //

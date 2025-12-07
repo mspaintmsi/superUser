@@ -13,8 +13,8 @@
 #include <windows.h>
 #include <wchar.h>
 
-#include "utils.h"  // Utility functions
 #include "output.h" // Display functions
+#include "utils.h"  // Utility functions
 #include "tokens.h" // Tokens and privileges management functions
 
 // Program options
@@ -73,7 +73,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 	}
 
 	// Set all privileges in the child process token
-	setAllPrivileges( hChildProcessToken );
+	setAllPrivileges( hChildProcessToken, NULL );
 
 	// Initialize startupInfo
 

@@ -15,8 +15,8 @@
 #include <windows.h>
 #include <wchar.h>
 
-#include "utils.h"  // Utility functions
 #include "output.h" // Display functions
+#include "utils.h"  // Utility functions
 #include "tokens.h" // Tokens and privileges management functions
 
 // Program options
@@ -59,6 +59,13 @@ static int getExitCode( int code )
 }
 
 
+static void showMissingPrivilege( const wchar_t* pwszPrivilege )
+{
+	showFmtVerbose( L"Could not set privilege [%ls], you most likely don't have it.",
+		pwszPrivilege );
+}
+
+
 static int createChildProcess( wchar_t* pwszImageName )
 {
 	int errCode = 0;
@@ -84,7 +91,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 		}
 
 		// Set all privileges in the child process token
-		setAllPrivilegesV( hChildProcessToken, options.bVerbose );
+		setAllPrivileges( hChildProcessToken, &showMissingPrivilege );
 	}
 
 	// Initialize startupInfo
@@ -150,7 +157,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 			OpenProcessToken( processInfo.hProcess, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
 				&hProcessToken );
 			// Set all privileges in the child process token
-			setAllPrivilegesV( hProcessToken, options.bVerbose );
+			setAllPrivileges( hProcessToken, &showMissingPrivilege );
 			CloseHandle( hProcessToken );
 
 			ResumeThread( processInfo.hThread );

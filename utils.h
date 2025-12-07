@@ -23,8 +23,8 @@ LPVOID allocHeap( DWORD dwFlags, SIZE_T dwBytes );
 void freeHeap( LPVOID lpMem );
 
 //
-// Print a formatted string with a list of variable arguments to a new string. 
-// 
+// Print a formatted string with a list of variable arguments to a new string.
+//
 // The caller must use freeHeap to free the returned string.
 // Returns NULL if an error occurs.
 wchar_t* v_printFmtString( const wchar_t* pwszFormat, va_list arg_list );

@@ -17,6 +17,7 @@
 #include <wchar.h>
 
 #include "output.h" // Display functions
+#include "tokens.h"
 
 #define CUSTOM_ERROR_PROCESS_NOT_FOUND 0xA0001000
 #define CUSTOM_ERROR_SERVICE_START_FAILED 0xA0001001
@@ -78,23 +79,13 @@ static BOOL enableTokenPrivilege( HANDLE hToken, const wchar_t* pcwszPrivilege )
 }
 
 
-void setAllPrivileges( HANDLE hToken )
+void setAllPrivileges( HANDLE hToken, MissingPrivilegeFunc fnMPCb )
 {
 	// Iterate over apcwszTokenPrivileges to add all privileges to a token
 	for (int i = 0; i < (sizeof( apcwszTokenPrivileges ) /
 		sizeof( *apcwszTokenPrivileges )); i++)
-		enableTokenPrivilege( hToken, apcwszTokenPrivileges[ i ] );
-}
-
-
-void setAllPrivilegesV( HANDLE hToken, BOOL bVerbose )
-{
-	// Iterate over apcwszTokenPrivileges to add all privileges to a token
-	for (int i = 0; i < (sizeof( apcwszTokenPrivileges ) /
-		sizeof( *apcwszTokenPrivileges )); i++)
-		if (! enableTokenPrivilege( hToken, apcwszTokenPrivileges[ i ] ) && bVerbose)
-			showFmtDebug( L"Could not set privilege [%ls], you most likely don't have it.",
-				apcwszTokenPrivileges[ i ] );
+		if (! enableTokenPrivilege( hToken, apcwszTokenPrivileges[ i ] ) && fnMPCb)
+			fnMPCb( apcwszTokenPrivileges[ i ] );
 }
 
 
