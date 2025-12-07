@@ -20,17 +20,14 @@
 static BOOL showMessage( BOOL bError, const wchar_t* pwszString )
 {
 	wchar_t* pwszTitle = NULL;
-	UINT iType = 0;
+	UINT uFlags = MB_OK;
 	if (bError) {
 		pwszTitle = L"Error";
-		iType = MB_ICONERROR;
+		uFlags |= MB_ICONERROR;
 	}
-	else {
-		pwszTitle = L"Information";
-		iType = MB_ICONINFORMATION;
-	}
+	else pwszTitle = L"Help";
 
-	return MessageBox( NULL, pwszString, pwszTitle, MB_OK | iType ) > 0;
+	return MessageBox( NULL, pwszString, pwszTitle, uFlags ) > 0;
 }
 
 
