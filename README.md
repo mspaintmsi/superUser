@@ -10,10 +10,10 @@ The program acquires the TrustedInstaller process' access token and creates a ne
 There are two ways to run the program:
 
 ## From the File Explorer
-Double-click the executable, grant administrator privileges and wait for a command prompt to appear.
+Double-click the Windows version (`superUserW.exe`), grant administrator privileges and wait for a command prompt to appear.
 
 ## From the Command Prompt
-Run _superUser_ from the command prompt opened __as administrator__, using the following arguments:
+Run the command-line version (`superUser.exe` or `sudo.exe`) from the command prompt opened __as administrator__, using the following arguments:
 
 __`superUser [options] [command_to_run]`__
 
@@ -72,9 +72,9 @@ If _superUser_ fails, it returns a code from -1000001 to -1000005 (e.g., -100000
 
 # sudo
 
-`sudo32.exe` and `sudo64.exe` are simpler versions of superUser.
+`sudo.exe` is a simpler version of superUser.
 
-They are equivalent to `superUser /ws`.
+It is equivalent to `superUser /ws`.
 
 - The child process runs in the same window and performs its inputs and outputs there.
 - _sudo_ waits for this process to finish and returns its exit code.
@@ -89,3 +89,16 @@ Open a command prompt __as administrator__ to run these commands.
 	sudo64 whoami /user
 	sudo64 whoami /groups | find "TrustedInstaller"
 	sudo64 my_script.cmd arg1 arg2
+
+
+# superUserW
+
+`superUserW.exe` is the Windows version of superUser.
+
+Choose this version when you're not in the command prompt, for example, from File Explorer, by double-clicking or using a context menu.
+
+Messages (errors, help) are displayed in Windows dialog boxes.
+
+Otherwise, if you were using the command-line version from File Explorer, these messages would never appear. Furthermore, it could cause an annoying flickering of a window at startup.
+
+Usage is the same as `superUser.exe`, except that the _s_ and _v_ options do not exist.

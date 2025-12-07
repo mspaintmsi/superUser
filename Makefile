@@ -228,7 +228,7 @@ endif
 
 # -----------------------------------------------------------------------------
 
-PROJECTS = sudo superUser
+PROJECTS = sudo superUser superUserW
 
 # _WIN32_WINNT: the minimal Windows version the app can run on.
 # Windows Vista: the earliest to utilize the Trusted Installer.
@@ -239,6 +239,7 @@ CFLAGS = -municode -Os -s -flto -fno-ident -Wall
 LDFLAGS = -Wl,--exclude-all-symbols,--dynamicbase,--nxcompat
 LDFLAGS_sudo = $(LDFLAGS) -Wl,--subsystem,console
 LDFLAGS_superUser = $(LDFLAGS) -Wl,--subsystem,console
+LDFLAGS_superUserW = $(LDFLAGS) -Wl,--subsystem,windows
 
 LDLIBS = -lwtsapi32
 WRFLAGS = --codepage 65001 -O coff
@@ -247,6 +248,7 @@ DEPS = output.h tokens.h utils.h winnt2.h
 SRCS = tokens.c utils.c
 SRCS_sudo = output_console.c $(SRCS)
 SRCS_superUser = output_console.c $(SRCS)
+SRCS_superUserW = output_windows.c $(SRCS)
 
 
 x86: $(PROJECTS:%=%32.exe)

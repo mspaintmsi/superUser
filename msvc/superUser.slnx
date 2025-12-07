@@ -5,4 +5,5 @@
   </Configurations>
   <Project Path="sudo.vcxproj" Id="7deaeb1c-de51-4a0b-aa1b-b54918005ab1" />
   <Project Path="superUser.vcxproj" Id="9093f045-179c-4896-9d04-edbe7e883178" />
+  <Project Path="superUserW.vcxproj" Id="968b2fce-4212-4abd-8762-004c2a7fe8a8" />
 </Solution>

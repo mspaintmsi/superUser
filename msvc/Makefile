@@ -200,7 +200,7 @@ LIB_64 = $(MSVC_CRT_PATH)/lib/x64;$(MSVC_SDK_LIB_PATH)/um/x64
 
 # -----------------------------------------------------------------------------
 
-PROJECTS = sudo superUser
+PROJECTS = sudo superUser superUserW
 
 # Initialize the variables
 define INITIALIZE_VARS
@@ -216,10 +216,12 @@ CFLAGS = -c
 LDFLAGS =
 LDFLAGS_sudo = $(LDFLAGS) -subsystem:console
 LDFLAGS_superUser = $(LDFLAGS) -subsystem:console
+LDFLAGS_superUserW = $(LDFLAGS) -subsystem:windows
 LDFLAGS_sudo_64 = $(LDFLAGS_sudo) -merge:".pdata=.text"
 LDFLAGS_superUser_64 = $(LDFLAGS_superUser) -merge:".pdata=.text"
 
 LDLIBS = advapi32.lib wtsapi32.lib
+LDLIBS_superUserW = user32.lib $(LDLIBS)
 LDLIBS_32 = msvcrt32.lib
 LDLIBS_64 = msvcrt64.lib
 
@@ -229,6 +231,7 @@ DEPS = ../output.h ../tokens.h ../utils.h
 SRCS = ../tokens.c ../utils.c msvcrt.c
 SRCS_sudo = ../output_console.c $(SRCS)
 SRCS_superUser = ../output_console.c $(SRCS)
+SRCS_superUserW = ../output_windows.c $(SRCS)
 
 $(eval SRCS_ALL = $$(sort $(SRCS) $(PROJECTS:%=$$(SRCS_%))))
 OBJS_ALL := $(patsubst %.c,%.obj,$(notdir $(SRCS_ALL)))

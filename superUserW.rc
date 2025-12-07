@@ -1,0 +1,40 @@
+#define PROJECT_NAME "superUserW"
+#define QUOTE(x) #x
+#define BUILD_NAME(t) PROJECT_NAME QUOTE(t) ".exe"
+
+#ifdef TARGET
+	#define FILENAME BUILD_NAME(TARGET)
+#else
+	#define FILENAME BUILD_NAME()
+#endif
+
+LANGUAGE 9, 0
+
+1 VERSIONINFO
+FILEVERSION 6,0,1,0
+PRODUCTVERSION 6,0,1,0
+FILEOS 0x40004
+FILETYPE 0x1
+BEGIN
+	BLOCK "StringFileInfo"
+	BEGIN
+		BLOCK "000904B0"
+		BEGIN
+			VALUE "CompanyName", "github.com/mspaintmsi/superUser"
+			VALUE "FileDescription", "Run any process with Trusted Installer privileges"
+			VALUE "FileVersion", "6.0.1.0"
+			VALUE "InternalName", PROJECT_NAME
+			VALUE "LegalCopyright", "Copyright © 2019-2026 github.com/mspaintmsi/superUser"
+			VALUE "OriginalFilename", FILENAME
+			VALUE "ProductName", "superUser"
+			VALUE "ProductVersion", "6.0.1"
+		END
+	END
+
+	BLOCK "VarFileInfo"
+	BEGIN
+		VALUE "Translation", 0x0009, 1200
+	END
+END
+
+1 24 manifest_w.xml
