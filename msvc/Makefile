@@ -219,6 +219,7 @@ LDFLAGS_superUser = $(LDFLAGS) -subsystem:console
 LDFLAGS_superUserW = $(LDFLAGS) -subsystem:windows
 LDFLAGS_sudo_64 = $(LDFLAGS_sudo) -merge:".pdata=.text"
 LDFLAGS_superUser_64 = $(LDFLAGS_superUser) -merge:".pdata=.text"
+LDFLAGS_superUserW_64 = $(LDFLAGS_superUserW) -merge:".pdata=.rdata"
 
 LDLIBS = advapi32.lib wtsapi32.lib
 LDLIBS_superUserW = user32.lib $(LDLIBS)
