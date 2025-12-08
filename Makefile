@@ -1,5 +1,5 @@
 #
-# superUser 6.0
+# superUser 6.1
 #
 # Copyright 2019-2026 https://github.com/mspaintmsi/superUser
 #
@@ -250,7 +250,6 @@ SRCS_sudo = output_console.c $(SRCS)
 SRCS_superUser = output_console.c $(SRCS)
 SRCS_superUserW = output_windows.c $(SRCS)
 
-
 x86: $(PROJECTS:%=%32.exe)
 x64: $(PROJECTS:%=%64.exe)
 arm32: $(PROJECTS:%=%A32.exe)
@@ -281,8 +280,8 @@ endif
 # Compile and link the project
 $(1)$(2).exe: $(1).c $$(SRCS_$(1)) $$(DEPS) $(1)$(2).res | check_$(2)
 	$$(info --- Compile and link $(1)$(2).exe ---)
-	$$(CC_$(2)) $$(CPPFLAGS) $$(CFLAGS) $$< $$(SRCS_$(1)) $$(LDFLAGS_$(1)_$(2)) $(1)$(2).res \
-		$$(LDLIBS) -o $$@
+	$$(CC_$(2)) $$(CPPFLAGS) $$(CFLAGS) $$< $$(SRCS_$(1)) \
+		$$(LDFLAGS_$(1)_$(2)) $(1)$(2).res $$(LDLIBS) -o $$@
 
 # Compile the resource file
 $(1)$(2).res: $(1).rc | check_$(2)

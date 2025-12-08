@@ -25,20 +25,24 @@ different systems (Windows, Linux, macOS) and architectures (Intel/AMD or Arm,
 The executable names are as follows:
 
 - Windows Intel/AMD 32-bit  
-`superUser32.exe`
 `sudo32.exe`
+`superUser32.exe`
+`superUserW32.exe`
 
 - Windows Intel/AMD 64-bit  
-`superUser64.exe`
 `sudo64.exe`
+`superUser64.exe`
+`superUserW64.exe`
 
 - Windows on ARMv7 32-bit  
-`superUserA32.exe`
 `sudoA32.exe`
+`superUserA32.exe`
+`superUserWA32.exe`
 
 - Windows on Arm64  
-`superUserA64.exe`
 `sudoA64.exe`
+`superUserA64.exe`
+`superUserWA64.exe`
 
 <br />
 First, choose the system on which you want to run the development tools.

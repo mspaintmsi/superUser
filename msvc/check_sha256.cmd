@@ -1,6 +1,6 @@
 @echo off
 ::
-:: superUser 6.0
+:: superUser 6.1
 ::
 :: Copyright 2019-2026 https://github.com/mspaintmsi/superUser
 ::
