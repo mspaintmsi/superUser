@@ -9,18 +9,19 @@
 
 */
 
+#include "tokens.h"
+
+#define CUSTOM_ERROR_PROCESS_NOT_FOUND 0xA0001000
+#define CUSTOM_ERROR_SERVICE_START_FAILED 0xA0001001
+
+#include <wchar.h>
 #include <windows.h>
 #include <wtsapi32.h>
 #ifdef __GNUC__
 #include "winnt2.h"
 #endif
-#include <wchar.h>
 
 #include "output.h" // Display functions
-#include "tokens.h"
-
-#define CUSTOM_ERROR_PROCESS_NOT_FOUND 0xA0001000
-#define CUSTOM_ERROR_SERVICE_START_FAILED 0xA0001001
 
 const wchar_t* apcwszTokenPrivileges[ 36 ] = {
 	SE_ASSIGNPRIMARYTOKEN_NAME,

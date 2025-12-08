@@ -12,12 +12,12 @@
 
 */
 
-#include <windows.h>
 #include <wchar.h>
+#include <windows.h>
 
 #include "output.h" // Display functions
-#include "utils.h"  // Utility functions
 #include "tokens.h" // Tokens and privileges management functions
+#include "utils.h"  // Utility functions
 
 // Program options
 static struct {

@@ -282,7 +282,10 @@ Visual Studio
 The following components must be installed:
 
 - For ARM64 (64-bit):  
+"MSVC Build Tools for ARM64/ARM64EC (Latest)"  
+or  
 "MSVC v143 - VS 2022 C++ ARM64 build tools (Latest)"
+
 - For ARM (32-bit):  
 "MSVC v143 - VS 2022 C++ ARM build tools (Latest)"  
 "Windows 11 Software Development Kit (SDK) 10.0.22621" or below

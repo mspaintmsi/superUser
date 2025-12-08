@@ -9,9 +9,9 @@
 
 */
 
-#include <windows.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <windows.h>
 
 #include "utils.h"  // Utility functions
 

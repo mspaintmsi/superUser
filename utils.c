@@ -12,10 +12,10 @@
 
 */
 
-#include <windows.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <windows.h>
 
 //
 // Allocate a block of memory from the process heap.

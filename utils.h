@@ -13,8 +13,8 @@
 
 */
 
-#include <windows.h>
 #include <stdarg.h>
+#include <windows.h>
 
 // Allocate a block of memory from the process heap.
 LPVOID allocHeap( DWORD dwFlags, SIZE_T dwBytes );
