@@ -95,10 +95,10 @@ Open a command prompt __as administrator__ to run these commands.
 
 `superUserW.exe` is the Windows version of superUser.
 
-Choose this version when you're not in the command prompt, for example, from File Explorer, by double-clicking or using a context menu.
+Choose this version when not launched from the command prompt or a script, but for example from File Explorer, by double-clicking, a context menu or a shortcut.
 
-Messages (errors, help) are displayed in Windows dialog boxes.
+Like Windows applications, it does not create a console window at startup (no unwanted window flashing). Messages (errors, help) are displayed in Windows dialog boxes.
 
-Otherwise, if you were using the command-line version from File Explorer, these messages would never appear. Furthermore, it could cause an annoying flickering of a window at startup.
+Otherwise, the usage remains the same as the command-line versions. By default, cmd.exe is started. To launch another application, specify its name as a parameter (e.g., in the shortcut or context menu).
 
-Usage is the same as `superUser.exe`, except that the _s_ and _v_ options do not exist.
+Note that the _s_ and _v_ options do not exist.
