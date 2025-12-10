@@ -99,6 +99,6 @@ Choose this version when not launched from the command prompt or a script, but f
 
 Like Windows applications, it does not create a console window at startup (no unwanted window flashing). Messages (errors, help) are displayed in Windows dialog boxes.
 
-Otherwise, the usage remains the same as the command-line versions. By default, cmd.exe is started. To launch another application, specify its name as a parameter (e.g., in the shortcut or context menu).
+Otherwise, the usage remains the same as the command-line versions. By default, `cmd.exe` is started. To launch another application, specify its name as a parameter (e.g., in the shortcut or context menu).
 
 Note that the _s_ and _v_ options do not exist.
