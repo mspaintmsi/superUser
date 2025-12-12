@@ -190,7 +190,7 @@ static BOOL getArgument( wchar_t** ppArgument, wchar_t** ppArgumentIndex )
 static void showHelp( void )
 {
 	showInfo( L"\
-superUser [options] [command_to_run]\n\n\
+superUserW [options] [command_to_run]\n\n\
 Options (you can use either \"-\" or \"/\"):\n\
   /h  Display this help message.\n\
   /m  Minimize the created window.\n\
