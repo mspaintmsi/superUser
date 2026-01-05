@@ -23,3 +23,6 @@ void showFmtError( DWORD dwCode, int iPosition, const wchar_t* pwszFormat, ... )
 
 // Show a formatted debug message with variable arguments.
 void showFmtDebug( const wchar_t* pwszFormat, ... );
+
+// Set the output title.
+void setOutputTitle( const wchar_t* pwszString );

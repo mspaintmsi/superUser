@@ -17,6 +17,8 @@
 #include "tokens.h" // Tokens and privileges management functions
 #include "utils.h"  // Utility functions
 
+#define PROJECT_NAME_WSTR L"sudo"
+
 // Program options
 static struct {
 	unsigned int bMinimize : 1;    // Whether to minimize created window
@@ -177,8 +179,8 @@ static BOOL getArgument( wchar_t** ppArgument, wchar_t** ppArgumentIndex )
 
 static void showHelp( void )
 {
-	showInfo( L"\n\
-sudo [options] [command_to_run]\n\n\
+	showInfo( L"\n"
+		PROJECT_NAME_WSTR " [options] [command_to_run]\n\n\
 Options (you can use either \"-\" or \"/\"):\n\
   /h  Display this help message.\n\
   /m  Minimize the created window.\n\

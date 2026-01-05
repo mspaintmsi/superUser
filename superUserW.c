@@ -19,6 +19,8 @@
 #include "tokens.h" // Tokens and privileges management functions
 #include "utils.h"  // Utility functions
 
+#define PROJECT_NAME_WSTR L"superUserW"
+
 // Program options
 static struct {
 	unsigned int bMinimize : 1;    // Whether to minimize created window
@@ -95,7 +97,7 @@ static int createChildProcess( wchar_t* pwszImageName )
 		NULL,
 		NULL,
 		FALSE,
-		CREATE_NEW_CONSOLE | CREATE_SUSPENDED | EXTENDED_STARTUPINFO_PRESENT,
+		CREATE_SUSPENDED | EXTENDED_STARTUPINFO_PRESENT,
 		NULL,
 		NULL,
 		(LPSTARTUPINFO) &startupInfo,
@@ -189,8 +191,8 @@ static BOOL getArgument( wchar_t** ppArgument, wchar_t** ppArgumentIndex )
 
 static void showHelp( void )
 {
-	showInfo( L"\
-superUserW [options] [command_to_run]\n\n\
+	showInfo(
+		PROJECT_NAME_WSTR " [options] [command_to_run]\n\n\
 Options (you can use either \"-\" or \"/\"):\n\
   /h  Display this help message.\n\
   /m  Minimize the created window.\n\
@@ -203,6 +205,7 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	PWSTR pCmdLine, int nCmdShow )
 {
 	int errCode = 0;  // superUser error code
+	setOutputTitle( PROJECT_NAME_WSTR );
 
 	// Command to run (executable filename of process to create, followed by
 	// arguments) - basically the first non-option argument or "cmd.exe".

@@ -14,18 +14,30 @@
 
 #include "utils.h"    // Utility functions
 
+static const wchar_t* pwszOutputTitle = NULL;
+
+
+//
+// Set the output title.
+//
+void setOutputTitle( const wchar_t* pwszString )
+{
+	pwszOutputTitle = pwszString;
+}
+
+
 //
 // Show a message.
 //
 static BOOL showMessage( BOOL bError, const wchar_t* pwszString )
 {
-	wchar_t* pwszTitle = NULL;
+	const wchar_t* pwszTitle = pwszOutputTitle;
 	UINT uFlags = MB_OK;
 	if (bError) {
-		pwszTitle = L"Error";
+		if (! pwszTitle) pwszTitle = L"Error";
 		uFlags |= MB_ICONERROR;
 	}
-	else pwszTitle = L"Help";
+	else if (! pwszTitle) pwszTitle = L"Information";
 
 	return MessageBox( NULL, pwszString, pwszTitle, uFlags ) > 0;
 }
@@ -107,9 +119,3 @@ void showFmtError( DWORD dwCode, int iPosition, const wchar_t* pwszFormat, ... )
 
 	va_end( args );
 }
-
-
-//
-// Show a formatted debug message with variable arguments.
-//
-void showFmtDebug( const wchar_t* pwszFormat, ... ) {}

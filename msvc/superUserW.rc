@@ -26,8 +26,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
 //
 
 #define PROJECT_NAME "superUserW"
-#define QUOTE(x) #x
-#define BUILD_NAME(t) PROJECT_NAME QUOTE(t) ".exe"
+#define STR(x) #x
+#define BUILD_NAME(t) PROJECT_NAME STR(t) ".exe"
 
 #ifdef TARGET
 	#define FILENAME BUILD_NAME(TARGET)
