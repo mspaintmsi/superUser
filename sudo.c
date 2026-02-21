@@ -1,5 +1,5 @@
 /*
-	superUser 6.1
+	superUser 6.2
 
 	A simple and lightweight utility to start any process
 	as the System user with Trusted Installer privileges.

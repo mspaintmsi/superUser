@@ -1,5 +1,5 @@
 #
-# superUser 6.1
+# superUser 6.2
 #
 # Makefile LLVM-MSVC (version for GNU make)
 #
@@ -231,7 +231,7 @@ LDFLAGS_superUser = $(LDFLAGS) -subsystem:console
 LDFLAGS_superUserW = $(LDFLAGS) -subsystem:windows
 LDFLAGS_sudo_64 = $(LDFLAGS_sudo) -merge:".pdata=.text"
 LDFLAGS_superUser_64 = $(LDFLAGS_superUser) -merge:".pdata=.text"
-LDFLAGS_superUserW_64 = $(LDFLAGS_superUserW) -merge:".pdata=.rdata"
+LDFLAGS_superUserW_64 = $(LDFLAGS_superUserW) -merge:".pdata=.text"
 
 LDLIBS = advapi32.lib wtsapi32.lib
 LDLIBS_superUserW = user32.lib $(LDLIBS)
